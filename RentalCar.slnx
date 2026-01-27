@@ -1,7 +1,0 @@
-<Solution>
-  <Project Path="CAR.Application/CAR.Application.csproj" />
-  <Project Path="CAR.Domain/CAR.Domain.csproj" />
-  <Project Path="CAR.Infrastructure/CAR.Infrastructure.csproj" />
-  <Project Path="CAR.Test/CAR.Test.csproj" />
-  <Project Path="RentalCar/CAR.csproj" />
-</Solution>
