@@ -1,0 +1,11 @@
+C:\SWD\RentalCar\CAR.Domain\bin\Debug\net8.0\CAR.Domain.deps.json
+C:\SWD\RentalCar\CAR.Domain\bin\Debug\net8.0\CAR.Domain.dll
+C:\SWD\RentalCar\CAR.Domain\bin\Debug\net8.0\CAR.Domain.pdb
+C:\SWD\RentalCar\CAR.Domain\obj\Debug\net8.0\CAR.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\SWD\RentalCar\CAR.Domain\obj\Debug\net8.0\CAR.Domain.AssemblyInfoInputs.cache
+C:\SWD\RentalCar\CAR.Domain\obj\Debug\net8.0\CAR.Domain.AssemblyInfo.cs
+C:\SWD\RentalCar\CAR.Domain\obj\Debug\net8.0\CAR.Domain.csproj.CoreCompileInputs.cache
+C:\SWD\RentalCar\CAR.Domain\obj\Debug\net8.0\CAR.Domain.dll
+C:\SWD\RentalCar\CAR.Domain\obj\Debug\net8.0\refint\CAR.Domain.dll
+C:\SWD\RentalCar\CAR.Domain\obj\Debug\net8.0\CAR.Domain.pdb
+C:\SWD\RentalCar\CAR.Domain\obj\Debug\net8.0\ref\CAR.Domain.dll

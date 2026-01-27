@@ -1,0 +1,15 @@
+C:\SWD\RentalCar\CAR.Application\bin\Debug\net8.0\CAR.Application.deps.json
+C:\SWD\RentalCar\CAR.Application\bin\Debug\net8.0\CAR.Application.dll
+C:\SWD\RentalCar\CAR.Application\bin\Debug\net8.0\CAR.Application.pdb
+C:\SWD\RentalCar\CAR.Application\bin\Debug\net8.0\CAR.Domain.dll
+C:\SWD\RentalCar\CAR.Application\bin\Debug\net8.0\CAR.Domain.pdb
+C:\SWD\RentalCar\CAR.Application\obj\Debug\net8.0\CAR.Application.csproj.AssemblyReference.cache
+C:\SWD\RentalCar\CAR.Application\obj\Debug\net8.0\CAR.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\SWD\RentalCar\CAR.Application\obj\Debug\net8.0\CAR.Application.AssemblyInfoInputs.cache
+C:\SWD\RentalCar\CAR.Application\obj\Debug\net8.0\CAR.Application.AssemblyInfo.cs
+C:\SWD\RentalCar\CAR.Application\obj\Debug\net8.0\CAR.Application.csproj.CoreCompileInputs.cache
+C:\SWD\RentalCar\CAR.Application\obj\Debug\net8.0\CAR.Appl.5B541B26.Up2Date
+C:\SWD\RentalCar\CAR.Application\obj\Debug\net8.0\CAR.Application.dll
+C:\SWD\RentalCar\CAR.Application\obj\Debug\net8.0\refint\CAR.Application.dll
+C:\SWD\RentalCar\CAR.Application\obj\Debug\net8.0\CAR.Application.pdb
+C:\SWD\RentalCar\CAR.Application\obj\Debug\net8.0\ref\CAR.Application.dll

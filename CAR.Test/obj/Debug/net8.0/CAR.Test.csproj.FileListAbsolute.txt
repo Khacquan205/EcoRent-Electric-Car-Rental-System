@@ -1,0 +1,11 @@
+C:\SWD\RentalCar\CAR.Test\bin\Debug\net8.0\CAR.Test.deps.json
+C:\SWD\RentalCar\CAR.Test\bin\Debug\net8.0\CAR.Test.dll
+C:\SWD\RentalCar\CAR.Test\bin\Debug\net8.0\CAR.Test.pdb
+C:\SWD\RentalCar\CAR.Test\obj\Debug\net8.0\CAR.Test.GeneratedMSBuildEditorConfig.editorconfig
+C:\SWD\RentalCar\CAR.Test\obj\Debug\net8.0\CAR.Test.AssemblyInfoInputs.cache
+C:\SWD\RentalCar\CAR.Test\obj\Debug\net8.0\CAR.Test.AssemblyInfo.cs
+C:\SWD\RentalCar\CAR.Test\obj\Debug\net8.0\CAR.Test.csproj.CoreCompileInputs.cache
+C:\SWD\RentalCar\CAR.Test\obj\Debug\net8.0\CAR.Test.dll
+C:\SWD\RentalCar\CAR.Test\obj\Debug\net8.0\refint\CAR.Test.dll
+C:\SWD\RentalCar\CAR.Test\obj\Debug\net8.0\CAR.Test.pdb
+C:\SWD\RentalCar\CAR.Test\obj\Debug\net8.0\ref\CAR.Test.dll

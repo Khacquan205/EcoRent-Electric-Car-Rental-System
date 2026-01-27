@@ -1,0 +1,12 @@
+[
+  {
+    "ContainingType": "CAR.Controllers.HealthController",
+    "Method": "CheckDatabase",
+    "RelativePath": "Test/Connection/db",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  }
+]
