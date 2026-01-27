@@ -31,7 +31,7 @@ namespace CAR.Controllers
                     success = true,
                     canConnect = canConnect,
                     totalUsers = userCount,
-                    message = "Database connected & query OK"
+                    message = "Database connected very Good"
                 });
             }
             catch (Exception ex)
