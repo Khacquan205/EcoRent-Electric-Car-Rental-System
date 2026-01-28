@@ -1,4 +1,5 @@
 ﻿using CAR.Infrastructure;
+using CAR.Infrastructure.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -87,6 +88,9 @@ builder.Services.AddControllers(options =>
 });
 
 var app = builder.Build();
+
+// Initialize Firebase
+app.InitializeFirebase();
 
 if (app.Environment.IsDevelopment())
 {

@@ -34,6 +34,7 @@ namespace CAR.Infrastructure
             // Services
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IJwtService, JwtService>();
+            services.AddScoped<IFirebaseService, FirebaseService>();
 
             return services;
         }
@@ -43,7 +44,6 @@ namespace CAR.Infrastructure
         {
             // Services
             services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IEmailService, EmailService>();
 
             return services;
         }

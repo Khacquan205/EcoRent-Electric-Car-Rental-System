@@ -1,4 +1,5 @@
 using CAR.Application.Dtos.Auth;
+using CAR.Application.Interfaces.Services;
 using CAR.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -8,13 +9,6 @@ using System.Text;
 
 namespace CAR.Infrastructure.Services
 {
-    public interface IJwtService
-    {
-        string GenerateAccessToken(MUser user);
-        string GenerateRefreshToken();
-        ClaimsPrincipal? GetPrincipalFromExpiredToken(string token);
-    }
-
     public class JwtService : IJwtService
     {
         private readonly IConfiguration _configuration;
@@ -42,7 +36,8 @@ namespace CAR.Infrastructure.Services
                 new Claim(ClaimTypes.Role, user.RoleId.ToString()),
                 new Claim("userId", user.Id.ToString()),
                 new Claim("email", user.Email),
-                new Claim("roleId", user.RoleId.ToString())
+                new Claim("roleId", user.RoleId.ToString()),
+                new Claim("verify_level", "0") // Default verify level, can be enhanced based on business logic
             };
 
             var token = new JwtSecurityToken(
@@ -64,7 +59,7 @@ namespace CAR.Infrastructure.Services
             return Convert.ToBase64String(randomBytes);
         }
 
-        public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
+        public System.Security.Claims.ClaimsPrincipal? ValidateToken(string token)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var secretKey = jwtSettings["SecretKey"] ?? throw new ArgumentNullException("JwtSettings:SecretKey");

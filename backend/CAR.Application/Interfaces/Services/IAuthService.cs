@@ -9,5 +9,6 @@ namespace CAR.Application.Interfaces.Services
         Task<AuthResponseDto> Login(LoginRequestDto request);
         Task<AuthResponseDto> SendOtp(SendOtpRequestDto request);
         Task<AuthResponseDto> ChangePassword(int userId, ChangePasswordRequestDto request);
+        Task<AuthResponseDto> LoginWithGoogleAsync(GoogleLoginRequestDto request);
     }
 }
