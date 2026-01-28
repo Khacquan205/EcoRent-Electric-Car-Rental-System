@@ -5,14 +5,14 @@ namespace CAR.Infrastructure.Data
 {
     public class AppDbContext : DbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options)
-            : base(options)
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }
 
         // ===== DbSet =====
         public DbSet<MUser> Users { get; set; }
         public DbSet<MRole> Roles { get; set; }
+        public DbSet<MAuthentication> Authentications { get; set; }
         public DbSet<MCustomerProfile> CustomerProfiles { get; set; }
         public DbSet<MOwnerProfile> OwnerProfiles { get; set; }
         public DbSet<MLocation> Locations { get; set; }
