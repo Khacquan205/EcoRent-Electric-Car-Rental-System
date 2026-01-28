@@ -12,19 +12,22 @@ namespace CAR.Infrastructure.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailService _emailService;
         private readonly IJwtService _jwtService;
+        private readonly IFirebaseService _firebaseService;
 
         public AuthService(
             IAuthenticationRepository authRepository,
             IUserRepository userRepository,
             IUnitOfWork unitOfWork,
             IEmailService emailService,
-            IJwtService jwtService)
+            IJwtService jwtService,
+            IFirebaseService firebaseService)
         {
             _authRepository = authRepository;
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _emailService = emailService;
             _jwtService = jwtService;
+            _firebaseService = firebaseService;
         }
 
         public async Task<AuthResponseDto> Register(RegisterRequestDto request)
@@ -32,20 +35,29 @@ namespace CAR.Infrastructure.Services
             var existingUser = await _userRepository.GetByEmailAsync(request.Email!);
             if (existingUser != null)
             {
-                // Check if user has expired OTP (more than 5 minutes old)
+                // Check if user has active account (already verified)
                 var existingAuth = await _authRepository.GetByUserIdAsync(existingUser.Id);
-                if (existingAuth != null && existingAuth.CodeExpiresAt > DateTime.UtcNow)
+                if (existingAuth != null && existingAuth.IsActive)
                 {
-                    // OTP still valid - user should verify or resend OTP
+                    // Account already verified - cannot re-register
                     return new AuthResponseDto
                     {
                         Success = false,
-                        Message = "Email already registered. Please check your email for OTP or use resend OTP."
+                        Message = "Email already registered and verified. Please login instead."
+                    };
+                }
+                else if (existingAuth != null && existingAuth.CodeExpiresAt > DateTime.UtcNow && !existingAuth.IsActive)
+                {
+                    // OTP still valid but not verified - user should verify or resend OTP
+                    return new AuthResponseDto
+                    {
+                        Success = false,
+                        Message = "Email already registered. Please check your email for OTP verification or use resend OTP."
                     };
                 }
                 else
                 {
-                    // OTP expired - clean up old records and allow re-registration
+                    // OTP expired or no auth record - clean up old records and allow re-registration
                     _userRepository.Remove(existingUser);
                     if (existingAuth != null)
                     {
@@ -364,6 +376,123 @@ namespace CAR.Infrastructure.Services
             catch
             {
                 return false;
+            }
+        }
+
+        public async Task<AuthResponseDto> LoginWithGoogleAsync(GoogleLoginRequestDto request)
+        {
+            try
+            {
+                // Verify Google ID token
+                var userInfo = await _firebaseService.VerifyGoogleIdTokenAsync(request.IdToken);
+                
+                if (userInfo == null || string.IsNullOrEmpty(userInfo.Email))
+                {
+                    return new AuthResponseDto
+                    {
+                        Success = false,
+                        Message = "Invalid Google ID token"
+                    };
+                }
+
+                // Check if user already exists
+                var existingUser = await _userRepository.GetByEmailAsync(userInfo.Email);
+                
+                if (existingUser == null)
+                {
+                    // Create new user
+                    var newUser = new MUser
+                    {
+                        Email = userInfo.Email,
+                        PasswordHash = string.Empty, // No password for Google login
+                        RoleId = 2, // Default user role
+                        Status = 1, // Active (no email verification needed for Google)
+                        Gender = 0,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    await _userRepository.CreateUserAsync(newUser);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    // Create authentication record
+                    var newAuth = new MAuthentication
+                    {
+                        UserId = newUser.Id,
+                        Email = userInfo.Email,
+                        PasswordHash = string.Empty,
+                        AuthType = 2, // Google
+                        AuthProvider = 2, // Google
+                        GoogleId = userInfo.GoogleId, // Firebase UID
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    await _authRepository.CreateAuthenticationAsync(newAuth);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    existingUser = newUser;
+                }
+                else
+                {
+                    // User exists, check/update Google authentication
+                    var existingAuth = await _authRepository.GetByUserIdAsync(existingUser.Id);
+                    
+                    if (existingAuth == null)
+                    {
+                        // Create authentication record for existing user
+                        existingAuth = new MAuthentication
+                        {
+                            UserId = existingUser.Id,
+                            Email = userInfo.Email,
+                            AuthType = 2, // Google
+                            AuthProvider = 2, // Google
+                            GoogleId = userInfo.GoogleId,
+                            IsActive = true,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        await _authRepository.CreateAuthenticationAsync(existingAuth);
+                        await _unitOfWork.SaveChangesAsync();
+                    }
+                    else if (existingAuth.GoogleId != userInfo.GoogleId)
+                    {
+                        // Update Google ID if different
+                        existingAuth.GoogleId = userInfo.GoogleId;
+                        existingAuth.AuthType = 2; // Google
+                        existingAuth.AuthProvider = 2; // Google
+                        existingAuth.IsActive = true;
+                        existingAuth.UpdatedAt = DateTime.UtcNow;
+                        _authRepository.Update(existingAuth);
+                        await _unitOfWork.SaveChangesAsync();
+                    }
+                }
+
+                // Generate system JWT
+                var accessToken = _jwtService.GenerateAccessToken(existingUser);
+                var expiresIn = 3600; // 1 hour in seconds
+
+                return new AuthResponseDto
+                {
+                    Success = true,
+                    Message = "Google login successful",
+                    AccessToken = accessToken,
+                    ExpiresIn = expiresIn,
+                    User = new UserInfoDto
+                    {
+                        Id = existingUser.Id,
+                        Email = existingUser.Email,
+                        RoleId = existingUser.RoleId,
+                        IsActive = existingUser.Status == 1
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new AuthResponseDto
+                {
+                    Success = false,
+                    Message = "Google login failed: " + ex.Message
+                };
             }
         }
     }

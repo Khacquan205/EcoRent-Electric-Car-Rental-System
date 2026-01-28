@@ -68,7 +68,17 @@ namespace CAR.Controllers
             }
 
             var result = await _authService.ChangePassword(userId, request);
-            return result.Success ? Ok(result) : BadRequest(result);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// login with Google
+        /// </summary>
+        [HttpPost("login-google")]
+        public async Task<IActionResult> LoginWithGoogle([FromBody] GoogleLoginRequestDto request)
+        {
+            var result = await _authService.LoginWithGoogleAsync(request);
+            return Ok(result);
         }
     }
 }
