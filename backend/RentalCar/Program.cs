@@ -80,6 +80,12 @@ builder.Services.AddCors(options =>
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 
+// Add Validation Filter globally
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<RentalCar.Filters.ValidationFilter>();
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

@@ -23,11 +23,10 @@ namespace CAR.Infrastructure.Repositories
 
         public async Task<MAuthentication?> GetByValidOtpAsync(string email, string code)
         {
-            return await _dbSet.FirstOrDefaultAsync(x => 
-                x.Email == email && 
+            return await 
+                _dbSet.FirstOrDefaultAsync(x => 
+                x.Email == email &&
                 x.Code == code && 
-                x.CodeIsUsed == false && 
-                x.CodeIsRevoked == false && 
                 x.CodeExpiresAt > DateTime.UtcNow);
         }
 
@@ -38,6 +37,10 @@ namespace CAR.Infrastructure.Repositories
             {
                 auth.CodeIsUsed = isUsed;
                 auth.CodeIsRevoked = isRevoked;
+                if (isUsed && !isRevoked)
+                {
+                    auth.IsActive = true;
+                }
                 auth.UpdatedAt = DateTime.UtcNow;
                 _dbSet.Update(auth);
             }

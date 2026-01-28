@@ -19,7 +19,6 @@ namespace CAR.Infrastructure.Repositories
         public async Task CreateUserAsync(MUser user)
         {
             _dbSet.Add(user);
-            // Do NOT call SaveChangesAsync here - let UnitOfWork handle it
         }
     }
 }

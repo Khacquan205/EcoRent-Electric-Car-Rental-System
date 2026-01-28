@@ -32,8 +32,8 @@ namespace CAR.Infrastructure
             services.AddScoped<IRepository<Domain.Entities.MUser>, Repository<Domain.Entities.MUser>>();
 
             // Services
-            services.AddScoped<IEmailService, CAR.Infrastructure.Services.EmailService>();
-            services.AddScoped<IJwtService, CAR.Infrastructure.Services.JwtService>();
+            services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IJwtService, JwtService>();
 
             return services;
         }
@@ -42,8 +42,8 @@ namespace CAR.Infrastructure
             this IServiceCollection services)
         {
             // Services
-            services.AddScoped<IAuthService, CAR.Infrastructure.Services.AuthService>();
-            services.AddScoped<IEmailService, CAR.Infrastructure.Services.EmailService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IEmailService, EmailService>();
 
             return services;
         }

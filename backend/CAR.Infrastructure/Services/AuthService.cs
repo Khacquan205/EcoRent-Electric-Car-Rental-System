@@ -29,26 +29,42 @@ namespace CAR.Infrastructure.Services
 
         public async Task<AuthResponseDto> Register(RegisterRequestDto request)
         {
-            var existingUser = await _userRepository.GetByEmailAsync(request.Email);
+            var existingUser = await _userRepository.GetByEmailAsync(request.Email!);
             if (existingUser != null)
             {
-                return new AuthResponseDto
+                // Check if user has expired OTP (more than 5 minutes old)
+                var existingAuth = await _authRepository.GetByUserIdAsync(existingUser.Id);
+                if (existingAuth != null && existingAuth.CodeExpiresAt > DateTime.UtcNow)
                 {
-                    Success = false,
-                    Message = "Email already registered"
-                };
+                    // OTP still valid - user should verify or resend OTP
+                    return new AuthResponseDto
+                    {
+                        Success = false,
+                        Message = "Email already registered. Please check your email for OTP or use resend OTP."
+                    };
+                }
+                else
+                {
+                    // OTP expired - clean up old records and allow re-registration
+                    _userRepository.Remove(existingUser);
+                    if (existingAuth != null)
+                    {
+                        _authRepository.Remove(existingAuth);
+                    }
+                    await _unitOfWork.SaveChangesAsync();
+                }
             }
 
-            var passwordHash = HashPassword(request.Password);
+            var passwordHash = HashPassword(request.Password!);
             var otpCode = GenerateOtp();
 
             var user = new MUser
             {
-                RoleId = 2, // Default user role
-                Email = request.Email,
+                RoleId = 2, 
+                Email = request.Email!,
                 PasswordHash = passwordHash,
                 Gender = 0,
-                Status = 0, // Inactive until OTP verification
+                Status = 0, 
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -158,13 +174,40 @@ namespace CAR.Infrastructure.Services
             }
 
             var auth = await _authRepository.GetByUserIdAsync(user.Id);
-            if (auth == null || !auth.IsActive)
+            if (auth == null)
             {
                 return new AuthResponseDto
                 {
                     Success = false,
-                    Message = "Account not verified. Please check your email for OTP."
+                    Message = "Account not found. Please register."
                 };
+            }
+
+            // Check if account is not verified and OTP has expired
+            if (!auth.IsActive)
+            {
+                if (auth.CodeExpiresAt <= DateTime.UtcNow)
+                {
+                    // OTP expired - clean up and suggest re-registration
+                    _userRepository.Remove(user);
+                    _authRepository.Remove(auth);
+                    await _unitOfWork.SaveChangesAsync();
+                    
+                    return new AuthResponseDto
+                    {
+                        Success = false,
+                        Message = "OTP expired. Please register again to receive a new OTP."
+                    };
+                }
+                else
+                {
+                    // OTP still valid
+                    return new AuthResponseDto
+                    {
+                        Success = false,
+                        Message = "Account not verified. Please check your email for OTP or use resend OTP."
+                    };
+                }
             }
 
             if (!VerifyPassword(request.Password, user.PasswordHash))
