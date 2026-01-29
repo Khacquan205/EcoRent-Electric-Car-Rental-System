@@ -48,11 +48,13 @@ public class UserConfiguration : IEntityTypeConfiguration<MUser>
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("datetime")
-               .IsRequired();
+               .HasColumnType("timestamp with time zone")
+               .IsRequired()
+               .HasDefaultValueSql("NOW() AT TIME ZONE 'utc'"); // PostgreSQL UTC default
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamp with time zone")
+               .HasDefaultValueSql("NOW() AT TIME ZONE 'utc'"); // PostgreSQL UTC default
     }
 }
