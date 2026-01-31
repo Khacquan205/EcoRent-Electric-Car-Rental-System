@@ -1,0 +1,11 @@
+frontend/
+
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/*.user
+**/*.suo
+**/*.pdb
+
+.git/
