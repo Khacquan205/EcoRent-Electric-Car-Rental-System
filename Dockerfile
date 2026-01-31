@@ -13,7 +13,10 @@ RUN dotnet publish backend/RentalCar/CAR.csproj -c Release -o /app/publish /p:Us
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-# Render supplies $PORT; bind Kestrel to it
+EXPOSE 8080
+
+# Default to 8080 (good for local runs). Render will set PORT automatically.
+ENV PORT=8080
 ENV ASPNETCORE_URLS=http://0.0.0.0:${PORT}
 ENV ASPNETCORE_ENVIRONMENT=Production
 
