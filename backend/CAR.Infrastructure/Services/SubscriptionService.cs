@@ -4,6 +4,7 @@ using CAR.Application.Interfaces.Repositories;
 using CAR.Application.Interfaces.Services;
 using CAR.Domain.Entities;
 using CAR.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
 
@@ -106,6 +107,38 @@ namespace CAR.Infrastructure.Services
                 RemainingPosts = subscription.RemainingPosts,
                 Status = subscription.Status
             };
+        }
+
+        public async Task ConsumeOnePostAsync(long subscriptionId)
+        {
+            var subscription = await _ownerSubscriptionRepository.Query()
+                .FirstOrDefaultAsync(s => s.Id == subscriptionId);
+            
+            if (subscription == null)
+            {
+                throw new UserFriendlyException(404, "SUBSCRIPTION_NOT_FOUND", "Subscription not found");
+            }
+
+            if (subscription.RemainingPosts <= 0)
+            {
+                throw new UserFriendlyException(400, "NO_REMAINING_POSTS", "No remaining posts to consume");
+            }
+
+            subscription.RemainingPosts--;
+            subscription.UpdatedAt = DateTime.UtcNow;
+
+            _ownerSubscriptionRepository.Update(subscription);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public bool HasRemainingPosts(MOwnerSubscription subscription)
+        {
+            return subscription.RemainingPosts > 0;
+        }
+
+        public bool IsActive(MOwnerSubscription subscription, DateTime currentTime)
+        {
+            return subscription.Status == 1 && subscription.StartDate <= currentTime && subscription.EndDate >= currentTime;
         }
     }
 }
