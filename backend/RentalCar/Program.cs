@@ -113,6 +113,9 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 app.UseCors("AllowSwagger");
 
+// Add Global Exception Middleware
+app.UseMiddleware<RentalCar.Middleware.GlobalExceptionMiddleware>();
+
 // Add Authentication middleware
 app.UseAuthentication();
 app.UseAuthorization();
