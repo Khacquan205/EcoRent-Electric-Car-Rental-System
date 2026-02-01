@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CAR.Domain.Entities
 {
     public partial class MPost
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
 
-        public int OwnerId { get; set; }
+        public long OwnerId { get; set; }
 
-        public int CategoryId { get; set; }
+        public long CategoryId { get; set; }
 
-        public int? LocationId { get; set; }
+        public long? LocationId { get; set; }
 
         public string Title { get; set; } = null!;
 
@@ -24,7 +20,14 @@ namespace CAR.Domain.Entities
 
         public string? ContactPhone { get; set; }
 
+
         public short Status { get; set; }
+
+
+        public long? StaffId { get; set; }
+
+        public string? RejectReason { get; set; }
+
 
         public short PriorityLevel { get; set; }
 
