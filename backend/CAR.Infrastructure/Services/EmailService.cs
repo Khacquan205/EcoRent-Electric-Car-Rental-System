@@ -54,7 +54,11 @@ namespace CAR.Infrastructure.Services
             catch (Exception ex)
             {
                 // Log error here
-                Console.WriteLine($"Failed to send email: {ex.Message}");
+                Console.WriteLine($"Failed to send email: {ex}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"InnerException: {ex.InnerException}");
+                }
                 return false;
             }
         }
