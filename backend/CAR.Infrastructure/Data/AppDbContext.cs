@@ -19,7 +19,14 @@ namespace CAR.Infrastructure.Data
         public DbSet<MPost> Posts { get; set; }
         public DbSet<MVehicleCategory> VehicleCategories { get; set; }
         public DbSet<TPostImage> PostImages { get; set; }
-
+        public DbSet<MStaffProfile> StaffProfiles { get; set; }
+        public DbSet<MAdvertisement> Advertisements { get; set; }
+        public DbSet<MReport> Reports { get; set; }
+        public DbSet<MOwnerPackage> OwnerPackages { get; set; }
+        public DbSet<MPayment> Payments { get; set; }
+        public DbSet<MReview> Reviews { get; set; }
+        public DbSet<MSearchHistory> SearchHistories { get; set; }
+        public DbSet<MVehicleVerification> VehicleVerifications { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
