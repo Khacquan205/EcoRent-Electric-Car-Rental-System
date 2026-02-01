@@ -92,11 +92,8 @@ var app = builder.Build();
 // Initialize Firebase
 app.InitializeFirebase();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseCors("AllowSwagger");
