@@ -13,17 +13,20 @@ namespace CAR.Infrastructure.Services
         private readonly IPostRepository _postRepository;
         private readonly IOwnerProfileRepository _ownerProfileRepository;
         private readonly IOwnerSubscriptionRepository _ownerSubscriptionRepository;
+        private readonly ISubscriptionService _subscriptionService;
         private readonly IUnitOfWork _unitOfWork;
 
         public PostService(
             IPostRepository postRepository,
             IOwnerProfileRepository ownerProfileRepository,
             IOwnerSubscriptionRepository ownerSubscriptionRepository,
+            ISubscriptionService subscriptionService,
             IUnitOfWork unitOfWork)
         {
             _postRepository = postRepository;
             _ownerProfileRepository = ownerProfileRepository;
             _ownerSubscriptionRepository = ownerSubscriptionRepository;
+            _subscriptionService = subscriptionService;
             _unitOfWork = unitOfWork;
         }
 
@@ -53,8 +56,7 @@ namespace CAR.Infrastructure.Services
 
             var post = await _postRepository.CreatePendingPostAsync(request, verifiedOwner.Id, currentTime);
 
-            activeSubscription.ConsumeOnePost();
-            _ownerSubscriptionRepository.Update(activeSubscription);
+            await _subscriptionService.ConsumeOnePostAsync(activeSubscription.Id);
 
             await _unitOfWork.SaveChangesAsync();
 
