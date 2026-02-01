@@ -7,6 +7,21 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Email config debug (do not log password)
+var emailServer = builder.Configuration["EmailSettings:SmtpServer"];
+var emailPort = builder.Configuration["EmailSettings:SmtpPort"];
+var emailFrom = builder.Configuration["EmailSettings:SenderEmail"];
+var hasEmailConfig = !string.IsNullOrWhiteSpace(emailServer)
+    && !string.IsNullOrWhiteSpace(emailPort)
+    && !string.IsNullOrWhiteSpace(emailFrom);
+
+Console.WriteLine($"[Config] Email: {(hasEmailConfig ? "OK" : "MISSING")}");
+if (hasEmailConfig)
+{
+    Console.WriteLine($"[Config] SMTP: {emailServer}:{emailPort}");
+    Console.WriteLine($"[Config] From: {emailFrom}");
+}
+
 // Add Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"] ?? throw new ArgumentNullException("JwtSettings:SecretKey");
