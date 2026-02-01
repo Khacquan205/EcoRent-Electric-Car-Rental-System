@@ -29,15 +29,18 @@ namespace CAR.Infrastructure.Services
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+            var roleCode = GetRoleCode(user.RoleId);
+
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.RoleId.ToString()),
+                new Claim(ClaimTypes.Role, roleCode),
                 new Claim("userId", user.Id.ToString()),
                 new Claim("email", user.Email),
                 new Claim("roleId", user.RoleId.ToString()),
-                new Claim("verify_level", "0") // Default verify level, can be enhanced based on business logic
+                new Claim("roleCode", roleCode),
+                new Claim("verify_level", "0")
             };
 
             var token = new JwtSecurityToken(
@@ -72,7 +75,7 @@ namespace CAR.Infrastructure.Services
                 ValidateIssuer = true,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-                ValidateLifetime = false, // Don't validate lifetime for expired token
+                ValidateLifetime = false,
                 ValidIssuer = issuer,
                 ValidAudience = audience
             };
@@ -87,6 +90,19 @@ namespace CAR.Infrastructure.Services
             {
                 return null;
             }
+        }
+
+        private string GetRoleCode(int roleId)
+        {
+            return roleId switch
+            {
+                0 => "GUEST",
+                1 => "CUSTOMER",
+                2 => "OWNER",
+                3 => "STAFF",
+                4 => "ADMIN",
+                _ => "GUEST"
+            };
         }
     }
 }

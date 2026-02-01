@@ -29,6 +29,10 @@ namespace CAR.Infrastructure
             // Repositories
             services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IOwnerProfileRepository, OwnerProfileRepository>();
+            services.AddScoped<IOwnerSubscriptionRepository, OwnerSubscriptionRepository>();
+            services.AddScoped<IPostRepository, PostRepository>();
+            services.AddScoped<IOwnerPackageRepository, OwnerPackageRepository>();
             services.AddScoped<IRepository<Domain.Entities.MUser>, Repository<Domain.Entities.MUser>>();
 
             // Services
@@ -44,6 +48,11 @@ namespace CAR.Infrastructure
         {
             // Services
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IPostService, PostService>();
+            services.AddScoped<IOwnerService, OwnerService>();
+            services.AddScoped<ISubscriptionService, SubscriptionService>();
+            services.AddScoped<IIdentityVerificationService, IdentityVerificationService>();
+            services.AddScoped<IOwnerPackageService, OwnerPackageService>();
 
             return services;
         }

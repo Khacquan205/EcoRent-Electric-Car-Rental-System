@@ -27,6 +27,8 @@ namespace CAR.Infrastructure.Data
         public DbSet<MReview> Reviews { get; set; }
         public DbSet<MSearchHistory> SearchHistories { get; set; }
         public DbSet<MVehicleVerification> VehicleVerifications { get; set; }
+        public DbSet<MOwnerSubscription> OwnerSubscriptions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -35,9 +35,6 @@ public class VehicleVerificationConfiguration : IEntityTypeConfiguration<MVehicl
                .HasColumnName("verified_at")
                .HasColumnType("datetime");
 
-        builder.Property(x => x.StaffId)
-               .HasColumnName("staff_id");
-
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
                .HasColumnType("datetime")

@@ -6,11 +6,11 @@ namespace CAR.Controllers
 {
     [ApiController]
     [Route("Test/Connection")]
-    public class HealthController : ControllerBase
+    public class TestController : ControllerBase
     {
         private readonly AppDbContext _db;
 
-        public HealthController(AppDbContext db)
+        public TestController(AppDbContext db)
         {
             _db = db;
         }
