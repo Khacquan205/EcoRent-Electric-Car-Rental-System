@@ -84,11 +84,12 @@ builder.Services.AddSwaggerGen(c =>
 // Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSwagger", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("https://localhost:7179", "http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
@@ -111,7 +112,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-app.UseCors("AllowSwagger");
+app.UseCors("AllowAll");
 
 // Add Global Exception Middleware
 app.UseMiddleware<RentalCar.Middleware.GlobalExceptionMiddleware>();
