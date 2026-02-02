@@ -13,7 +13,7 @@ import {
 
 const navLinks = [
   { href: "/become-a-renter", label: "Become a renter" },
-  { href: "/vehicles", label: "Vehicles" },
+  { href: "/cars", label: "Cars" },
   { href: "/how-it-works", label: "How it work" },
   { href: "/about-us", label: "Why choose us" },
 ];

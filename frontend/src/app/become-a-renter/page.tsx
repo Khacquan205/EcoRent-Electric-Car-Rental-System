@@ -74,28 +74,28 @@ const steps = [
     title: "Create Your Listing",
     description:
       "Sign up and list your car in minutes. Add photos, set your price, and describe your vehicle's features.",
-    image: "/car item/Tesla Model 3.png",
+    image: "/car item/image 11.png",
   },
   {
     number: "02",
     title: "Get Verified",
     description:
       "Complete our quick verification process. We'll verify your identity and vehicle documents for safety.",
-    image: "/car item/BMW iX3.png",
+    image: "/car item/image 12.png",
   },
   {
     number: "03",
     title: "Accept Bookings",
     description:
       "Review rental requests and accept the ones that work for you. You have full control over who rents your car.",
-    image: "/car item/Porsche Taycan.png",
+    image: "/car item/image 13.png",
   },
   {
     number: "04",
     title: "Earn Money",
     description:
       "Hand over the keys and start earning. Payments are processed securely and deposited directly to your account.",
-    image: "/car item/Mercedes EQS.png",
+    image: "/car item/Audi 1 (1).png",
   },
 ];
 
@@ -244,7 +244,7 @@ export default function BecomeARenterPage() {
             <div className="relative hidden lg:block">
               <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-white/10 p-8">
                 <Image
-                  src="/car item/Tesla Model 3.png"
+                  src="/car item/image 11.png"
                   alt="Rent your car"
                   fill
                   className="object-contain"
@@ -657,7 +657,7 @@ export default function BecomeARenterPage() {
               </div>
               <div className="relative hidden h-full min-h-[400px] lg:block">
                 <Image
-                  src="/car item/Porsche Taycan.png"
+                  src="/car item/Audi 1 (1).png"
                   alt="Start earning with EcoRent"
                   fill
                   className="object-contain p-8"

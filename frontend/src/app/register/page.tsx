@@ -43,39 +43,24 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       <div className="flex min-h-screen">
-        {/* Left Side - Image */}
-        <div className="relative hidden lg:block lg:w-1/2">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1572D3] to-[#0D4F8C]">
-            <div className="flex h-full flex-col items-center justify-center p-12 text-center">
-              <div className="rounded-full bg-white/10 p-6">
-                <Car className="h-16 w-16 text-white" />
-              </div>
-              <h2 className="mt-8 text-3xl font-bold text-white">
-                Join EcoRent Today
-              </h2>
-              <p className="mt-4 max-w-md text-lg text-white/80">
-                Create an account to start renting eco-friendly electric
-                vehicles. Sustainable transportation at your fingertips.
-              </p>
+        {/* Left Side - Video Background */}
+        <div className="relative hidden overflow-hidden lg:block lg:w-1/2">
+          {/* Video Background */}
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+          >
+            <source
+              src="/car video/From KlickPin CF Revolutionizing the Road Tesla Cybertruck Unveiled.mp4"
+              type="video/mp4"
+            />
+          </video>
 
-              {/* Benefits */}
-              <div className="mt-10 space-y-4 text-left">
-                {[
-                  "Access to 500+ electric vehicles",
-                  "Exclusive member discounts",
-                  "24/7 customer support",
-                  "Flexible rental plans",
-                ].map((benefit, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
-                      <Check className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="text-white/90">{benefit}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          {/* Dark Overlay */}
+          <div className="absolute inset-0 bg-black/40" />
         </div>
 
         {/* Right Side - Form */}

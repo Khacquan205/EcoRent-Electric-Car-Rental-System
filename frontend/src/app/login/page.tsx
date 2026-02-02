@@ -176,48 +176,26 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Right Side - Pinterest Video Background */}
+        {/* Right Side - Video Background */}
         <div className="relative hidden overflow-hidden lg:block lg:w-1/2">
-          {/* Pinterest Video Embed */}
-          <div className="absolute inset-0 flex items-center justify-center bg-[#0D4F8C]">
-            <iframe
-              src="https://assets.pinterest.com/ext/embed.html?id=13510867627962850"
-              className="h-[200%] w-[200%] scale-125 border-0"
-              scrolling="no"
-              allowFullScreen
+          {/* Video Background */}
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+          >
+            <source
+              src="/car video/From KlickPin CF Pin by Halit Can on Pins by you _ Fast cars videos Good looking cars Car videos.mp4"
+              type="video/mp4"
             />
-          </div>
+          </video>
 
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1572D3]/70 to-[#0D4F8C]/70" />
+          {/* Dark Overlay */}
+          <div className="absolute inset-0 bg-black/40" />
 
-          {/* Content */}
-          <div className="relative z-10 flex h-full flex-col items-center justify-center p-12 text-center">
-            <div className="rounded-full bg-white/10 p-6 backdrop-blur-sm">
-              <Car className="h-16 w-16 text-white" />
-            </div>
-            <h2 className="mt-8 text-3xl font-bold text-white drop-shadow-lg">
-              Start Your Journey
-            </h2>
-            <p className="mt-4 max-w-md text-lg text-white/90 drop-shadow">
-              Rent eco-friendly electric vehicles and explore the world
-              sustainably. Join thousands of happy customers today.
-            </p>
-            <div className="mt-8 flex items-center gap-4">
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="h-10 w-10 rounded-full border-2 border-white bg-white/20 backdrop-blur-sm"
-                  />
-                ))}
-              </div>
-              <p className="text-sm text-white/90 drop-shadow">
-                <span className="font-semibold text-white">10,000+</span> happy
-                customers
-              </p>
-            </div>
-          </div>
+          
         </div>
       </div>
     </div>
