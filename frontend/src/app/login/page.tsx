@@ -1,48 +1,117 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import * as authApi from "@/lib/authApi";
+import { useAuthSession } from "@/components/AuthSessionProvider";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { setSession } = useAuthSession();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function onLogin() {
+    setIsSubmitting(true);
+    setMessage(null);
+    try {
+      const res = await authApi.login({ email, password });
+      if (!res.success) {
+        setMessage(res.message || "Đăng nhập thất bại");
+        return;
+      }
+
+      if (res.accessToken) {
+        setSession({
+          accessToken: res.accessToken,
+          expiresIn: res.expiresIn,
+          user: res.user,
+          email,
+        });
+      } else {
+        setSession(null);
+      }
+
+      router.push("/");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Đăng nhập thất bại");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
-    <div className="min-h-[calc(100vh-128px)] bg-white">
-      <div className="container mx-auto px-6 py-14">
-        <div className="mx-auto w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm">
-          <h1 className="text-2xl font-semibold text-gray-900">Đăng nhập</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Chào mừng bạn quay lại. Vui lòng nhập thông tin để tiếp tục.
-          </p>
+    <div className="min-h-[calc(100vh-128px)] bg-background">
+      <div className="container mx-auto flex px-6 py-14">
+        <Card className="mx-auto w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl">Đăng nhập</CardTitle>
+            <CardDescription>
+              Chào mừng bạn quay lại. Vui lòng nhập thông tin để tiếp tục.
+            </CardDescription>
+          </CardHeader>
 
-          <form className="mt-6 grid gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700">Email</label>
-              <input
-                type="email"
-                className="mt-1 w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                placeholder="you@example.com"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700">Mật khẩu</label>
-              <input
-                type="password"
-                className="mt-1 w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <button
-              type="button"
-              className="mt-2 inline-flex h-11 items-center justify-center rounded-md bg-emerald-600 px-6 text-sm font-medium text-white hover:bg-emerald-700"
+          <CardContent>
+            <form
+              className="grid gap-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void onLogin();
+              }}
             >
-              Đăng nhập
-            </button>
-          </form>
+              <div className="grid gap-2">
+                <label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
 
-          <p className="mt-6 text-sm text-gray-600">
-            Chưa có tài khoản? {" "}
-            <Link href="/register" className="font-medium text-emerald-700 hover:underline">
-              Đăng ký
-            </Link>
-          </p>
-        </div>
+              <div className="grid gap-2">
+                <label htmlFor="password" className="text-sm font-medium">
+                  Mật khẩu
+                </label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
+              {message && (
+                <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm text-foreground">
+                  {message}
+                </div>
+              )}
+
+              <Button type="submit" disabled={isSubmitting} className="mt-1 h-10 w-full">
+                {isSubmitting ? "Đang xử lý..." : "Đăng nhập"}
+              </Button>
+            </form>
+
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Chưa có tài khoản?{" "}
+              <Link href="/register" className="font-medium text-primary hover:underline">
+                Đăng ký
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

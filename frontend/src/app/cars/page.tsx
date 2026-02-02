@@ -3,11 +3,11 @@ import { cars } from "@/lib/mockCars";
 
 export default function CarsPage() {
   return (
-    <div className="bg-white">
+    <div className="bg-background">
       <div className="container mx-auto px-6 py-10">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-semibold text-gray-900">Sản phẩm</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-semibold">Sản phẩm</h1>
+          <p className="text-muted-foreground">
             Danh sách xe điện (mock data) để bạn xem UI.
           </p>
         </div>
