@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+import { Navbar, Footer } from "@/components/layout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,7 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "EcoWheels - Môi giới thuê xe điện",
-  description: "Nền tảng môi giới thuê xe điện: tìm xe, so sánh và đặt thuê nhanh chóng.",
+  description:
+    "Nền tảng môi giới thuê xe điện: tìm xe, so sánh và đặt thuê nhanh chóng.",
 };
 
 export default function RootLayout({

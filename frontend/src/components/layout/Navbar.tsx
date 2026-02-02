@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/sheet";
 
 const navLinks = [
-  { href: "/become-renter", label: "Become a renter" },
-  { href: "/cars", label: "Rental deals" },
+  { href: "/become-a-renter", label: "Become a renter" },
+  { href: "/vehicles", label: "Vehicles" },
   { href: "/how-it-works", label: "How it work" },
   { href: "/about-us", label: "Why choose us" },
 ];

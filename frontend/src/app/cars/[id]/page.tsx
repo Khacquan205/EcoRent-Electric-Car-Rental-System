@@ -1,167 +1,302 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getCarById, formatVnd } from "@/lib/mockCars";
+import {
+  Star,
+  Users,
+  Gauge,
+  Wind,
+  DoorOpen,
+  ArrowLeft,
+  MapPin,
+  Phone,
+  MessageCircle,
+  Shield,
+  Calendar,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { getPopularCarById, formatUsd, popularCars } from "@/lib/data";
+import { notFound } from "next/navigation";
 
-export default async function CarDetailPage({
-  params,
-}: {
+interface CarDetailPageProps {
   params: Promise<{ id: string }>;
-}) {
+}
+
+export default async function CarDetailPage({ params }: CarDetailPageProps) {
   const { id } = await params;
-  const car = getCarById(id);
+  const car = getPopularCarById(id);
 
   if (!car) {
-    return (
-      <div className="container mx-auto px-6 py-14">
-        <h1 className="text-2xl font-semibold text-gray-900">Không tìm thấy xe</h1>
-        <p className="mt-2 text-gray-600">Xe bạn tìm không tồn tại trong mock data.</p>
-        <Link href="/cars" className="mt-6 inline-block text-emerald-700 hover:underline">
-          Quay lại danh sách xe
-        </Link>
-      </div>
-    );
+    notFound();
   }
 
   return (
-    <div className="bg-white">
-      <div className="container mx-auto px-6 py-10">
-        <Link href="/cars" className="text-sm font-medium text-emerald-700 hover:underline">
-          ← Quay lại
+    <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="container mx-auto px-6 py-8">
+        {/* Back Button */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-sm font-medium text-[#747474] transition-colors hover:text-[#1572D3]"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
         </Link>
 
         <div className="mt-6 grid gap-8 lg:grid-cols-3">
+          {/* Main Content */}
           <div className="lg:col-span-2">
-            <div className="rounded-2xl border bg-white p-6 shadow-sm">
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl">
+            {/* Car Image */}
+            <div className="overflow-hidden rounded-2xl bg-white p-6 shadow-sm">
+              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-[#F5F5F5]">
                 <Image
-                  src={car.images[0]}
+                  src={car.image}
                   alt={car.name}
                   fill
-                  className="object-cover"
+                  className="object-contain p-4"
                   sizes="(max-width: 1024px) 100vw, 66vw"
                   priority
                 />
               </div>
-              <h1 className="mt-5 text-3xl font-semibold text-gray-900">{car.name}</h1>
-              <p className="mt-1 text-gray-600">
-                {car.location} • {car.seats} chỗ • {car.transmission} • {car.rangeKm} km
-              </p>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {car.features.map((f) => (
-                  <span
-                    key={f}
-                    className="inline-flex items-center rounded-full border bg-white px-3 py-1 text-xs font-medium text-gray-700"
-                  >
-                    {f}
-                  </span>
-                ))}
-              </div>
-
-              <div className="mt-6 rounded-xl bg-emerald-50 p-4">
-                <p className="text-sm text-gray-700">Giá tham khảo</p>
-                <p className="mt-1 text-2xl font-semibold text-emerald-700">
-                  {formatVnd(car.pricePerDay)} / ngày
-                </p>
-                <p className="mt-1 text-xs text-gray-600">
-                  *EcoWheels là nền tảng môi giới. Giao dịch/thoả thuận sẽ làm việc trực tiếp với chủ xe.
-                </p>
-              </div>
             </div>
 
-            <div className="mt-8 rounded-2xl border bg-white p-6 shadow-sm">
-              <div className="flex items-end justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Đánh giá</h2>
-                  <p className="mt-1 text-sm text-gray-600">
-                    {car.ratingAvg} / 5 • {car.reviewCount} lượt
-                  </p>
+            {/* Car Details */}
+            <div className="mt-6 overflow-hidden rounded-2xl bg-white p-6 shadow-sm">
+              <h1 className="text-2xl font-bold text-[#242424] lg:text-3xl">
+                {car.name}
+              </h1>
+
+              {/* Rating */}
+              <div className="mt-3 flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-5 w-5 ${
+                        i < Math.floor(car.rating)
+                          ? "fill-[#FFC107] text-[#FFC107]"
+                          : "fill-gray-200 text-gray-200"
+                      }`}
+                    />
+                  ))}
                 </div>
+                <span className="text-lg font-semibold text-[#242424]">
+                  {car.rating}
+                </span>
+                <span className="text-[#747474]">({car.reviews} reviews)</span>
               </div>
 
-              <div className="mt-6 grid gap-4">
-                {car.reviews.map((r) => (
-                  <div key={r.id} className="rounded-xl border p-4">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium text-gray-900">{r.authorName}</p>
-                      <p className="text-xs text-gray-500">{r.createdAt}</p>
-                    </div>
-                    <p className="mt-1 text-sm text-emerald-700">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</p>
-                    <p className="mt-2 text-sm text-gray-700">{r.content}</p>
+              {/* Specifications */}
+              <div className="mt-6">
+                <h2 className="text-lg font-semibold text-[#242424]">
+                  Specifications
+                </h2>
+                <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                  <div className="flex flex-col items-center rounded-xl bg-[#F8FAFC] p-4">
+                    <Users className="h-6 w-6 text-[#1572D3]" />
+                    <span className="mt-2 text-sm font-medium text-[#242424]">
+                      {car.passengers} Passengers
+                    </span>
                   </div>
-                ))}
+                  <div className="flex flex-col items-center rounded-xl bg-[#F8FAFC] p-4">
+                    <Gauge className="h-6 w-6 text-[#1572D3]" />
+                    <span className="mt-2 text-sm font-medium text-[#242424]">
+                      {car.transmission}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center rounded-xl bg-[#F8FAFC] p-4">
+                    <Wind className="h-6 w-6 text-[#1572D3]" />
+                    <span className="mt-2 text-sm font-medium text-[#242424]">
+                      {car.airConditioning ? "AC" : "No AC"}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center rounded-xl bg-[#F8FAFC] p-4">
+                    <DoorOpen className="h-6 w-6 text-[#1572D3]" />
+                    <span className="mt-2 text-sm font-medium text-[#242424]">
+                      {car.doors} Doors
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="mt-8 rounded-2xl border bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-900">Report</h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Báo cáo tin đăng nếu bạn thấy có dấu hiệu lừa đảo hoặc thông tin không chính xác.
-              </p>
+              {/* Features */}
+              <div className="mt-6">
+                <h2 className="text-lg font-semibold text-[#242424]">
+                  Features
+                </h2>
+                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {[
+                    "GPS Navigation",
+                    "Bluetooth",
+                    "USB Charger",
+                    "Backup Camera",
+                    "Cruise Control",
+                    "Leather Seats",
+                  ].map((feature) => (
+                    <div
+                      key={feature}
+                      className="flex items-center gap-2 text-sm text-[#747474]"
+                    >
+                      <Shield className="h-4 w-4 text-[#1572D3]" />
+                      {feature}
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-              <form className="mt-6 grid gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Lý do</label>
-                  <select className="mt-1 w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <option>Thông tin sai lệch</option>
-                    <option>Nghi ngờ lừa đảo</option>
-                    <option>Trùng lặp tin đăng</option>
-                    <option>Khác</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Mô tả thêm</label>
-                  <textarea
-                    rows={4}
-                    className="mt-1 w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    placeholder="Mô tả ngắn gọn..."
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="inline-flex h-11 items-center justify-center rounded-md bg-red-600 px-6 text-sm font-medium text-white hover:bg-red-700"
-                >
-                  Gửi report
-                </button>
-              </form>
+              {/* Description */}
+              <div className="mt-6">
+                <h2 className="text-lg font-semibold text-[#242424]">
+                  Description
+                </h2>
+                <p className="mt-3 leading-relaxed text-[#747474]">
+                  Experience luxury and performance with the {car.name}. This
+                  premium vehicle offers exceptional comfort, cutting-edge
+                  technology, and impressive driving dynamics. Perfect for
+                  business trips, special occasions, or simply enjoying the open
+                  road in style.
+                </p>
+              </div>
             </div>
           </div>
 
-          <aside className="lg:col-span-1">
-            <div className="sticky top-24 rounded-2xl border bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900">Liên hệ chủ xe</h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Bạn có thể chat qua website hoặc gọi trực tiếp.
-              </p>
-
-              <div className="mt-5 rounded-xl border p-4">
-                <p className="text-sm font-medium text-gray-900">{car.owner.name}</p>
-                <p className="mt-1 text-sm text-gray-600">{car.owner.location}</p>
-                <p className="mt-2 text-xs text-gray-500">Phản hồi: {car.owner.responseRate}</p>
+          {/* Sidebar - Booking Card */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24 overflow-hidden rounded-2xl bg-white p-6 shadow-sm">
+              {/* Price */}
+              <div className="text-center">
+                <span className="text-sm text-[#747474]">Price per day</span>
+                <p className="mt-1 text-3xl font-bold text-[#1572D3]">
+                  {formatUsd(car.price)}
+                </p>
               </div>
 
-              <div className="mt-4 grid gap-3">
-                <button
-                  type="button"
-                  className="inline-flex h-11 items-center justify-center rounded-md bg-emerald-600 px-4 text-sm font-medium text-white hover:bg-emerald-700"
-                >
-                  Chat trên EcoWheels
-                </button>
-                <a
-                  href={`tel:${car.owner.phone.replace(/\s/g, "")}`}
-                  className="inline-flex h-11 items-center justify-center rounded-md border border-emerald-600 px-4 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
-                >
-                  Gọi: {car.owner.phone}
-                </a>
+              {/* Divider */}
+              <div className="my-6 border-t border-[#E5E5E5]" />
+
+              {/* Date Selection */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-[#242424]">
+                    Pick-up Date
+                  </label>
+                  <div className="mt-1 flex items-center gap-2 rounded-lg border border-[#E5E5E5] px-3 py-2">
+                    <Calendar className="h-4 w-4 text-[#747474]" />
+                    <input
+                      type="date"
+                      className="w-full text-sm text-[#242424] outline-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-[#242424]">
+                    Return Date
+                  </label>
+                  <div className="mt-1 flex items-center gap-2 rounded-lg border border-[#E5E5E5] px-3 py-2">
+                    <Calendar className="h-4 w-4 text-[#747474]" />
+                    <input
+                      type="date"
+                      className="w-full text-sm text-[#242424] outline-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-[#242424]">
+                    Pick-up Location
+                  </label>
+                  <div className="mt-1 flex items-center gap-2 rounded-lg border border-[#E5E5E5] px-3 py-2">
+                    <MapPin className="h-4 w-4 text-[#747474]" />
+                    <input
+                      type="text"
+                      placeholder="Enter location"
+                      className="w-full text-sm text-[#242424] outline-none placeholder:text-[#B6B6B6]"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="mt-6 rounded-xl bg-sky-50 p-4">
-                <p className="text-xs text-sky-900">
-                  Lưu ý: Không chuyển khoản đặt cọc khi chưa xác minh danh tính chủ xe.
+              {/* Rent Button */}
+              <Button className="mt-6 w-full bg-[#1572D3] py-6 text-white hover:bg-[#1260B0]">
+                Book Now
+              </Button>
+
+              {/* Contact Owner */}
+              <div className="mt-6 rounded-xl bg-[#F8FAFC] p-4">
+                <p className="text-sm font-medium text-[#242424]">
+                  Have questions?
+                </p>
+                <p className="mt-1 text-xs text-[#747474]">
+                  Contact the car owner directly
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 border-[#1572D3] text-[#1572D3]"
+                  >
+                    <Phone className="mr-1 h-4 w-4" />
+                    Call
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 border-[#1572D3] text-[#1572D3]"
+                  >
+                    <MessageCircle className="mr-1 h-4 w-4" />
+                    Chat
+                  </Button>
+                </div>
+              </div>
+
+              {/* Safety Notice */}
+              <div className="mt-4 rounded-xl bg-[#FFF8E6] p-4">
+                <p className="text-xs text-[#996600]">
+                  <strong>Safety Tip:</strong> Always verify the car and owner
+                  before making any payment. Meet in a safe, public location.
                 </p>
               </div>
             </div>
-          </aside>
+          </div>
+        </div>
+
+        {/* Similar Cars */}
+        <div className="mt-12">
+          <h2 className="text-xl font-bold text-[#242424]">Similar Cars</h2>
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {popularCars
+              .filter((c) => c.id !== car.id)
+              .slice(0, 4)
+              .map((similarCar) => (
+                <Link
+                  key={similarCar.id}
+                  href={`/cars/${similarCar.id}`}
+                  className="group overflow-hidden rounded-xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-[#F5F5F5]">
+                    <Image
+                      src={similarCar.image}
+                      alt={similarCar.name}
+                      fill
+                      className="object-contain p-2"
+                      sizes="25vw"
+                    />
+                  </div>
+                  <h3 className="mt-3 font-semibold text-[#242424] group-hover:text-[#1572D3]">
+                    {similarCar.name}
+                  </h3>
+                  <div className="mt-1 flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-[#FFC107] text-[#FFC107]" />
+                    <span className="text-sm text-[#747474]">
+                      {similarCar.rating}
+                    </span>
+                  </div>
+                  <p className="mt-2 font-bold text-[#1572D3]">
+                    {formatUsd(similarCar.price)}
+                    <span className="text-sm font-normal text-[#747474]">
+                      /day
+                    </span>
+                  </p>
+                </Link>
+              ))}
+          </div>
         </div>
       </div>
     </div>
