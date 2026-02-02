@@ -21,101 +21,85 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <section className="relative overflow-visible bg-gradient-to-br from-white via-white to-blue-50">
-        <div className="px-6 py-12 lg:px-12 lg:py-20 xl:px-20">
+    <div className="min-h-screen bg-background">
+      <section className="relative overflow-hidden bg-background">
+        <div className="container mx-auto px-6 py-12 lg:px-12 lg:py-20 xl:px-20">
           <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
-            {/* Left Content */}
             <div className="max-w-xl">
-              <h1 className="text-4xl font-bold leading-tight tracking-tight text-[#242424] md:text-5xl lg:text-6xl">
+              <h1 className="text-4xl font-bold leading-tight tracking-tight text-foreground md:text-5xl lg:text-6xl">
                 Find, book and <br />
-                rent a car{" "}
-                <span className="relative text-[#1572D3]">
-                  Easily
-                  <svg
-                    className="absolute -bottom-2 left-0 w-full"
-                    height="8"
-                    viewBox="0 0 120 8"
-                    fill="none"
-                  >
-                    <path
-                      d="M2 6C20 2 60 2 118 6"
-                      stroke="#1572D3"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </span>
+                rent an electric car{" "}
+                <span className="relative text-primary">easily</span>
               </h1>
-              <p className="mt-6 text-lg leading-relaxed text-[#747474]">
-                Get a car wherever and whenever you need it with your IOS and
-                Android device.
+              <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
+                Thuê xe điện linh hoạt theo giờ/ngày, minh bạch giá và điều khoản, đặt nhanh trên web/mobile.
               </p>
 
-              {/* App Store Buttons */}
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  href="#"
-                  className="inline-flex h-12 items-center gap-2 rounded-lg bg-[#242424] px-4 text-white transition-transform hover:scale-105"
-                >
-                  <svg
-                    className="h-6 w-6"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M17.523 2H6.477C3.467 2 1 4.467 1 7.477v9.046C1 19.533 3.467 22 6.477 22h11.046C20.533 22 23 19.533 23 16.523V7.477C23 4.467 20.533 2 17.523 2zM8.5 17.5l-1-1L11 13l-3.5-3.5 1-1L13 13l-4.5 4.5zm8 0l-4.5-4.5L16.5 8.5l1 1L14 13l3.5 3.5-1 1z" />
-                  </svg>
-                  <div className="text-left">
-                    <div className="text-[10px] uppercase leading-tight opacity-80">
-                      Get it on
+                <Button asChild variant="secondary" className="h-12 px-4">
+                  <Link href="#" className="inline-flex items-center gap-2">
+                    <svg
+                      className="h-6 w-6"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M17.523 2H6.477C3.467 2 1 4.467 1 7.477v9.046C1 19.533 3.467 22 6.477 22h11.046C20.533 22 23 19.533 23 16.523V7.477C23 4.467 20.533 2 17.523 2zM8.5 17.5l-1-1L11 13l-3.5-3.5 1-1L13 13l-4.5 4.5zm8 0l-4.5-4.5L16.5 8.5l1 1L14 13l3.5 3.5-1 1z" />
+                    </svg>
+                    <div className="text-left">
+                      <div className="text-[10px] uppercase leading-tight opacity-80">
+                        Get it on
+                      </div>
+                      <div className="text-sm font-semibold leading-tight">
+                        Google Play
+                      </div>
                     </div>
-                    <div className="text-sm font-semibold leading-tight">
-                      Google Play
+                  </Link>
+                </Button>
+
+                <Button asChild variant="secondary" className="h-12 px-4">
+                  <Link href="#" className="inline-flex items-center gap-2">
+                    <svg
+                      className="h-6 w-6"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+                    </svg>
+                    <div className="text-left">
+                      <div className="text-[10px] uppercase leading-tight opacity-80">
+                        Download on the
+                      </div>
+                      <div className="text-sm font-semibold leading-tight">
+                        App Store
+                      </div>
                     </div>
-                  </div>
-                </Link>
-                <Link
-                  href="#"
-                  className="inline-flex h-12 items-center gap-2 rounded-lg bg-[#242424] px-4 text-white transition-transform hover:scale-105"
-                >
-                  <svg
-                    className="h-6 w-6"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-                  </svg>
-                  <div className="text-left">
-                    <div className="text-[10px] uppercase leading-tight opacity-80">
-                      Download on the
-                    </div>
-                    <div className="text-sm font-semibold leading-tight">
-                      App Store
-                    </div>
-                  </div>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             </div>
 
-            {/* Right Content - Car Image */}
             <div className="relative flex items-center justify-center lg:justify-end">
-              {/* Background Frame */}
               <div className="absolute -right-6 top-1/2 -translate-y-1/2 lg:-right-12 xl:-right-20">
                 <Image
                   src="/Frame.png"
                   alt=""
                   width={700}
                   height={700}
-                  className="h-[400px] w-auto opacity-100 md:h-[500px] lg:h-[600px] xl:h-[700px]"
+                  className="h-[400px] w-auto opacity-60 md:h-[500px] lg:h-[600px] xl:h-[700px]"
                   priority
                 />
               </div>
-              {/* Car Image */}
               <div className="relative z-10 h-[300px] w-full max-w-[800px] md:h-[400px] lg:h-[500px] lg:-mr-12 xl:-mr-20">
                 <Image
                   src="/car 2 1.png"
@@ -130,209 +114,138 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Search Bar */}
         <div className="container mx-auto px-6 pb-12">
-          <div className="relative -mt-4 rounded-2xl bg-white p-6 shadow-lg lg:p-8">
-            <div className="grid gap-4 md:grid-cols-4 md:items-end">
-              {/* Location */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-[#484848]">
-                  <MapPin className="h-4 w-4 text-[#747474]" />
-                  Location
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Search your location"
-                  className="h-12 border-[#E5E5E5] bg-white text-[#242424] placeholder:text-[#ACACAC] focus-visible:ring-[#1572D3]"
-                />
-              </div>
+          <Card className="relative -mt-4">
+            <CardContent className="p-6 lg:p-8">
+              <div className="grid gap-4 md:grid-cols-4 md:items-end">
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    Location
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Search your location"
+                    className="h-12"
+                  />
+                </div>
 
-              {/* Pickup Date */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-[#484848]">
-                  <Calendar className="h-4 w-4 text-[#747474]" />
-                  Pickup date
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Tue 15 Feb, 09:00"
-                  className="h-12 border-[#E5E5E5] bg-white text-[#242424] placeholder:text-[#ACACAC] focus-visible:ring-[#1572D3]"
-                />
-              </div>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    Pickup date
+                  </label>
+                  <Input type="text" placeholder="Tue 15 Feb, 09:00" className="h-12" />
+                </div>
 
-              {/* Return Date */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-[#484848]">
-                  <Calendar className="h-4 w-4 text-[#747474]" />
-                  Return date
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Thu 16 Feb, 11:00"
-                  className="h-12 border-[#E5E5E5] bg-white text-[#242424] placeholder:text-[#ACACAC] focus-visible:ring-[#1572D3]"
-                />
-              </div>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    Return date
+                  </label>
+                  <Input type="text" placeholder="Thu 16 Feb, 11:00" className="h-12" />
+                </div>
 
-              {/* Search Button */}
-              <Button className="h-12 bg-[#1572D3] text-base font-semibold text-white hover:bg-[#1260B0]">
-                <Search className="mr-2 h-5 w-5" />
-                Search
-              </Button>
-            </div>
-          </div>
+                <Button className="h-12 text-base font-semibold">
+                  <Search className="mr-2 h-5 w-5" />
+                  Search
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
-      {/* How It Work Section */}
-      <section className="bg-white py-16 lg:py-24">
+      <section className="bg-background py-16 lg:py-24">
         <div className="container mx-auto px-6">
-          {/* Section Header */}
           <div className="flex flex-col items-center text-center">
-            <span className="inline-flex items-center rounded-full border border-[#1572D3] px-4 py-2 text-sm font-medium text-[#1572D3]">
-              HOW IT WORK
+            <span className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium text-muted-foreground">
+              HOW IT WORKS
             </span>
-            <h2 className="mt-6 text-3xl font-bold text-[#242424] md:text-4xl">
-              Rent with following 3 working steps
+            <h2 className="mt-6 text-3xl font-bold text-foreground md:text-4xl">
+              Thuê xe điện với 3 bước đơn giản
             </h2>
           </div>
 
-          {/* Steps */}
           <div className="mt-12 grid gap-8 md:grid-cols-3 lg:mt-16">
-            {/* Step 1 - Choose Location */}
             <div className="flex flex-col items-center text-center">
-              <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-[#E8F4FD]">
-                <CircleCheckBig className="h-10 w-10 text-[#1572D3]" />
+              <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-muted">
+                <CircleCheckBig className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="mt-6 text-xl font-semibold text-[#242424]">
-                Choose location
+              <h3 className="mt-6 text-xl font-semibold text-foreground">
+                Chọn xe & vị trí
               </h3>
-              <p className="mt-3 text-[#747474]">
-                Choose your and find
+              <p className="mt-3 text-muted-foreground">
+                Chọn xe điện theo nhu cầu
                 <br />
-                your best car
+                và khu vực của bạn
               </p>
             </div>
 
-            {/* Step 2 - Pick-up Date */}
             <div className="flex flex-col items-center text-center">
-              <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-[#E8F4FD]">
-                <CalendarDays className="h-10 w-10 text-[#1572D3]" />
+              <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-muted">
+                <CalendarDays className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="mt-6 text-xl font-semibold text-[#242424]">
-                Pick-up date
+              <h3 className="mt-6 text-xl font-semibold text-foreground">
+                Chọn thời gian
               </h3>
-              <p className="mt-3 text-[#747474]">
-                Select your pick up date and
+              <p className="mt-3 text-muted-foreground">
+                Chọn ngày/giờ nhận xe
                 <br />
-                time to book your car
+                để đặt xe điện nhanh chóng
               </p>
             </div>
 
-            {/* Step 3 - Book Your Car */}
             <div className="flex flex-col items-center text-center">
-              <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-[#E8F4FD]">
-                <Car className="h-10 w-10 text-[#1572D3]" />
+              <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-muted">
+                <Car className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="mt-6 text-xl font-semibold text-[#242424]">
-                Book your car
+              <h3 className="mt-6 text-xl font-semibold text-foreground">
+                Đặt xe & nhận xe
               </h3>
-              <p className="mt-3 text-[#747474]">
-                Book your car and we will deliver
+              <p className="mt-3 text-muted-foreground">
+                Đặt xe điện và nhận xe
                 <br />
-                it directly to you
+                nhanh chóng, minh bạch
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Brand Logos Section */}
-      <section className="border-t border-[#E5E5E5] bg-white py-16 lg:py-30">
+      <section className="border-t bg-background py-16 lg:py-24">
         <div className="container mx-auto px-6">
           <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16 lg:justify-between">
-            {/* Honda */}
-            <div className="flex items-center gap-2 text-[#242424] opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-              <svg
-                className="h-8 w-auto"
-                viewBox="0 0 100 20"
-                fill="currentColor"
-              >
-                <text
-                  x="0"
-                  y="16"
-                  fontSize="18"
-                  fontWeight="bold"
-                  fontFamily="Arial"
-                >
+            <div className="flex items-center gap-2 text-foreground opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
+              <svg className="h-8 w-auto" viewBox="0 0 100 20" fill="currentColor">
+                <text x="0" y="16" fontSize="18" fontWeight="bold" fontFamily="Arial">
                   HONDA
                 </text>
               </svg>
             </div>
-            {/* Jaguar */}
-            <div className="flex items-center gap-2 text-[#242424] opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-              <svg
-                className="h-8 w-auto"
-                viewBox="0 0 120 20"
-                fill="currentColor"
-              >
-                <text
-                  x="0"
-                  y="16"
-                  fontSize="18"
-                  fontWeight="bold"
-                  fontFamily="serif"
-                  letterSpacing="2"
-                >
+            <div className="flex items-center gap-2 text-foreground opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
+              <svg className="h-8 w-auto" viewBox="0 0 120 20" fill="currentColor">
+                <text x="0" y="16" fontSize="18" fontWeight="bold" fontFamily="serif" letterSpacing="2">
                   JAGUAR
                 </text>
               </svg>
             </div>
-            {/* Nissan */}
-            <div className="flex items-center gap-2 text-[#242424] opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-              <svg
-                className="h-8 w-auto"
-                viewBox="0 0 100 20"
-                fill="currentColor"
-              >
-                <text
-                  x="0"
-                  y="16"
-                  fontSize="16"
-                  fontWeight="bold"
-                  fontFamily="Arial"
-                >
+            <div className="flex items-center gap-2 text-foreground opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
+              <svg className="h-8 w-auto" viewBox="0 0 100 20" fill="currentColor">
+                <text x="0" y="16" fontSize="16" fontWeight="bold" fontFamily="Arial">
                   NISSAN
                 </text>
               </svg>
             </div>
-            {/* Volvo */}
-            <div className="flex items-center gap-2 text-[#242424] opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-              <svg
-                className="h-8 w-auto"
-                viewBox="0 0 100 20"
-                fill="currentColor"
-              >
-                <text
-                  x="0"
-                  y="16"
-                  fontSize="16"
-                  fontWeight="bold"
-                  fontFamily="Arial"
-                  letterSpacing="4"
-                >
+            <div className="flex items-center gap-2 text-foreground opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
+              <svg className="h-8 w-auto" viewBox="0 0 100 20" fill="currentColor">
+                <text x="0" y="16" fontSize="16" fontWeight="bold" fontFamily="Arial" letterSpacing="4">
                   VOLVO
                 </text>
               </svg>
             </div>
-            {/* Audi */}
-            <div className="flex items-center gap-2 text-[#242424] opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-              <svg
-                className="h-8 w-auto"
-                viewBox="0 0 80 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
+            <div className="flex items-center gap-2 text-foreground opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
+              <svg className="h-8 w-auto" viewBox="0 0 80 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <circle cx="28" cy="12" r="10" />
                 <circle cx="44" cy="12" r="10" />
@@ -343,24 +256,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Choose Us Section */}
-      <section className="relative overflow-hidden bg-white py-16 lg:py-24">
-        {/* Background Triangle Shape */}
-        <div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2">
+      <section className="relative overflow-hidden bg-background py-16 lg:py-24">
+        <div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 opacity-20">
           <Image
             src="/Vector.png"
             alt=""
             width={600}
             height={600}
-            className="h-[500px] w-auto opacity-100 lg:h-[700px]"
+            className="h-[500px] w-auto lg:h-[700px]"
           />
         </div>
 
         <div className="container mx-auto px-6">
           <div className="grid items-center gap-12 lg:grid-cols-2">
-            {/* Left Content - Car Image */}
             <div className="relative flex items-center justify-start">
-              <div className="relative z-10 -ml-12 h-[300px] w-full max-w-[600px] md:h-[400px] lg:-ml-">
+              <div className="relative z-10 -ml-12 h-[300px] w-full max-w-[600px] md:h-[400px]">
                 <Image
                   src="/Audi 1.png"
                   alt="Silver Audi R8 sports car"
@@ -371,78 +281,71 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right Content */}
             <div>
-              {/* Section Header */}
-              <span className="inline-flex items-center rounded-full border border-[#1572D3] px-4 py-2 text-sm font-medium text-[#1572D3]">
-                WHY CHOOSE US
+              <span className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium text-muted-foreground">
+                VÌ SAO CHỌN ECOWHEELS
               </span>
-              <h2 className="mt-6 text-3xl font-bold text-[#242424] md:text-4xl">
-                We offer the best experience
+              <h2 className="mt-6 text-3xl font-bold text-foreground md:text-4xl">
+                Trải nghiệm thuê xe điện
                 <br />
-                with our rental deals
+                an toàn và minh bạch
               </h2>
 
-              {/* Features List */}
               <div className="mt-8 space-y-6">
-                {/* Feature 1 - Best price guaranteed */}
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#E8F4FD]">
-                    <BadgeDollarSign className="h-6 w-6 text-[#1572D3]" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-muted">
+                    <BadgeDollarSign className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-[#242424]">
+                    <h3 className="text-lg font-semibold text-foreground">
                       Best price guaranteed
                     </h3>
-                    <p className="mt-1 text-[#747474]">
+                    <p className="mt-1 text-muted-foreground">
                       Find a lower price? We&apos;ll refund you 100% of the
                       difference.
                     </p>
                   </div>
                 </div>
 
-                {/* Feature 2 - Experience driver */}
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#E8F4FD]">
-                    <UserCheck className="h-6 w-6 text-[#1572D3]" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-muted">
+                    <UserCheck className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-[#242424]">
+                    <h3 className="text-lg font-semibold text-foreground">
                       Experience driver
                     </h3>
-                    <p className="mt-1 text-[#747474]">
+                    <p className="mt-1 text-muted-foreground">
                       Don&apos;t have driver? Don&apos;t worry, we have many
                       experienced driver for you.
                     </p>
                   </div>
                 </div>
 
-                {/* Feature 3 - 24 hour car delivery */}
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#E8F4FD]">
-                    <Truck className="h-6 w-6 text-[#1572D3]" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-muted">
+                    <Truck className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-[#242424]">
+                    <h3 className="text-lg font-semibold text-foreground">
                       24 hour car delivery
                     </h3>
-                    <p className="mt-1 text-[#747474]">
+                    <p className="mt-1 text-muted-foreground">
                       Book your car anytime and we will deliver it directly to
                       you.
                     </p>
                   </div>
                 </div>
 
-                {/* Feature 4 - 24/7 technical support */}
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#E8F4FD]">
-                    <Headphones className="h-6 w-6 text-[#1572D3]" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-muted">
+                    <Headphones className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-[#242424]">
+                    <h3 className="text-lg font-semibold text-foreground">
                       24/7 technical support
                     </h3>
-                    <p className="mt-1 text-[#747474]">
+                    <p className="mt-1 text-muted-foreground">
                       Have a question? Contact Rentcars support any time when
                       you have problem.
                     </p>
@@ -454,20 +357,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Popular Rental Deals Section */}
-      <section className="bg-[#F8FAFC] py-16 lg:py-24">
+      <section className="bg-background py-16 lg:py-24">
         <div className="container mx-auto px-6">
-          {/* Section Header */}
           <div className="flex flex-col items-center text-center">
-            <span className="inline-flex items-center rounded-full border border-[#1572D3] px-4 py-2 text-sm font-medium text-[#1572D3]">
-              POPULAR RENTAL DEALS
+            <span className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium text-muted-foreground">
+              XE ĐIỆN NỔI BẬT
             </span>
-            <h2 className="mt-6 text-3xl font-bold text-[#242424] md:text-4xl">
-              Most popular cars rental deals
+            <h2 className="mt-6 text-3xl font-bold text-foreground md:text-4xl">
+              Các mẫu xe điện được quan tâm nhiều
             </h2>
           </div>
 
-          {/* Car Cards Grid */}
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
@@ -515,83 +415,76 @@ export default function Home() {
                 price: 2300,
               },
             ].map((car) => (
-              <div
-                key={car.name}
-                className="group rounded-2xl border border-[#E5E5E5] bg-white p-4 transition-shadow hover:shadow-lg"
-              >
-                {/* Car Image */}
-                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-[#F5F5F5]">
-                  <Image
-                    src={car.image}
-                    alt={car.name}
-                    fill
-                    className="object-contain p-2"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                  />
-                </div>
+              <Card key={car.name} className="group">
+                <CardContent className="p-4">
+                  <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-muted">
+                    <Image
+                      src={car.image}
+                      alt={car.name}
+                      fill
+                      className="object-contain p-2"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                    />
+                  </div>
 
-                {/* Car Info */}
-                <div className="mt-4">
-                  <h3 className="text-lg font-semibold text-[#242424]">
-                    {car.name}
-                  </h3>
-                  <div className="mt-1 flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-[#FFC107] text-[#FFC107]" />
-                    <span className="text-sm font-medium text-[#242424]">
-                      {car.rating}
-                    </span>
-                    <span className="text-sm text-[#747474]">
-                      ({car.reviews} reviews)
-                    </span>
-                  </div>
-                </div>
-
-                {/* Specifications */}
-                <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-[#747474]">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    <span>{car.passengers} Passagers</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Gauge className="h-4 w-4" />
-                    <span>{car.transmission}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Wind className="h-4 w-4" />
-                    <span>Air Conditioning</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <DoorOpen className="h-4 w-4" />
-                    <span>{car.doors} Doors</span>
-                  </div>
-                </div>
-
-                {/* Price and Button */}
-                <div className="mt-4 flex items-center justify-between border-t border-[#E5E5E5] pt-4">
-                  <div>
-                    <span className="text-sm text-[#747474]">Price</span>
-                    <p className="text-lg font-bold text-[#242424]">
-                      ${car.price.toLocaleString()}
-                      <span className="text-sm font-normal text-[#747474]">
-                        /day
+                  <div className="mt-4">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {car.name}
+                    </h3>
+                    <div className="mt-1 flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-primary text-primary" />
+                      <span className="text-sm font-medium text-foreground">
+                        {car.rating}
                       </span>
-                    </p>
+                      <span className="text-sm text-muted-foreground">
+                        ({car.reviews} reviews)
+                      </span>
+                    </div>
                   </div>
-                  <Button className="bg-[#1572D3] text-white hover:bg-[#1260B0]">
-                    Rent Now
-                    <ArrowRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      <span>{car.passengers} Passagers</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Gauge className="h-4 w-4" />
+                      <span>{car.transmission}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Wind className="h-4 w-4" />
+                      <span>Air Conditioning</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <DoorOpen className="h-4 w-4" />
+                      <span>{car.doors} Doors</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between border-t pt-4">
+                    <div>
+                      <span className="text-sm text-muted-foreground">
+                        Price
+                      </span>
+                      <p className="text-lg font-bold text-foreground">
+                        ${car.price.toLocaleString()}
+                        <span className="text-sm font-normal text-muted-foreground">
+                          /day
+                        </span>
+                      </p>
+                    </div>
+                    <Button>
+                      Rent Now
+                      <ArrowRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
 
-          {/* Show All Button */}
           <div className="mt-10 flex justify-center">
-            <Button
-              variant="outline"
-              className="border-[#E5E5E5] text-[#484848] hover:bg-[#F5F5F5]"
-            >
+            <Button variant="outline">
               Show all vehicles
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
@@ -599,28 +492,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="relative overflow-hidden bg-[#F0F7FF] py-16 lg:py-24">
-        {/* Background Quote Marks */}
-        <div className="pointer-events-none absolute left-10 top-10 text-[200px] font-serif leading-none text-[#1572D3] opacity-10">
-          "
-        </div>
-        <div className="pointer-events-none absolute right-10 top-10 text-[200px] font-serif leading-none text-[#1572D3] opacity-10">
-          "
-        </div>
-
+      <section className="relative overflow-hidden bg-background py-16 lg:py-24">
         <div className="container mx-auto px-6">
-          {/* Section Header */}
           <div className="flex flex-col items-center text-center">
-            <span className="inline-flex items-center rounded-full border border-[#1572D3] px-4 py-2 text-sm font-medium text-[#1572D3]">
+            <span className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium text-muted-foreground">
               TESTIMONIALS
             </span>
-            <h2 className="mt-6 text-3xl font-bold text-[#242424] md:text-4xl">
-              What people say about us?
+            <h2 className="mt-6 text-3xl font-bold text-foreground md:text-4xl">
+              Khách hàng nói gì về EcoWheels?
             </h2>
           </div>
 
-          {/* Testimonials Grid */}
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {[
               {
@@ -647,12 +529,11 @@ export default function Home() {
                 review:
                   "The service exceeded my expectations. Easy booking process and the car was in perfect condition. Highly recommended!",
               },
-            ].map((testimonial, index) => (
-              <div
+            ].map((testimonial) => (
+              <Card
                 key={testimonial.name}
-                className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-lg md:flex-row"
+                className="group flex flex-col overflow-hidden md:flex-row"
               >
-                {/* Image */}
                 <div className="relative h-48 w-full shrink-0 md:h-auto md:w-48">
                   <Image
                     src={testimonial.image}
@@ -663,40 +544,38 @@ export default function Home() {
                   />
                 </div>
 
-                {/* Content */}
-                <div className="flex flex-1 flex-col justify-center p-6">
-                  {/* Rating */}
+                <CardContent className="flex flex-1 flex-col justify-center p-6">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-[#242424]">
+                    <span className="text-3xl font-bold text-foreground">
                       {testimonial.rating.toFixed(1)}
                     </span>
-                    <span className="text-lg text-[#747474]">stars</span>
+                    <span className="text-lg text-muted-foreground">
+                      stars
+                    </span>
                   </div>
                   <div className="mt-1 flex gap-0.5">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className="h-4 w-4 fill-[#FFC107] text-[#FFC107]"
+                        className="h-4 w-4 fill-primary text-primary"
                       />
                     ))}
                   </div>
 
-                  {/* Review Text */}
-                  <p className="mt-4 text-sm leading-relaxed text-[#747474]">
+                  <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                     &ldquo;{testimonial.review}&rdquo;
                   </p>
 
-                  {/* Author */}
                   <div className="mt-4">
-                    <p className="font-semibold text-[#242424]">
+                    <p className="font-semibold text-foreground">
                       {testimonial.name}
                     </p>
-                    <p className="text-sm text-[#747474]">
+                    <p className="text-sm text-muted-foreground">
                       {testimonial.location}
                     </p>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
