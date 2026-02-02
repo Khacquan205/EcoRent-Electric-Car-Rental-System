@@ -14,14 +14,14 @@ async function proxy(request: Request) {
   // Ensure host-related headers don't confuse the backend
   headers.delete("host");
 
-  const res = await fetch(target, {
+  const init: RequestInit = {
     method: request.method,
     headers,
     body: request.method === "GET" || request.method === "HEAD" ? undefined : request.body,
-    // Required by Node.js fetch when streaming a request body
-    duplex: "half",
     redirect: "manual",
-  });
+  };
+
+  const res = await fetch(target, init);
 
   const responseHeaders = new Headers(res.headers);
   // Avoid leaking backend-specific encoding headers that can cause issues in proxies

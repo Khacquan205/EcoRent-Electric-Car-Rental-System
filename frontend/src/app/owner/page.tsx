@@ -27,7 +27,7 @@ export default function OwnerPage() {
     setIsSubmitting(true);
     setResult("");
     try {
-      const res = await ownerApi.verifyIdentity({ code: Number(code) });
+      const res = await ownerApi.verifyIdentity();
       setResult(JSON.stringify(res, null, 2));
     } catch (e) {
       setResult(e instanceof Error ? e.message : "Verify failed");
