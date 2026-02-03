@@ -16,14 +16,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getCarById, formatVnd } from "@/lib/mockCars";
+import { getCarById, formatVnd } from "@/lib/data/cars";
 
+// Sửa lại kiểu tham số cho đúng
 export default async function CarDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
+  // Lấy id từ params
+  const { id } = params;
+  // Gọi đúng hàm lấy dữ liệu xe
   const car = getCarById(id);
 
   if (!car) {
@@ -56,6 +59,7 @@ export default async function CarDetailPage({
         </Button>
 
         <div className="mt-6 grid gap-8 lg:grid-cols-3">
+          {/* Main Content */}
           <div className="lg:col-span-2">
             <Card>
               <CardContent>
@@ -72,11 +76,12 @@ export default async function CarDetailPage({
 
                 <h1 className="mt-5 text-3xl font-semibold">{car.name}</h1>
                 <p className="mt-1 text-muted-foreground">
-                  {car.location} • {car.seats} chỗ • {car.transmission} • {car.rangeKm} km
+                  {car.location} • {car.seats} chỗ • {car.transmission} •{" "}
+                  {car.rangeKm} km
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {car.features.map((f) => (
+                  {car.features.map((f: any) => (
                     <span
                       key={f}
                       className="inline-flex items-center rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground"
@@ -92,7 +97,8 @@ export default async function CarDetailPage({
                     {formatVnd(car.pricePerDay)} / ngày
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    *EcoWheels là nền tảng môi giới. Giao dịch/thoả thuận sẽ làm việc trực tiếp với chủ xe.
+                    *EcoWheels là nền tảng môi giới. Giao dịch/thoả thuận sẽ làm
+                    việc trực tiếp với chủ xe.
                   </p>
                 </div>
               </CardContent>
@@ -107,16 +113,24 @@ export default async function CarDetailPage({
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4">
-                  {car.reviews.map((r) => (
-                    <div key={r.id} className="rounded-xl border bg-background p-4">
+                  {car.reviews.map((r: any) => (
+                    <div
+                      key={r.id}
+                      className="rounded-xl border bg-background p-4"
+                    >
                       <div className="flex items-center justify-between gap-3">
                         <p className="font-medium">{r.authorName}</p>
-                        <p className="text-xs text-muted-foreground">{r.createdAt}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {r.createdAt}
+                        </p>
                       </div>
                       <p className="mt-1 text-sm text-primary">
-                        {"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}
+                        {"★".repeat(r.rating)}
+                        {"☆".repeat(5 - r.rating)}
                       </p>
-                      <p className="mt-2 text-sm text-muted-foreground">{r.content}</p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        {r.content}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -127,13 +141,17 @@ export default async function CarDetailPage({
               <CardHeader>
                 <CardTitle className="text-xl">Report</CardTitle>
                 <CardDescription>
-                  Báo cáo tin đăng nếu bạn thấy có dấu hiệu lừa đảo hoặc thông tin không chính xác.
+                  Báo cáo tin đăng nếu bạn thấy có dấu hiệu lừa đảo hoặc thông
+                  tin không chính xác.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form className="grid gap-4">
                   <div className="grid gap-2">
-                    <label htmlFor="reportReason" className="text-sm font-medium">
+                    <label
+                      htmlFor="reportReason"
+                      className="text-sm font-medium"
+                    >
                       Lý do
                     </label>
                     <Select>
@@ -141,9 +159,13 @@ export default async function CarDetailPage({
                         <SelectValue placeholder="Chọn lý do" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="wrong-info">Thông tin sai lệch</SelectItem>
+                        <SelectItem value="wrong-info">
+                          Thông tin sai lệch
+                        </SelectItem>
                         <SelectItem value="scam">Nghi ngờ lừa đảo</SelectItem>
-                        <SelectItem value="duplicate">Trùng lặp tin đăng</SelectItem>
+                        <SelectItem value="duplicate">
+                          Trùng lặp tin đăng
+                        </SelectItem>
                         <SelectItem value="other">Khác</SelectItem>
                       </SelectContent>
                     </Select>
@@ -153,7 +175,11 @@ export default async function CarDetailPage({
                     <label htmlFor="reportNote" className="text-sm font-medium">
                       Mô tả thêm
                     </label>
-                    <Textarea id="reportNote" rows={4} placeholder="Mô tả ngắn gọn..." />
+                    <Textarea
+                      id="reportNote"
+                      rows={4}
+                      placeholder="Mô tả ngắn gọn..."
+                    />
                   </div>
 
                   <Button type="button" variant="destructive" className="h-10">
@@ -176,7 +202,9 @@ export default async function CarDetailPage({
               <CardContent>
                 <div className="rounded-xl border bg-background p-4">
                   <p className="text-sm font-medium">{car.owner.name}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{car.owner.location}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {car.owner.location}
+                  </p>
                   <p className="mt-2 text-xs text-muted-foreground">
                     Phản hồi: {car.owner.responseRate}
                   </p>
@@ -186,7 +214,12 @@ export default async function CarDetailPage({
                   <Button type="button" className="h-11">
                     Chat trên EcoWheels
                   </Button>
-                  <Button asChild type="button" variant="outline" className="h-11">
+                  <Button
+                    asChild
+                    type="button"
+                    variant="outline"
+                    className="h-11"
+                  >
                     <a href={`tel:${car.owner.phone.replace(/\s/g, "")}`}>
                       Gọi: {car.owner.phone}
                     </a>
@@ -195,7 +228,8 @@ export default async function CarDetailPage({
 
                 <div className="mt-6 rounded-xl border bg-muted/30 p-4">
                   <p className="text-xs text-muted-foreground">
-                    Lưu ý: Không chuyển khoản đặt cọc khi chưa xác minh danh tính chủ xe.
+                    Lưu ý: Không chuyển khoản đặt cọc khi chưa xác minh danh
+                    tính chủ xe.
                   </p>
                 </div>
               </CardContent>

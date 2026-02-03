@@ -34,7 +34,9 @@ export default function RegisterPage() {
         return;
       }
 
-      setMessage(res.message || "Đăng ký thành công. Vui lòng nhập OTP để xác thực.");
+      setMessage(
+        res.message || "Đăng ký thành công. Vui lòng nhập OTP để xác thực.",
+      );
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Đăng ký thất bại");
     } finally {
@@ -52,7 +54,10 @@ export default function RegisterPage() {
         return;
       }
 
-      setMessage(res.message || "Xác thực thành công. Đang chuyển sang trang đăng nhập...");
+      setMessage(
+        res.message ||
+          "Xác thực thành công. Đang chuyển sang trang đăng nhập...",
+      );
       router.push(`/login?email=${encodeURIComponent(email)}`);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Xác thực thất bại");
@@ -139,7 +144,11 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              <Button type="submit" disabled={isSubmitting} className="mt-1 h-10 w-full">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="mt-1 h-10 w-full"
+              >
                 {isSubmitting ? "Đang xử lý..." : "Tạo tài khoản"}
               </Button>
 
@@ -186,7 +195,10 @@ export default function RegisterPage() {
           <CardFooter className="justify-center">
             <p className="text-center text-sm text-muted-foreground">
               Đã có tài khoản?{" "}
-              <Link href="/login" className="font-medium text-primary hover:underline">
+              <Link
+                href="/login"
+                className="font-medium text-primary hover:underline"
+              >
                 Đăng nhập
               </Link>
             </p>
