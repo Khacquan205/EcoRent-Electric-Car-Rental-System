@@ -8,7 +8,6 @@ import {
   DoorOpen,
   ArrowLeft,
   MapPin,
-  Phone,
   MessageCircle,
   Shield,
   Heart,
@@ -303,20 +302,20 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
                     </span>
                     <Info className="h-4 w-4 text-[#B6B6B6]" />
                   </div>
-                  <div className="mt-8 relative">
+                  <div className="relative mt-8">
                     {/* Price tag positioned above the dot */}
                     <div
                       className="absolute -top-7 -translate-x-1/2"
                       style={{ left: "30%" }}
                     >
-                      <span className="rounded bg-[#1572D3] px-2 py-1 text-xs font-medium text-white whitespace-nowrap">
+                      <span className="whitespace-nowrap rounded bg-[#1572D3] px-2 py-1 text-xs font-medium text-white">
                         {formatUsd(car.price)}
                       </span>
                     </div>
                     {/* Progress bar with gradient */}
                     <div className="relative h-2 rounded-full bg-gradient-to-r from-green-400 via-yellow-400 to-red-400">
                       <div
-                        className="absolute top-1/2 h-4 w-4 -translate-y-1/2 -translate-x-1/2 rounded-full border-2 border-white bg-[#1572D3] shadow"
+                        className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#1572D3] shadow"
                         style={{ left: "30%" }}
                       />
                     </div>
@@ -327,7 +326,6 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
                   </div>
                 </div>
 
-                {/* Action Buttons */}
                 {/* Action Buttons */}
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <Button
@@ -373,7 +371,7 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
                       sizes="48px"
                     />
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h3 className="truncate font-semibold text-[#242424]">
                       {ownerInfo.name}
                     </h3>

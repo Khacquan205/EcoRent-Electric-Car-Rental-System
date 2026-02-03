@@ -1,4 +1,6 @@
-﻿namespace CAR.Domain.Entities
+﻿using CAR.Domain.Enums;
+
+namespace CAR.Domain.Entities
 {
     public class MOwnerPackage
     {
@@ -12,7 +14,7 @@
         public int MaxPosts { get; set; }
 
         public int PriorityLevel { get; set; }
-        public int Status { get; set; }
+        public OwnerPackageStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }

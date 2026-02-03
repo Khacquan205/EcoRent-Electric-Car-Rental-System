@@ -8,86 +8,71 @@ namespace CAR.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<MPost> builder)
         {
-            // TABLE
             builder.ToTable("MPost");
 
-            // PRIMARY KEY
             builder.HasKey(x => x.Id);
 
-            // ID
             builder.Property(x => x.Id)
-                   .HasColumnName("id")
-                   .ValueGeneratedOnAdd()
-                   .IsRequired();
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd()
+                .IsRequired();
 
-            // OWNER ID
             builder.Property(x => x.OwnerId)
-                   .HasColumnName("owner_id")
-                   .IsRequired();
+                .HasColumnName("owner_id")
+                .IsRequired();
 
-            // CATEGORY ID
             builder.Property(x => x.CategoryId)
-                   .HasColumnName("category_id")
-                   .IsRequired();
+                .HasColumnName("category_id")
+                .IsRequired();
 
-            // LOCATION ID (nullable)
             builder.Property(x => x.LocationId)
-                   .HasColumnName("location_id")
-                   .IsRequired(false);
+                .HasColumnName("location_id");
 
-            // TITLE
             builder.Property(x => x.Title)
-                   .HasColumnName("title")
-                   .HasMaxLength(255)
-                   .IsRequired();
+                .HasColumnName("title")
+                .HasMaxLength(255)
+                .IsRequired();
 
-            // DESCRIPTION
             builder.Property(x => x.Description)
-                   .HasColumnName("description")
-                   .HasColumnType("nvarchar(max)")
-                   .IsRequired(false);
+                .HasColumnName("description");
 
-            // PRICE
             builder.Property(x => x.Price)
-                   .HasColumnName("price")
-                   .HasColumnType("decimal(18,2)")
-                   .IsRequired();
+                .HasColumnName("price")
+                .HasColumnType("numeric(18,2)")
+                .IsRequired();
 
-            // CONTACT PHONE
             builder.Property(x => x.ContactPhone)
-                   .HasColumnName("contact_phone")
-                   .HasMaxLength(20)
-                   .IsRequired(false);
+                .HasColumnName("contact_phone")
+                .HasMaxLength(20);
 
-            // STATUS
             builder.Property(x => x.Status)
-                   .HasColumnName("status")
-                   .HasColumnType("smallint")
-                   .IsRequired();
+                .HasColumnName("status")
+                .HasColumnType("smallint")
+                .IsRequired();
 
-            // PRIORITY LEVEL
+            builder.Property(x => x.StaffId)
+                .HasColumnName("staff_id");
+
+            builder.Property(x => x.RejectReason)
+                .HasColumnName("reject_reason");
+
             builder.Property(x => x.PriorityLevel)
-                   .HasColumnName("priority_level")
-                   .HasColumnType("smallint")
-                   .IsRequired();
+                .HasColumnName("priority_level")
+                .HasColumnType("smallint")
+                .IsRequired();
 
-            // EXPIRED AT (nullable)
             builder.Property(x => x.ExpiredAt)
-                   .HasColumnName("expired_at")
-                   .HasColumnType("datetime")
-                   .IsRequired(false);
+                .HasColumnName("expired_at")
+                .HasColumnType("timestamptz");
 
-            // CREATED AT
             builder.Property(x => x.CreatedAt)
-                   .HasColumnName("created_at")
-                   .HasColumnType("datetime")
-                   .IsRequired();
+                .HasColumnName("created_at")
+                .HasColumnType("timestamptz")
+                .IsRequired();
 
-            // UPDATED AT (nullable)
             builder.Property(x => x.UpdatedAt)
-                   .HasColumnName("updated_at")
-                   .HasColumnType("datetime")
-                   .IsRequired(false);
+                .HasColumnName("updated_at")
+                .HasColumnType("timestamptz");
         }
     }
 }
