@@ -14,16 +14,19 @@ async function proxy(request: Request) {
   // Ensure host-related headers don't confuse the backend
   headers.delete("host");
 
+  const method = request.method.toUpperCase();
+  const hasBody = method !== "GET" && method !== "HEAD";
+
   const init: RequestInit & { duplex?: "half" } = {
-    method: request.method,
+    method,
     headers,
-    body: request.method === "GET" || request.method === "HEAD" ? undefined : request.body,
+    body: hasBody ? request.body : undefined,
     redirect: "manual",
   };
 
-  // Node.js fetch requires `duplex: "half"` when sending a streaming request body.
-  // Next/TS types don't always include it, so we add it conditionally.
-  if (init.body) {
+  // Node.js fetch requires `duplex: "half"` when sending a body (streaming).
+  // Some runtimes require it even if body is present but not yet readable, so set by method.
+  if (hasBody) {
     init.duplex = "half";
   }
 
