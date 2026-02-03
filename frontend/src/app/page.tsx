@@ -1,7 +1,3 @@
-"use client";
-
-import Link from "next/link";
-import Image from "next/image";
 import {
   MapPin,
   Calendar,
@@ -29,6 +25,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -43,7 +41,8 @@ export default function Home() {
                 <span className="relative text-primary">easily</span>
               </h1>
               <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
-                Thuê xe điện linh hoạt theo giờ/ngày, minh bạch giá và điều khoản, đặt nhanh trên web/mobile.
+                Thuê xe điện linh hoạt theo giờ/ngày, minh bạch giá và điều
+                khoản, đặt nhanh trên web/mobile.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -135,7 +134,11 @@ export default function Home() {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     Pickup date
                   </label>
-                  <Input type="text" placeholder="Tue 15 Feb, 09:00" className="h-12" />
+                  <Input
+                    type="text"
+                    placeholder="Tue 15 Feb, 09:00"
+                    className="h-12"
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -143,7 +146,11 @@ export default function Home() {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     Return date
                   </label>
-                  <Input type="text" placeholder="Thu 16 Feb, 11:00" className="h-12" />
+                  <Input
+                    type="text"
+                    placeholder="Thu 16 Feb, 11:00"
+                    className="h-12"
+                  />
                 </div>
 
                 <Button className="h-12 text-base font-semibold">
@@ -217,35 +224,83 @@ export default function Home() {
         <div className="container mx-auto px-6">
           <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16 lg:justify-between">
             <div className="flex items-center gap-2 text-foreground opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-              <svg className="h-8 w-auto" viewBox="0 0 100 20" fill="currentColor">
-                <text x="0" y="16" fontSize="18" fontWeight="bold" fontFamily="Arial">
+              <svg
+                className="h-8 w-auto"
+                viewBox="0 0 100 20"
+                fill="currentColor"
+              >
+                <text
+                  x="0"
+                  y="16"
+                  fontSize="18"
+                  fontWeight="bold"
+                  fontFamily="Arial"
+                >
                   HONDA
                 </text>
               </svg>
             </div>
             <div className="flex items-center gap-2 text-foreground opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-              <svg className="h-8 w-auto" viewBox="0 0 120 20" fill="currentColor">
-                <text x="0" y="16" fontSize="18" fontWeight="bold" fontFamily="serif" letterSpacing="2">
+              <svg
+                className="h-8 w-auto"
+                viewBox="0 0 120 20"
+                fill="currentColor"
+              >
+                <text
+                  x="0"
+                  y="16"
+                  fontSize="18"
+                  fontWeight="bold"
+                  fontFamily="serif"
+                  letterSpacing="2"
+                >
                   JAGUAR
                 </text>
               </svg>
             </div>
             <div className="flex items-center gap-2 text-foreground opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-              <svg className="h-8 w-auto" viewBox="0 0 100 20" fill="currentColor">
-                <text x="0" y="16" fontSize="16" fontWeight="bold" fontFamily="Arial">
+              <svg
+                className="h-8 w-auto"
+                viewBox="0 0 100 20"
+                fill="currentColor"
+              >
+                <text
+                  x="0"
+                  y="16"
+                  fontSize="16"
+                  fontWeight="bold"
+                  fontFamily="Arial"
+                >
                   NISSAN
                 </text>
               </svg>
             </div>
             <div className="flex items-center gap-2 text-foreground opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-              <svg className="h-8 w-auto" viewBox="0 0 100 20" fill="currentColor">
-                <text x="0" y="16" fontSize="16" fontWeight="bold" fontFamily="Arial" letterSpacing="4">
+              <svg
+                className="h-8 w-auto"
+                viewBox="0 0 100 20"
+                fill="currentColor"
+              >
+                <text
+                  x="0"
+                  y="16"
+                  fontSize="16"
+                  fontWeight="bold"
+                  fontFamily="Arial"
+                  letterSpacing="4"
+                >
                   VOLVO
                 </text>
               </svg>
             </div>
             <div className="flex items-center gap-2 text-foreground opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-              <svg className="h-8 w-auto" viewBox="0 0 80 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                className="h-8 w-auto"
+                viewBox="0 0 80 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <circle cx="12" cy="12" r="10" />
                 <circle cx="28" cy="12" r="10" />
                 <circle cx="44" cy="12" r="10" />
@@ -549,9 +604,7 @@ export default function Home() {
                     <span className="text-3xl font-bold text-foreground">
                       {testimonial.rating.toFixed(1)}
                     </span>
-                    <span className="text-lg text-muted-foreground">
-                      stars
-                    </span>
+                    <span className="text-lg text-muted-foreground">stars</span>
                   </div>
                   <div className="mt-1 flex gap-0.5">
                     {[...Array(5)].map((_, i) => (

@@ -6,7 +6,13 @@ import { useState } from "react";
 import * as authApi from "@/lib/authApi";
 import { useAuthSession } from "@/components/AuthSessionProvider";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 export default function LoginPage() {
@@ -99,14 +105,21 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <Button type="submit" disabled={isSubmitting} className="mt-1 h-10 w-full">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="mt-1 h-10 w-full"
+              >
                 {isSubmitting ? "Đang xử lý..." : "Đăng nhập"}
               </Button>
             </form>
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Chưa có tài khoản?{" "}
-              <Link href="/register" className="font-medium text-primary hover:underline">
+              <Link
+                href="/register"
+                className="font-medium text-primary hover:underline"
+              >
                 Đăng ký
               </Link>
             </p>
