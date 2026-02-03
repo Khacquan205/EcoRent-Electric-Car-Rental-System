@@ -235,31 +235,37 @@ namespace CAR.Infrastructure.Services
             }
 
             // For legacy data: Create CustomerProfile if missing for CUSTOMER users
+            // Only create fallback for users without authentication records (legacy data)
             if (user.RoleId == UserRoles.CUSTOMER)
             {
                 var existingCustomerProfile = await _customerProfileRepository.GetByUserIdAsync(user.Id);
                 if (existingCustomerProfile == null)
                 {
-                    try
+                    // Check if this is legacy data (user without authentication record)
+                    var userAuth = await _authRepository.GetByUserIdAsync(user.Id);
+                    if (userAuth == null)
                     {
-                        // Create fallback CustomerProfile with email prefix as name
-                        var fallbackCustomerProfile = new MCustomerProfile
+                        try
                         {
-                            UserId = user.Id,
-                            Name = user.Email.Split('@')[0] ?? string.Empty, // Use email prefix as temporary name
-                            Phone = null,
-                            CreatedAt = DateTime.UtcNow,
-                            UpdatedAt = DateTime.UtcNow
-                        };
+                            // Create fallback CustomerProfile with email prefix as name
+                            var fallbackCustomerProfile = new MCustomerProfile
+                            {
+                                UserId = user.Id,
+                                Name = user.Email.Split('@')[0] ?? string.Empty, // Use email prefix as temporary name
+                                Phone = null,
+                                CreatedAt = DateTime.UtcNow,
+                                UpdatedAt = DateTime.UtcNow
+                            };
 
-                        await _customerProfileRepository.CreateCustomerProfileAsync(fallbackCustomerProfile);
-                        await _unitOfWork.SaveChangesAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        // Log error but don't fail login - this is just a safety fallback
-                        // Consider adding proper logging here
-                        Console.WriteLine($"Warning: Failed to create fallback CustomerProfile for user {user.Id}: {ex.Message}");
+                            await _customerProfileRepository.CreateCustomerProfileAsync(fallbackCustomerProfile);
+                            await _unitOfWork.SaveChangesAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log error but don't fail login - this is just a safety fallback
+                            // Consider adding proper logging here
+                            Console.WriteLine($"Warning: Failed to create fallback CustomerProfile for user {user.Id}: {ex.Message}");
+                        }
                     }
                 }
             }
