@@ -11,7 +11,6 @@ import * as authApi from "@/lib/authApi";
 export default function RegisterPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [showOtpForm, setShowOtpForm] = useState(false);
@@ -20,7 +19,6 @@ export default function RegisterPage() {
     fullName: "",
     email: "",
     password: "",
-    confirmPassword: "",
     agreeTerms: false,
   });
 
@@ -34,10 +32,6 @@ export default function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      setMessage("Passwords do not match");
-      return;
-    }
     setIsSubmitting(true);
     setMessage(null);
     try {
@@ -346,49 +340,6 @@ export default function RegisterPage() {
                         ))}
                       </div>
                     )}
-                  </div>
-
-                  {/* Confirm Password */}
-                  <div>
-                    <label className="text-sm font-medium text-[#242424]">
-                      Confirm password
-                    </label>
-                    <div className="relative mt-1.5">
-                      <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#747474]" />
-                      <input
-                        type={showConfirmPassword ? "text" : "password"}
-                        name="confirmPassword"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        className={`w-full rounded-lg border py-3 pl-10 pr-12 text-sm text-[#242424] outline-none transition-colors placeholder:text-[#B6B6B6] focus:ring-2 focus:ring-[#1572D3]/20 ${
-                          formData.confirmPassword &&
-                          formData.password !== formData.confirmPassword
-                            ? "border-red-400 focus:border-red-400"
-                            : "border-[#E5E5E5] focus:border-[#1572D3]"
-                        }`}
-                        placeholder="Confirm your password"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#747474] hover:text-[#242424]"
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
-                      </button>
-                    </div>
-                    {formData.confirmPassword &&
-                      formData.password !== formData.confirmPassword && (
-                        <p className="mt-1 text-xs text-red-500">
-                          Passwords do not match
-                        </p>
-                      )}
                   </div>
 
                   {/* Terms */}
