@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EcoWheels - Môi giới thuê xe điện",
+  title: "EcoRent - Môi giới thuê xe điện",
   description:
     "Nền tảng môi giới thuê xe điện: tìm xe, so sánh và đặt thuê nhanh chóng.",
 };
