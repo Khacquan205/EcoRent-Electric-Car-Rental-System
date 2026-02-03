@@ -30,17 +30,53 @@ export default function LoginPage() {
       }
 
       if (res.accessToken) {
+        function getUserField(user: unknown, key: string): unknown {
+          if (!user || typeof user !== "object") return undefined;
+          return (user as Record<string, unknown>)[key];
+        }
+
+        const roleIdRaw =
+          getUserField(res.user, "roleId") ??
+          getUserField(res.user, "RoleId") ??
+          getUserField(res.user, "roleID") ??
+          getUserField(res.user, "RoleID");
+
+        const roleCodeRaw =
+          getUserField(res.user, "roleCode") ??
+          getUserField(res.user, "RoleCode") ??
+          getUserField(res.user, "role") ??
+          getUserField(res.user, "Role");
+
+        const roleId =
+          typeof roleIdRaw === "number"
+            ? roleIdRaw
+            : roleIdRaw
+              ? Number(roleIdRaw)
+              : undefined;
+        const nextRole = roleCodeRaw ? String(roleCodeRaw) : undefined;
+
         setSession({
           accessToken: res.accessToken,
           expiresIn: res.expiresIn,
           user: res.user,
           email,
+          roleId,
+          role: nextRole,
         });
+
+        if (
+          nextRole &&
+          (nextRole.toLowerCase() === "admin" ||
+            nextRole.toUpperCase() === "ADMIN")
+        ) {
+          router.push("/admin");
+        } else {
+          router.push("/");
+        }
       } else {
         setSession(null);
+        router.push("/");
       }
-
-      router.push("/");
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Đăng nhập thất bại");
     } finally {

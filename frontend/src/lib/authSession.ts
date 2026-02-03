@@ -3,6 +3,8 @@ export type AuthSession = {
   expiresIn: number | null;
   user: unknown | null;
   email?: string;
+  role?: string;
+  roleId?: number;
 };
 
 const COOKIE_NAME = "ecorent_session";
