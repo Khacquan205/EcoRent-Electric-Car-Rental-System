@@ -11,7 +11,6 @@
         public string? InsuranceImage { get; set; }
 
         public DateTime? VerifiedAt { get; set; }
-        public int? StaffId { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

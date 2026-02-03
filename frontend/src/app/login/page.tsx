@@ -3,19 +3,50 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, EyeOff, Mail, Lock, Car } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import * as authApi from "@/lib/authApi";
+import { useAuthSession } from "@/components/AuthSessionProvider";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { setSession } = useAuthSession();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Handle login logic here
-    console.log({ email, password });
-  };
+    setIsSubmitting(true);
+    setMessage(null);
+    try {
+      const res = await authApi.login({ email, password });
+      if (!res.success) {
+        setMessage(res.message || "Đăng nhập thất bại");
+        return;
+      }
+
+      if (res.accessToken) {
+        setSession({
+          accessToken: res.accessToken,
+          expiresIn: res.expiresIn,
+          user: res.user,
+          email,
+        });
+      } else {
+        setSession(null);
+      }
+
+      router.push("/");
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Đăng nhập thất bại");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
@@ -142,6 +173,13 @@ export default function LoginPage() {
                 </div>
               </div>
 
+              {/* Error Message */}
+              {message && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                  {message}
+                </div>
+              )}
+
               {/* Remember Me */}
               <div className="flex items-center gap-2">
                 <input
@@ -157,9 +195,10 @@ export default function LoginPage() {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="h-12 w-full bg-[#1572D3] text-white hover:bg-[#1260B0]"
+                disabled={isSubmitting}
+                className="h-12 w-full bg-[#1572D3] text-white hover:bg-[#1260B0] disabled:opacity-50"
               >
-                Sign in
+                {isSubmitting ? "Signing in..." : "Sign in"}
               </Button>
             </form>
 
@@ -194,8 +233,6 @@ export default function LoginPage() {
 
           {/* Dark Overlay */}
           <div className="absolute inset-0 bg-black/40" />
-
-          
         </div>
       </div>
     </div>
