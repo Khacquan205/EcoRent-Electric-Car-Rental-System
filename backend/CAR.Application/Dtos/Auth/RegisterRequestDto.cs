@@ -15,5 +15,17 @@ namespace CAR.Application.Dtos.Auth
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$", 
             ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, and one number")]
         public string Password { get; set; } = null!;
+
+        [Required(ErrorMessage = "Confirm Password is required")]
+        [Compare("Password", ErrorMessage = "Password and Confirm Password must match")]
+        public string ConfirmPassword { get; set; } = null!;
+
+        [Required(ErrorMessage = "Name is required")]
+        [MaxLength(100, ErrorMessage = "Name cannot exceed 100 characters")]
+        public string Name { get; set; } = null!;
+
+        [Phone(ErrorMessage = "Invalid phone number format")]
+        [MaxLength(20, ErrorMessage = "Phone cannot exceed 20 characters")]
+        public string? Phone { get; set; }
     }
 }
