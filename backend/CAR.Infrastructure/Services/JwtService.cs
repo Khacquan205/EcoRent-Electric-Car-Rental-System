@@ -1,6 +1,7 @@
 using CAR.Application.Dtos.Auth;
 using CAR.Application.Interfaces.Services;
 using CAR.Domain.Entities;
+using CAR.Domain.Constants;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -96,11 +97,11 @@ namespace CAR.Infrastructure.Services
         {
             return roleId switch
             {
-                0 => "GUEST",
-                1 => "CUSTOMER",
-                2 => "OWNER",
-                3 => "STAFF",
-                4 => "ADMIN",
+                UserRoles.GUEST => "GUEST",
+                UserRoles.CUSTOMER => "CUSTOMER",
+                UserRoles.OWNER => "OWNER",
+                UserRoles.STAFF => "STAFF",
+                UserRoles.ADMIN => "ADMIN",
                 _ => "GUEST"
             };
         }
