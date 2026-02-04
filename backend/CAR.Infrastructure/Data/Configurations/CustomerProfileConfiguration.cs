@@ -1,4 +1,5 @@
 ﻿using CAR.Domain.Entities;
+using CAR.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -27,13 +28,26 @@ public class CustomerProfileConfiguration : IEntityTypeConfiguration<MCustomerPr
                .HasColumnName("phone")
                .HasMaxLength(20);
 
+        builder.Property(x => x.Gender)
+               .HasColumnName("gender")
+               .IsRequired();
+
+        builder.Property(x => x.DateOfBirth)
+               .HasColumnName("DateOfBirth")
+               .HasColumnType("timestamp with time zone")
+               .HasConversion(v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null, 
+                                v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null);
+
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("datetime")
-               .IsRequired();
+               .HasColumnType("timestamp with time zone")
+               .IsRequired()
+               .HasConversion(v => DateTime.SpecifyKind(v, DateTimeKind.Utc), v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamp with time zone")
+               .HasConversion(v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null, 
+                                v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : (DateTime?)null);
     }
 }

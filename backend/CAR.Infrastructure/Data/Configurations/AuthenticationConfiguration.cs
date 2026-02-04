@@ -18,6 +18,9 @@ public class AuthenticationConfiguration : IEntityTypeConfiguration<MAuthenticat
                .HasColumnName("user_id")
                .IsRequired();
 
+        builder.Property(x => x.Name)
+               .HasColumnName("Name");
+
         builder.Property(x => x.Email)
                .HasColumnName("email")
                .HasMaxLength(255)

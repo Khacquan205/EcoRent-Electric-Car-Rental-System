@@ -4,6 +4,7 @@ using CAR.Application.Interfaces.Repositories;
 using CAR.Application.Interfaces.Services;
 using CAR.Domain.Entities;
 using CAR.Domain.Constants;
+using CAR.Domain.Enums;
 using System;
 using System.Threading.Tasks;
 
@@ -14,17 +15,20 @@ namespace CAR.Infrastructure.Services
         private readonly IOwnerProfileRepository _ownerProfileRepository;
         private readonly ICustomerProfileRepository _customerProfileRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IKycRepository _kycRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public OwnerService(
             IOwnerProfileRepository ownerProfileRepository,
             ICustomerProfileRepository customerProfileRepository,
             IUserRepository userRepository,
+            IKycRepository kycRepository,
             IUnitOfWork unitOfWork)
         {
             _ownerProfileRepository = ownerProfileRepository;
             _customerProfileRepository = customerProfileRepository;
             _userRepository = userRepository;
+            _kycRepository = kycRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -38,6 +42,17 @@ namespace CAR.Infrastructure.Services
                     409,
                     "OWNER_ALREADY_EXISTS",
                     "User already has an owner profile"
+                );
+            }
+
+            // Check KYC status - user must have completed KYC before becoming owner
+            var kyc = await _kycRepository.GetByCustomerIdAsync(userId);
+            if (kyc?.VerificationStatus != KycVerificationStatus.Verified)
+            {
+                throw new UserFriendlyException(
+                    400,
+                    "KYC_REQUIRED",
+                    "Bạn cần hoàn thành xác minh danh tính (KYC) trước khi đăng ký làm người cho thuê xe"
                 );
             }
 
@@ -74,7 +89,7 @@ namespace CAR.Infrastructure.Services
                     UserId = userId,
                     Name = customerProfile.Name ?? string.Empty, // Copy name from CustomerProfile
                     Phone = request.Phone ?? customerProfile.Phone, // Use request phone or fallback to customer phone
-                    IdentityVerified = false,
+                    IdentityVerified = true, // User has completed KYC
                     RatingAvg = 0.0,
                     TotalPosts = 0,
                     CreatedAt = DateTime.UtcNow

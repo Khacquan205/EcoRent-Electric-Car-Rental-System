@@ -21,8 +21,6 @@ namespace CAR.Domain.Entities
 
         public string? Phone { get; set; }
 
-        public short Gender { get; set; }
-
         public short Status { get; set; }
 
         public string? AvatarImgUrl { get; set; }

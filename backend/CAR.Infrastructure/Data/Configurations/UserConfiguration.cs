@@ -32,11 +32,6 @@ public class UserConfiguration : IEntityTypeConfiguration<MUser>
                .HasColumnName("phone")
                .HasMaxLength(20);
 
-        builder.Property(x => x.Gender)
-               .HasColumnName("gender")
-               .HasColumnType("smallint")
-               .IsRequired();
-
         builder.Property(x => x.Status)
                .HasColumnName("status")
                .HasColumnType("smallint")

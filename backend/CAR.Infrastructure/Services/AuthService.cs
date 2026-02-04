@@ -91,8 +91,7 @@ namespace CAR.Infrastructure.Services
                 RoleId = UserRoles.CUSTOMER,
                 Email = request.Email!,
                 PasswordHash = passwordHash,
-                Phone = request.Phone,
-                Gender = 0,
+                Phone = null, // Will be updated after KYC phone verification
                 Status = 0, // Inactive until OTP verification
                 CreatedAt = DateTime.UtcNow
             };
@@ -104,7 +103,7 @@ namespace CAR.Infrastructure.Services
             {
                 UserId = user.Id,
                 Email = request.Email,
-                Name = request.Name,
+                Name = null, // Will be updated after KYC verification
                 PasswordHash = passwordHash,
                 Code = otpCode,
                 CodeExpiresAt = DateTime.UtcNow.AddMinutes(5),
@@ -492,7 +491,6 @@ namespace CAR.Infrastructure.Services
                         PasswordHash = string.Empty, // No password for Google login
                         RoleId = 2, // Default user role
                         Status = 1, // Active (no email verification needed for Google)
-                        Gender = 0,
                         CreatedAt = DateTime.UtcNow
                     };
 
