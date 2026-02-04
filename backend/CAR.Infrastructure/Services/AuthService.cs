@@ -92,7 +92,6 @@ namespace CAR.Infrastructure.Services
                 Email = request.Email!,
                 PasswordHash = passwordHash,
                 Phone = request.Phone,
-                Gender = 0,
                 Status = 0, // Inactive until OTP verification
                 CreatedAt = DateTime.UtcNow
             };
@@ -492,7 +491,6 @@ namespace CAR.Infrastructure.Services
                         PasswordHash = string.Empty, // No password for Google login
                         RoleId = 2, // Default user role
                         Status = 1, // Active (no email verification needed for Google)
-                        Gender = 0,
                         CreatedAt = DateTime.UtcNow
                     };
 
