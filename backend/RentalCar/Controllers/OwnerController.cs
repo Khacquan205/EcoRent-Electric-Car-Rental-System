@@ -11,10 +11,14 @@ namespace CAR.Controllers
     public class OwnerController : ControllerBase
     {
         private readonly IOwnerService _ownerService;
+        private readonly IIdentityVerificationService _identityVerificationService;
 
-        public OwnerController(IOwnerService ownerService)
+        public OwnerController(
+            IOwnerService ownerService,
+            IIdentityVerificationService identityVerificationService)
         {
             _ownerService = ownerService;
+            _identityVerificationService = identityVerificationService;
         }
 
         /// <summary>
@@ -34,6 +38,22 @@ namespace CAR.Controllers
         }
 
         /// <summary>
+        /// Verify owner identity (auto-verify)
+        /// </summary>
+        [HttpPost("verify-identity")]
+        public async Task<IActionResult> VerifyIdentity([FromBody] VerifyIdentityRequestDto request)
+        {
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new { Success = false, Message = "Invalid user token" });
+            }
+
+            var result = await _identityVerificationService.VerifyIdentityAsync(userId, request);
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Get current owner profile
         /// </summary>
         [HttpGet("me")]
@@ -45,9 +65,8 @@ namespace CAR.Controllers
                 return Unauthorized(new { Success = false, Message = "Invalid user token" });
             }
 
-            // This would need to be implemented in OwnerService
-            // For now, return a placeholder response
-            return Ok(new { Success = true, Message = "Owner profile endpoint - to be implemented" });
+            var result = await _identityVerificationService.GetOwnerProfileAsync(userId);
+            return Ok(result);
         }
     }
 }

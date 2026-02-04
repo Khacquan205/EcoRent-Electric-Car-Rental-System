@@ -50,6 +50,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
+<<<<<<< HEAD
 
 // Configure form options for file upload
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
@@ -57,6 +58,8 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
     options.MultipartBodyLengthLimit = 104857600; // 100MB
 });
 
+=======
+>>>>>>> e48b1cfac175a5e2424f3e1473341d311e08a3c6
 builder.Services.AddEndpointsApiExplorer();
 
 // Configure Swagger with JWT
@@ -106,9 +109,12 @@ builder.Services.AddCors(options =>
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 
+<<<<<<< HEAD
 // Add HttpClient for FPT KYC service
 builder.Services.AddHttpClient<IKycOcrService, FptKycOcrService>();
 
+=======
+>>>>>>> e48b1cfac175a5e2424f3e1473341d311e08a3c6
 // Add Validation Filter globally
 builder.Services.AddControllers(options =>
 {
