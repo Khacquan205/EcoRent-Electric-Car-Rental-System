@@ -2,6 +2,7 @@ using CAR.Application.Dtos.Auth;
 using CAR.Application.Interfaces.Repositories;
 using CAR.Application.Interfaces.Services;
 using CAR.Domain.Entities;
+using CAR.Domain.Constants;
 
 namespace CAR.Infrastructure.Services
 {
@@ -9,6 +10,7 @@ namespace CAR.Infrastructure.Services
     {
         private readonly IAuthenticationRepository _authRepository;
         private readonly IUserRepository _userRepository;
+        private readonly ICustomerProfileRepository _customerProfileRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailService _emailService;
         private readonly IJwtService _jwtService;
@@ -17,6 +19,7 @@ namespace CAR.Infrastructure.Services
         public AuthService(
             IAuthenticationRepository authRepository,
             IUserRepository userRepository,
+            ICustomerProfileRepository customerProfileRepository,
             IUnitOfWork unitOfWork,
             IEmailService emailService,
             IJwtService jwtService,
@@ -24,6 +27,7 @@ namespace CAR.Infrastructure.Services
         {
             _authRepository = authRepository;
             _userRepository = userRepository;
+            _customerProfileRepository = customerProfileRepository;
             _unitOfWork = unitOfWork;
             _emailService = emailService;
             _jwtService = jwtService;
@@ -32,6 +36,17 @@ namespace CAR.Infrastructure.Services
 
         public async Task<AuthResponseDto> Register(RegisterRequestDto request)
         {
+            // Validate password match
+            if (request.Password != request.ConfirmPassword)
+            {
+                return new AuthResponseDto
+                {
+                    Success = false,
+                    Message = "Password and Confirm Password do not match"
+                };
+            }
+
+            // Check if email already exists
             var existingUser = await _userRepository.GetByEmailAsync(request.Email!);
             if (existingUser != null)
             {
@@ -70,13 +85,15 @@ namespace CAR.Infrastructure.Services
             var passwordHash = HashPassword(request.Password!);
             var otpCode = GenerateOtp();
 
+            // Create MUser with CUSTOMER role but inactive status
             var user = new MUser
             {
-                RoleId = 2, 
+                RoleId = UserRoles.CUSTOMER,
                 Email = request.Email!,
                 PasswordHash = passwordHash,
+                Phone = request.Phone,
                 Gender = 0,
-                Status = 0, 
+                Status = 0, // Inactive until OTP verification
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -87,6 +104,7 @@ namespace CAR.Infrastructure.Services
             {
                 UserId = user.Id,
                 Email = request.Email,
+                Name = request.Name,
                 PasswordHash = passwordHash,
                 Code = otpCode,
                 CodeExpiresAt = DateTime.UtcNow.AddMinutes(5),
@@ -144,33 +162,64 @@ namespace CAR.Infrastructure.Services
                 };
             }
 
-            // Activate user
-            user.Status = 1; // Active
-            user.UpdatedAt = DateTime.UtcNow;
-            _userRepository.Update(user);
-
-            // Update authentication - mark as active and OTP used
-            await _authRepository.UpdateOtpStatusAsync(auth.Id, true, false);
-
-            await _unitOfWork.SaveChangesAsync();
-
-            var accessToken = _jwtService.GenerateAccessToken(user);
-            var expiresIn = 3600; // 1 hour in seconds
-
-            return new AuthResponseDto
+            try
             {
-                Success = true,
-                Message = "Account verified successfully",
-                AccessToken = accessToken,
-                ExpiresIn = expiresIn,
-                User = new UserInfoDto
+                // Start transaction
+                await _unitOfWork.BeginTransactionAsync();
+
+                // Activate user
+                user.Status = 1; // Active
+                user.UpdatedAt = DateTime.UtcNow;
+                _userRepository.Update(user);
+
+                // Create MCustomerProfile
+                var customerProfile = new MCustomerProfile
                 {
-                    Id = user.Id,
-                    Email = user.Email,
-                    RoleId = user.RoleId,
-                    IsActive = user.Status == 1
-                }
-            };
+                    UserId = user.Id,
+                    Name = auth.Name ?? string.Empty,
+                    Phone = user.Phone,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                await _customerProfileRepository.CreateCustomerProfileAsync(customerProfile);
+                await _unitOfWork.SaveChangesAsync();
+
+                // Update authentication - mark as active and OTP used
+                await _authRepository.UpdateOtpStatusAsync(auth.Id, true, false);
+
+                // Commit transaction
+                await _unitOfWork.CommitAsync();
+
+                var accessToken = _jwtService.GenerateAccessToken(user);
+                var expiresIn = 3600; // 1 hour in seconds
+
+                return new AuthResponseDto
+                {
+                    Success = true,
+                    Message = "Account verified successfully",
+                    AccessToken = accessToken,
+                    ExpiresIn = expiresIn,
+                    User = new UserInfoDto
+                    {
+                        Id = user.Id,
+                        Email = user.Email,
+                        RoleId = user.RoleId,
+                        IsActive = user.Status == 1
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                // Rollback transaction on error
+                await _unitOfWork.RollbackAsync();
+                
+                return new AuthResponseDto
+                {
+                    Success = false,
+                    Message = "Verification failed: " + ex.Message
+                };
+            }
         }
 
         public async Task<AuthResponseDto> Login(LoginRequestDto request)
@@ -183,6 +232,42 @@ namespace CAR.Infrastructure.Services
                     Success = false,
                     Message = "Invalid email or password"
                 };
+            }
+
+            // For legacy data: Create CustomerProfile if missing for CUSTOMER users
+            // Only create fallback for users without authentication records (legacy data)
+            if (user.RoleId == UserRoles.CUSTOMER)
+            {
+                var existingCustomerProfile = await _customerProfileRepository.GetByUserIdAsync(user.Id);
+                if (existingCustomerProfile == null)
+                {
+                    // Check if this is legacy data (user without authentication record)
+                    var userAuth = await _authRepository.GetByUserIdAsync(user.Id);
+                    if (userAuth == null)
+                    {
+                        try
+                        {
+                            // Create fallback CustomerProfile with email prefix as name
+                            var fallbackCustomerProfile = new MCustomerProfile
+                            {
+                                UserId = user.Id,
+                                Name = user.Email.Split('@')[0] ?? string.Empty, // Use email prefix as temporary name
+                                Phone = null,
+                                CreatedAt = DateTime.UtcNow,
+                                UpdatedAt = DateTime.UtcNow
+                            };
+
+                            await _customerProfileRepository.CreateCustomerProfileAsync(fallbackCustomerProfile);
+                            await _unitOfWork.SaveChangesAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log error but don't fail login - this is just a safety fallback
+                            // Consider adding proper logging here
+                            Console.WriteLine($"Warning: Failed to create fallback CustomerProfile for user {user.Id}: {ex.Message}");
+                        }
+                    }
+                }
             }
 
             var auth = await _authRepository.GetByUserIdAsync(user.Id);

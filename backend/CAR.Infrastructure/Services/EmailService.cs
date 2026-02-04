@@ -62,5 +62,59 @@ namespace CAR.Infrastructure.Services
                 return false;
             }
         }
+
+        public async Task<bool> SendWelcomeEmailAsync(string email, string name)
+        {
+            try
+            {
+                var smtpServer = _configuration["EmailSettings:SmtpServer"];
+                var smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"]);
+                var senderName = _configuration["EmailSettings:SenderName"];
+                var senderEmail = _configuration["EmailSettings:SenderEmail"];
+                var password = _configuration["EmailSettings:Password"];
+
+                using var client = new SmtpClient(smtpServer, smtpPort)
+                {
+                    EnableSsl = true,
+                    Credentials = new NetworkCredential(senderEmail, password)
+                };
+
+                var subject = "Welcome to EcoRent!";
+                var body = $@"
+                <h2>Welcome to EcoRent, {name}! 🎉</h2>
+                <p>Thank you for registering with EcoRent. Your account has been successfully created.</p>
+                <p>You can now:</p>
+                <ul>
+                    <li>Browse and rent electric cars</li>
+                    <li>Manage your bookings</li>
+                    <li>Enjoy exclusive member benefits</li>
+                </ul>
+                <p>Get started by visiting our platform and exploring our wide range of electric vehicles.</p>
+                <br>
+                <p>Best regards,<br>EcoRent Team</p>";
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(senderEmail, senderName),
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = true
+                };
+                mailMessage.To.Add(email);
+
+                await client.SendMailAsync(mailMessage);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log error here
+                Console.WriteLine($"Failed to send welcome email: {ex}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"InnerException: {ex.InnerException}");
+                }
+                return false;
+            }
+        }
     }
 }

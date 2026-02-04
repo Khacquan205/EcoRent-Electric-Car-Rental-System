@@ -29,6 +29,7 @@ namespace CAR.Infrastructure
             // Repositories
             services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<ICustomerProfileRepository, CustomerProfileRepository>();
             services.AddScoped<IOwnerProfileRepository, OwnerProfileRepository>();
             services.AddScoped<IOwnerSubscriptionRepository, OwnerSubscriptionRepository>();
             services.AddScoped<IPostRepository, PostRepository>();
