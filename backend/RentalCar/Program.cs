@@ -1,5 +1,7 @@
 ﻿using CAR.Infrastructure;
 using CAR.Infrastructure.Options;
+using CAR.Application.Interfaces.Services;
+using CAR.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -48,6 +50,13 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
+
+// Configure form options for file upload
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 104857600; // 100MB
+});
+
 builder.Services.AddEndpointsApiExplorer();
 
 // Configure Swagger with JWT
@@ -96,6 +105,9 @@ builder.Services.AddCors(options =>
 // DI
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
+
+// Add HttpClient for FPT KYC service
+builder.Services.AddHttpClient<IKycOcrService, FptKycOcrService>();
 
 // Add Validation Filter globally
 builder.Services.AddControllers(options =>

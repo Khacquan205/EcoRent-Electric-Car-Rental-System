@@ -7,6 +7,7 @@ using CAR.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using CAR.Infrastructure.Repositiories;
 
 namespace CAR.Infrastructure
 {
@@ -35,11 +36,16 @@ namespace CAR.Infrastructure
             services.AddScoped<IPostRepository, PostRepository>();
             services.AddScoped<IOwnerPackageRepository, OwnerPackageRepository>();
             services.AddScoped<IRepository<Domain.Entities.MUser>, Repository<Domain.Entities.MUser>>();
+            services.AddScoped<IKycRepository, KycRepository>();
+            services.AddScoped<IPhoneRepository, PhoneRepository>();
 
             // Services
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IJwtService, JwtService>();
             services.AddScoped<IFirebaseService, FirebaseService>();
+            services.AddScoped<IKycOcrService, FptKycOcrService>();
+            services.AddScoped<ITwilioSmsService, TwilioSmsService>();
+            services.AddScoped<ICustomerService, CustomerService>();
 
             return services;
         }
@@ -53,6 +59,9 @@ namespace CAR.Infrastructure
             services.AddScoped<IOwnerService, OwnerService>();
             services.AddScoped<ISubscriptionService, SubscriptionService>();
             services.AddScoped<IIdentityVerificationService, IdentityVerificationService>();
+            services.AddScoped<IKycOcrService, FptKycOcrService>();
+            services.AddScoped<IFirebasePhoneService, FirebasePhoneService>();
+            services.AddScoped<ICustomerKycService, CustomerKycService>();
             services.AddScoped<IOwnerPackageService, OwnerPackageService>();
 
             return services;

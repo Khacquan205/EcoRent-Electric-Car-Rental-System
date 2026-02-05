@@ -20,5 +20,10 @@ namespace CAR.Infrastructure.Repositories
         {
             _dbSet.Add(customerProfile);
         }
+
+        public async Task UpdateCustomerProfileAsync(MCustomerProfile customerProfile)
+        {
+            _dbSet.Update(customerProfile);
+        }
     }
 }

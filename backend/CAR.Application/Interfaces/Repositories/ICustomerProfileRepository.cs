@@ -6,5 +6,6 @@ namespace CAR.Application.Interfaces.Repositories
     {
         Task<MCustomerProfile?> GetByUserIdAsync(int userId);
         Task CreateCustomerProfileAsync(MCustomerProfile customerProfile);
+        Task UpdateCustomerProfileAsync(MCustomerProfile customerProfile);
     }
 }
