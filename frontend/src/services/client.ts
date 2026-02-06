@@ -47,20 +47,6 @@ export async function apiFetch<TResponse>(
   }
   headers.set("Accept", "application/json");
 
-  // Auto attach access token from our session cookie (client-side) if present.
-  // This keeps pages simple (e.g. settings change-password) and avoids repeating auth wiring.
-  if (typeof window !== "undefined" && !headers.has("Authorization")) {
-    try {
-      const { getSessionCookie } = await import("@/lib/authSession");
-      const session = getSessionCookie();
-      if (session?.accessToken) {
-        headers.set("Authorization", `Bearer ${session.accessToken}`);
-      }
-    } catch {
-      // ignore
-    }
-  }
-
   const res = await fetch(url, {
     ...init,
     headers,

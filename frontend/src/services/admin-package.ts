@@ -1,15 +1,4 @@
-import { apiFetch } from "@/lib/apiClient";
-
-export type AdminPackage = {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  durationDays: number;
-  maxPosts: number;
-  priorityLevel: number;
-  status: number;
-};
+import { apiFetch } from "./client";
 
 export type AdminPackageRequest = {
   name: string;
@@ -44,14 +33,8 @@ export async function deletePackage(id: number): Promise<unknown> {
   });
 }
 
-export async function getPackage(id: number): Promise<AdminPackage> {
-  return apiFetch<AdminPackage>(`/api/admin/AdminPackage/get-package/${id}`, {
-    method: "GET",
-  });
-}
-
-export async function getActivePackages(): Promise<AdminPackage[]> {
-  return apiFetch<AdminPackage[]>("/api/Package/get-active-packages", {
+export async function getPackage(id: number): Promise<unknown> {
+  return apiFetch<unknown>(`/api/admin/AdminPackage/get-package/${id}`, {
     method: "GET",
   });
 }

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, User, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import * as authApi from "@/lib/authApi";
+import * as authApi from "@/services/auth";
 
 export default function RegisterPage() {
   const router = useRouter();

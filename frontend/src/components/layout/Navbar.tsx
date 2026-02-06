@@ -4,10 +4,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import NavUserMenu from "@/components/NavUserMenu";
+import NavUserMenu from "@/components/layout/NavUserMenu";
 import { useState } from "react";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useAuthSession } from "@/components/AuthSessionProvider";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { useAuthSession } from "@/components/providers";
 
 const navLinks = [
   { href: "/become-a-renter", label: "Become a renter" },
@@ -25,7 +30,13 @@ const Navbar = () => {
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur">
       <div className="flex items-center justify-between px-6 py-4 lg:px-12 xl:px-20">
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/Logo.png" alt="EcoRent Logo" width={32} height={32} className="h-8 w-8" />
+          <Image
+            src="/Logo.png"
+            alt="EcoRent Logo"
+            width={32}
+            height={32}
+            className="h-8 w-8"
+          />
           <span className="text-xl font-bold text-primary">EcoRent</span>
         </Link>
 
@@ -47,7 +58,10 @@ const Navbar = () => {
           ) : (
             <>
               <Link href="/login">
-                <Button variant="ghost" className="text-muted-foreground hover:text-primary">
+                <Button
+                  variant="ghost"
+                  className="text-muted-foreground hover:text-primary"
+                >
                   Sign in
                 </Button>
               </Link>
@@ -65,7 +79,9 @@ const Navbar = () => {
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-[320px] bg-background">
-            <SheetTitle className="text-left text-xl font-bold text-primary">EcoRent</SheetTitle>
+            <SheetTitle className="text-left text-xl font-bold text-primary">
+              EcoRent
+            </SheetTitle>
             <div className="mt-8 flex flex-col gap-4">
               {navLinks.map((link) => (
                 <Link
@@ -81,7 +97,10 @@ const Navbar = () => {
               <div className="my-2 h-px bg-border" />
 
               {isAuthed ? (
-                <NavUserMenu variant="mobile" onNavigate={() => setMobileOpen(false)} />
+                <NavUserMenu
+                  variant="mobile"
+                  onNavigate={() => setMobileOpen(false)}
+                />
               ) : (
                 <>
                   <Link href="/login" onClick={() => setMobileOpen(false)}>

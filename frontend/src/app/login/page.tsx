@@ -6,8 +6,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import * as authApi from "@/lib/authApi";
-import { useAuthSession } from "@/components/AuthSessionProvider";
+import * as authApi from "@/services/auth";
+import { useAuthSession } from "@/components/providers";
 
 export default function LoginPage() {
   const router = useRouter();

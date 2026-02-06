@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/apiClient";
+import { apiFetch } from "./client";
 
 export type RegisterRequest = {
   email: string;

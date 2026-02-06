@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthSession } from "@/components/AuthSessionProvider";
+import { useAuthSession } from "@/components/providers";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type Props = {

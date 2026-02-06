@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import * as authApi from "@/lib/authApi";
+import * as authApi from "@/services/auth";
 
 export default function UserSettingsPage() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -17,7 +17,9 @@ export default function UserSettingsPage() {
     setErrorMessage(null);
 
     if (!currentPassword || !newPassword) {
-      setErrorMessage("Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới.");
+      setErrorMessage(
+        "Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới.",
+      );
       return;
     }
 
@@ -37,7 +39,9 @@ export default function UserSettingsPage() {
       setNewPassword("");
       setConfirmNewPassword("");
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Đổi mật khẩu thất bại.");
+      setErrorMessage(
+        err instanceof Error ? err.message : "Đổi mật khẩu thất bại.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -93,8 +97,12 @@ export default function UserSettingsPage() {
             />
           </div>
 
-          {errorMessage ? <p className="text-sm text-red-600">{errorMessage}</p> : null}
-          {successMessage ? <p className="text-sm text-green-600">{successMessage}</p> : null}
+          {errorMessage ? (
+            <p className="text-sm text-red-600">{errorMessage}</p>
+          ) : null}
+          {successMessage ? (
+            <p className="text-sm text-green-600">{successMessage}</p>
+          ) : null}
 
           <button
             type="submit"
