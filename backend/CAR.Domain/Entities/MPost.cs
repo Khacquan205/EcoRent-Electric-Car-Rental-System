@@ -4,13 +4,13 @@ namespace CAR.Domain.Entities
 {
     public partial class MPost
     {
-        public long Id { get; set; }
+        public int Id { get; set; }
 
-        public long OwnerId { get; set; }
+        public int OwnerId { get; set; }
 
-        public long CategoryId { get; set; }
+        public int CategoryId { get; set; }
 
-        public long? LocationId { get; set; }
+        public int? LocationId { get; set; }
 
         public string Title { get; set; } = null!;
 
@@ -24,7 +24,7 @@ namespace CAR.Domain.Entities
         public short Status { get; set; }
 
 
-        public long? StaffId { get; set; }
+        public int? StaffId { get; set; }
 
         public string? RejectReason { get; set; }
 
@@ -36,5 +36,16 @@ namespace CAR.Domain.Entities
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        // Navigation Properties
+        public MOwnerProfile OwnerProfile { get; set; } = null!;
+        public MVehicleCategory Category { get; set; } = null!;
+        public MLocation? Location { get; set; }
+        public MStaffProfile? Staff { get; set; }
+        public MAdvertisement? Advertisement { get; set; }
+        public MVehicleVerification? VehicleVerification { get; set; }
+        public ICollection<TPostImage> Images { get; set; } = new List<TPostImage>();
+        public ICollection<MReview> Reviews { get; set; } = new List<MReview>();
+        public ICollection<MReport> Reports { get; set; } = new List<MReport>();
     }
 }

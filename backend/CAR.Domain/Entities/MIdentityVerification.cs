@@ -4,9 +4,11 @@ namespace CAR.Domain.Entities
 {
     public partial class MIdentityVerification
     {
-        public long Id { get; set; }
+        public int Id { get; set; }
 
-        public long OwnerId { get; set; }
+        public int OwnerProfileId { get; set; }
+
+        public MOwnerProfile OwnerProfile { get; set; } = null!;
 
         public string Status { get; set; } = null!;
 

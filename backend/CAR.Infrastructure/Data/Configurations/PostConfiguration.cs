@@ -8,7 +8,7 @@ namespace CAR.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<MPost> builder)
         {
-            builder.ToTable("MPost");
+            builder.ToTable("m_post");
 
             builder.HasKey(x => x.Id);
 

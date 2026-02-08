@@ -16,16 +16,16 @@ namespace CAR.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<MIdentityVerification?> GetByOwnerIdAsync(long ownerId)
+        public async Task<MIdentityVerification?> GetByOwnerIdAsync(int ownerId)
         {
-            return await _dbSet.FirstOrDefaultAsync(x => x.OwnerId == ownerId);
+            return await _dbSet.FirstOrDefaultAsync(x => x.OwnerProfileId == ownerId);
         }
 
-        public async Task<MIdentityVerification> CreateForOwnerAsync(long ownerId)
+        public async Task<MIdentityVerification> CreateForOwnerAsync(int ownerId)
         {
             var verification = new MIdentityVerification
             {
-                OwnerId = ownerId,
+                OwnerProfileId = ownerId,
                 Status = "PENDING",
                 Score = 0,
                 CreatedAt = System.DateTime.UtcNow
@@ -46,7 +46,7 @@ namespace CAR.Infrastructure.Repositories
             }
 
             var verification = await _dbSet
-                .FirstOrDefaultAsync(x => x.OwnerId == ownerProfile.Id);
+                .FirstOrDefaultAsync(x => x.OwnerProfileId == ownerProfile.Id);
 
             return new OwnerProfileResponseDto
             {

@@ -15,7 +15,7 @@ namespace CAR.Infrastructure.Repositiories
 
         public async Task<MKyc?> GetByCustomerIdAsync(int customerId)
         {
-            return await _context.Ky.FirstOrDefaultAsync(k => k.CustomerId == customerId);
+            return await _context.Ky.FirstOrDefaultAsync(k => k.CustomerProfileId == customerId);
         }
 
         public async Task<MKyc?> GetByCccdNumberAsync(string cccdNumber)

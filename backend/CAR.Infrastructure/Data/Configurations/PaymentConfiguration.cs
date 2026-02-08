@@ -6,7 +6,7 @@ public class PaymentConfiguration : IEntityTypeConfiguration<MPayment>
 {
     public void Configure(EntityTypeBuilder<MPayment> builder)
     {
-        builder.ToTable("MPayment");
+        builder.ToTable("m_payment");
 
         builder.HasKey(x => x.Id);
 
@@ -38,11 +38,11 @@ public class PaymentConfiguration : IEntityTypeConfiguration<MPayment>
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("datetime")
+               .HasColumnType("timestamp")
                .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamp");
     }
 }

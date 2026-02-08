@@ -6,7 +6,7 @@ public class VehicleCategoryConfiguration : IEntityTypeConfiguration<MVehicleCat
 {
     public void Configure(EntityTypeBuilder<MVehicleCategory> builder)
     {
-        builder.ToTable("MVehicleCategory");
+        builder.ToTable("m_vehicle_category");
 
         builder.HasKey(x => x.Id);
 
@@ -22,7 +22,7 @@ public class VehicleCategoryConfiguration : IEntityTypeConfiguration<MVehicleCat
 
         builder.Property(x => x.Description)
                .HasColumnName("description")
-               .HasColumnType("nvarchar(max)");
+               .HasColumnType("text");
 
         builder.Property(x => x.Status)
                .HasColumnName("status")
@@ -31,11 +31,11 @@ public class VehicleCategoryConfiguration : IEntityTypeConfiguration<MVehicleCat
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("datetime")
+               .HasColumnType("timestamp")
                .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamp");
     }
 }

@@ -5,9 +5,9 @@ namespace CAR.Domain.Entities
 {
     public partial class MKyc
     {
-        public int id { get; set; }
+        public int Id { get; set; }
 
-        public int CustomerId { get; set; }
+        public int CustomerProfileId { get; set; }
 
         public KycVerificationStatus VerificationStatus { get; set; }
 
@@ -28,5 +28,7 @@ namespace CAR.Domain.Entities
         public DateTime? UpdatedAt { get; set; }
 
         public DateTime? VerifiedAt { get; set; }
+
+        public MCustomerProfile CustomerProfile { get; set; } = null!;
     }
 }

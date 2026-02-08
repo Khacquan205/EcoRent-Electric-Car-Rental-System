@@ -6,7 +6,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<MRole>
 {
     public void Configure(EntityTypeBuilder<MRole> builder)
     {
-        builder.ToTable("MRole");
+        builder.ToTable("m_role");
 
         builder.HasKey(x => x.Id);
 
@@ -26,7 +26,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<MRole>
 
         builder.Property(x => x.Description)
                .HasColumnName("description")
-               .HasColumnType("nvarchar(max)");
+               .HasColumnType("text");
 
         builder.Property(x => x.Status)
                .HasColumnName("status")
@@ -35,11 +35,11 @@ public class RoleConfiguration : IEntityTypeConfiguration<MRole>
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("datetime")
+               .HasColumnType("timestamp")
                .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamp");
     }
 }

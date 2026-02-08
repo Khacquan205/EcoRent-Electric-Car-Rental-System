@@ -13,5 +13,9 @@
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        public MUser? User { get; set; }
+        public MVehicleCategory? Category { get; set; }
+        public MLocation? Location { get; set; }
     }
 }

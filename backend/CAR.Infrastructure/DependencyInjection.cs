@@ -20,7 +20,8 @@ namespace CAR.Infrastructure
             // DbContext
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(
-                    configuration.GetConnectionString("DefaultConnection")
+                    configuration.GetConnectionString("DefaultConnection"),
+                    b => b.MigrationsAssembly("CAR.Infrastructure")
                 )
             );
 

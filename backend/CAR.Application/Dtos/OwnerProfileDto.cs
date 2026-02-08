@@ -18,7 +18,7 @@ namespace CAR.Application.Dtos
 
         public bool IdentityVerified { get; set; }
 
-        public double RatingAvg { get; set; }
+        public decimal RatingAvg { get; set; }
 
         public int TotalPosts { get; set; }
 

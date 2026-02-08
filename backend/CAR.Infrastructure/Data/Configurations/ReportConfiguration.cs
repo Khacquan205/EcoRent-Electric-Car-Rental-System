@@ -6,7 +6,7 @@ public class ReportConfiguration : IEntityTypeConfiguration<MReport>
 {
     public void Configure(EntityTypeBuilder<MReport> builder)
     {
-        builder.ToTable("MReport");
+        builder.ToTable("m_report");
 
         builder.HasKey(x => x.Id);
 
@@ -29,7 +29,7 @@ public class ReportConfiguration : IEntityTypeConfiguration<MReport>
 
         builder.Property(x => x.Description)
                .HasColumnName("description")
-               .HasColumnType("nvarchar(max)");
+               .HasColumnType("text");
 
         builder.Property(x => x.Status)
                .HasColumnName("status")
@@ -37,11 +37,11 @@ public class ReportConfiguration : IEntityTypeConfiguration<MReport>
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("datetime")
+               .HasColumnType("timestamp")
                .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamp");
     }
 }

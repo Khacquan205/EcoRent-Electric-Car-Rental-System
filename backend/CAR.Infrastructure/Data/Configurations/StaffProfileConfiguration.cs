@@ -6,7 +6,7 @@ public class StaffProfileConfiguration : IEntityTypeConfiguration<MStaffProfile>
 {
     public void Configure(EntityTypeBuilder<MStaffProfile> builder)
     {
-        builder.ToTable("MStaffProfile");
+        builder.ToTable("m_staff_profile");
 
         builder.HasKey(x => x.Id);
 
@@ -37,11 +37,11 @@ public class StaffProfileConfiguration : IEntityTypeConfiguration<MStaffProfile>
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("datetime")
+               .HasColumnType("timestamp")
                .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamp");
     }
 }

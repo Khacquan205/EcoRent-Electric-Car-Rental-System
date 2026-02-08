@@ -82,7 +82,7 @@ namespace CAR.Infrastructure.Services
                 if (!string.IsNullOrEmpty(ocrResult.CccdNumber))
                 {
                     var existingCccd = await _kycRepository.GetByCccdNumberAsync(ocrResult.CccdNumber);
-                    if (existingCccd != null && existingCccd.CustomerId != customerId)
+                    if (existingCccd != null && existingCccd.CustomerProfileId != customerId)
                     {
                         throw new InvalidOperationException("Số CCCD này đã được sử dụng bởi tài khoản khác. Vui lòng sử dụng CCCD của bạn.");
                     }
@@ -92,7 +92,7 @@ namespace CAR.Infrastructure.Services
                 {
                     var newKyc = new MKyc
                     {
-                        CustomerId = customerId,
+                        CustomerProfileId = customerId,
                         CccdNumber = ocrResult.CccdNumber,
                         FullName = ocrResult.FullName,
                         DateOfBirth = ParseDate(ocrResult.Dob),

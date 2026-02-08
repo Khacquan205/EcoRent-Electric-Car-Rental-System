@@ -6,7 +6,7 @@ public class OwnerProfileConfiguration : IEntityTypeConfiguration<MOwnerProfile>
 {
     public void Configure(EntityTypeBuilder<MOwnerProfile> builder)
     {
-        builder.ToTable("MOwnerProfile");
+        builder.ToTable("m_owner_profile");
 
         builder.HasKey(x => x.Id);
 
@@ -33,7 +33,7 @@ public class OwnerProfileConfiguration : IEntityTypeConfiguration<MOwnerProfile>
 
         builder.Property(x => x.RatingAvg)
                .HasColumnName("rating_avg")
-               .HasColumnType("double")
+               .HasColumnType("numeric(18,2)")
                .IsRequired();
 
         builder.Property(x => x.TotalPosts)
@@ -42,11 +42,11 @@ public class OwnerProfileConfiguration : IEntityTypeConfiguration<MOwnerProfile>
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("datetime")
+               .HasColumnType("timestamp")
                .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamp");
     }
 }

@@ -6,11 +6,11 @@ public class PhoneConfiguration : IEntityTypeConfiguration<MPhone>
 {
     public void Configure(EntityTypeBuilder<MPhone> builder)
     {
-        builder.ToTable("MPhone");  // Đảm bảo table name là "MPhone"
+        builder.ToTable("m_phone");
 
-        builder.HasKey(x => x.id);
+        builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.id)
+        builder.Property(x => x.Id)
                .HasColumnName("id")
                .IsRequired();
 

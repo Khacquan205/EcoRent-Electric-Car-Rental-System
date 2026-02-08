@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,5 +22,8 @@ namespace CAR.Domain.Entities
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        // Navigation Properties
+        public ICollection<MUser> Users { get; set; } = new List<MUser>();
     }
 }

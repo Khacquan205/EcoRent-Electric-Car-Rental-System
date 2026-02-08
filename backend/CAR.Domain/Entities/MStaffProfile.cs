@@ -1,4 +1,4 @@
-﻿namespace CAR.Domain.Entities
+namespace CAR.Domain.Entities
 {
     public class MStaffProfile
     {
@@ -14,5 +14,8 @@
 
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+
+        public MUser User { get; set; } = null!;
+        public ICollection<MPost> VerifiedPosts { get; set; } = new List<MPost>();
     }
 }
