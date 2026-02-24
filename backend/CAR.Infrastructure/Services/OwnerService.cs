@@ -75,7 +75,7 @@ namespace CAR.Infrastructure.Services
                     Name = customerProfile.Name ?? string.Empty, // Copy name from CustomerProfile
                     Phone = request.Phone ?? customerProfile.Phone, // Use request phone or fallback to customer phone
                     IdentityVerified = false,
-                    RatingAvg = 0.0,
+                    RatingAvg = 0.0m,
                     TotalPosts = 0,
                     CreatedAt = DateTime.UtcNow
                 };

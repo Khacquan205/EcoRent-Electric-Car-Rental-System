@@ -6,7 +6,7 @@ public class LocationConfiguration : IEntityTypeConfiguration<MLocation>
 {
     public void Configure(EntityTypeBuilder<MLocation> builder)
     {
-        builder.ToTable("MLocation");
+        builder.ToTable("m_location");
 
         builder.HasKey(x => x.Id);
 
@@ -29,16 +29,16 @@ public class LocationConfiguration : IEntityTypeConfiguration<MLocation>
 
         builder.Property(x => x.AddressDetail)
                .HasColumnName("address_detail")
-               .HasColumnType("nvarchar(max)");
+               .HasColumnType("text");
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("datetime")
+               .HasColumnType("timestamp")
                .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamp");
     }
 }
 

@@ -1,4 +1,4 @@
-﻿namespace CAR.Domain.Entities
+namespace CAR.Domain.Entities
 {
     public class MReview
     {
@@ -13,5 +13,9 @@
 
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+
+        public MPost Post { get; set; } = null!;
+        public MUser Reviewer { get; set; } = null!;
+        public MOwnerProfile Owner { get; set; } = null!;
     }
 }

@@ -12,7 +12,7 @@ namespace CAR.Infrastructure.Repositories
         {
         }
 
-        public async Task<MPost> CreatePendingPostAsync(CreatePostRequestDto request, long ownerId, DateTime currentTime)
+        public async Task<MPost> CreatePendingPostAsync(CreatePostRequestDto request, int ownerId, DateTime currentTime)
         {
             var post = new MPost
             {

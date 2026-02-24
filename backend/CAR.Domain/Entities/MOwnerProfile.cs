@@ -18,12 +18,18 @@ namespace CAR.Domain.Entities
 
         public bool IdentityVerified { get; set; }
 
-        public double RatingAvg { get; set; }
+        public decimal RatingAvg { get; set; }
 
         public int TotalPosts { get; set; }
 
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        public MUser User { get; set; } = null!;
+        public MIdentityVerification? IdentityVerification { get; set; }
+        public ICollection<MPost> Posts { get; set; } = new List<MPost>();
+        public ICollection<MReview> ReviewsReceived { get; set; } = new List<MReview>();
+        public ICollection<MOwnerSubscription> Subscriptions { get; set; } = new List<MOwnerSubscription>();
     }
 }

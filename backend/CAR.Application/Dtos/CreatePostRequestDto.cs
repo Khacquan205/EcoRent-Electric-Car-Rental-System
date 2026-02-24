@@ -4,9 +4,9 @@ namespace CAR.Application.Dtos
 {
     public class CreatePostRequestDto
     {
-        public long CategoryId { get; set; }
+        public int CategoryId { get; set; }
 
-        public long? LocationId { get; set; }
+        public int? LocationId { get; set; }
 
         public string Title { get; set; } = null!;
 

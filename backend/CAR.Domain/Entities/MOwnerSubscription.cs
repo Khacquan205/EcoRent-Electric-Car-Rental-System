@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 
 namespace CAR.Domain.Entities
 {
     public partial class MOwnerSubscription
     {
-        public long Id { get; set; }
+        public int Id { get; set; }
 
-        public long OwnerId { get; set; }
+        public int OwnerId { get; set; }
 
-        public long PackageId { get; set; }
+        public int PackageId { get; set; }
 
         public DateTime StartDate { get; set; }
 
@@ -25,5 +25,9 @@ namespace CAR.Domain.Entities
         public DateTime CreatedAt { get; set; }
 
         public DateTime UpdatedAt { get; set; }
+
+        public MOwnerProfile OwnerProfile { get; set; } = null!;
+        public MOwnerPackage Package { get; set; } = null!;
+        public ICollection<MPayment> Payments { get; set; } = new List<MPayment>();
     }
 }

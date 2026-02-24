@@ -16,5 +16,7 @@
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        public MOwnerSubscription Subscription { get; set; } = null!;
     }
 }

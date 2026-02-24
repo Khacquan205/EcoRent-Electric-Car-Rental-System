@@ -6,7 +6,7 @@ public class UserConfiguration : IEntityTypeConfiguration<MUser>
 {
     public void Configure(EntityTypeBuilder<MUser> builder)
     {
-        builder.ToTable("MUser");
+        builder.ToTable("m_user");
 
         builder.HasKey(x => x.Id);
 
@@ -39,7 +39,7 @@ public class UserConfiguration : IEntityTypeConfiguration<MUser>
 
         builder.Property(x => x.AvatarImgUrl)
                .HasColumnName("avatar_img_url")
-               .HasColumnType("nvarchar(max)");
+               .HasColumnType("text");
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")

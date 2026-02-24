@@ -6,7 +6,7 @@ public class AuthenticationConfiguration : IEntityTypeConfiguration<MAuthenticat
 {
     public void Configure(EntityTypeBuilder<MAuthentication> builder)
     {
-        builder.ToTable("MAuthentication");
+        builder.ToTable("m_authentication");
 
         builder.HasKey(x => x.Id);
 
@@ -78,9 +78,9 @@ public class AuthenticationConfiguration : IEntityTypeConfiguration<MAuthenticat
                .HasDefaultValueSql("NOW() AT TIME ZONE 'utc'"); // PostgreSQL UTC default
 
         // Configure relationship with MUser
-        builder.HasOne<MUser>()
-               .WithOne()
-               .HasForeignKey<MAuthentication>(x => x.UserId)
+        builder.HasOne(a => a.User)
+               .WithMany(u => u.Authentications)
+               .HasForeignKey(a => a.UserId)
                .OnDelete(DeleteBehavior.Cascade);
     }
 }

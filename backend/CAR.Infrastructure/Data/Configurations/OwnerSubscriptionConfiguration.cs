@@ -9,8 +9,7 @@ namespace CAR.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<MOwnerSubscription> builder)
         {
-            builder.ToTable("MOwnerSubscription");
-
+            builder.ToTable("m_owner_subscription");
       
             builder.HasKey(x => x.Id);
 

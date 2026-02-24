@@ -6,7 +6,7 @@ public class ReviewConfiguration : IEntityTypeConfiguration<MReview>
 {
     public void Configure(EntityTypeBuilder<MReview> builder)
     {
-        builder.ToTable("MReview");
+        builder.ToTable("m_review");
 
         builder.HasKey(x => x.Id);
 
@@ -33,15 +33,15 @@ public class ReviewConfiguration : IEntityTypeConfiguration<MReview>
 
         builder.Property(x => x.Comment)
                .HasColumnName("comment")
-               .HasColumnType("nvarchar(max)");
+               .HasColumnType("text");
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("datetime")
+               .HasColumnType("timestamp")
                .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamp");
     }
 }

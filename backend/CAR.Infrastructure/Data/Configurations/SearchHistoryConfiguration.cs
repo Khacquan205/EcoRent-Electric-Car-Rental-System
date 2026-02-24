@@ -6,7 +6,7 @@ public class SearchHistoryConfiguration : IEntityTypeConfiguration<MSearchHistor
 {
     public void Configure(EntityTypeBuilder<MSearchHistory> builder)
     {
-        builder.ToTable("MSearchHistory");
+        builder.ToTable("m_search_history");
 
         builder.HasKey(x => x.Id);
 
@@ -30,11 +30,11 @@ public class SearchHistoryConfiguration : IEntityTypeConfiguration<MSearchHistor
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("datetime")
+               .HasColumnType("timestamp")
                .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamp");
     }
 }

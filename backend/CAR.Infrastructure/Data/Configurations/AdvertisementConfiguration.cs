@@ -8,7 +8,7 @@ namespace CAR.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<MAdvertisement> builder)
         {
-            builder.ToTable("MAdvertisement");
+            builder.ToTable("m_advertisement");
 
             builder.HasKey(x => x.Id);
 
@@ -23,12 +23,12 @@ namespace CAR.Infrastructure.Data.Configurations
 
             builder.Property(x => x.StartDate)
                    .HasColumnName("start_date")
-                   .HasColumnType("datetime")
+                   .HasColumnType("timestamp")
                    .IsRequired();
 
             builder.Property(x => x.EndDate)
                    .HasColumnName("end_date")
-                   .HasColumnType("datetime")
+                   .HasColumnType("timestamp")
                    .IsRequired();
 
             builder.Property(x => x.Status)
@@ -38,17 +38,17 @@ namespace CAR.Infrastructure.Data.Configurations
 
             builder.Property(x => x.Price)
                    .HasColumnName("price")
-                   .HasColumnType("double")
+                   .HasColumnType("numeric(18,2)")
                    .IsRequired();
 
             builder.Property(x => x.CreatedAt)
                    .HasColumnName("created_at")
-                   .HasColumnType("datetime")
+                   .HasColumnType("timestamp")
                    .IsRequired();
 
             builder.Property(x => x.UpdatedAt)
                    .HasColumnName("updated_at")
-                   .HasColumnType("datetime")
+                   .HasColumnType("timestamp")
                    .IsRequired(false);
         }
     }

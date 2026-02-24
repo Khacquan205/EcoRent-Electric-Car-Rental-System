@@ -6,7 +6,7 @@ public class VehicleVerificationConfiguration : IEntityTypeConfiguration<MVehicl
 {
     public void Configure(EntityTypeBuilder<MVehicleVerification> builder)
     {
-        builder.ToTable("MVehicleVerification");
+        builder.ToTable("m_vehicle_verification");
 
         builder.HasKey(x => x.Id);
 
@@ -21,27 +21,27 @@ public class VehicleVerificationConfiguration : IEntityTypeConfiguration<MVehicl
 
         builder.Property(x => x.RegistrationImage)
                .HasColumnName("registration_image")
-               .HasColumnType("nvarchar(max)");
+               .HasColumnType("text");
 
         builder.Property(x => x.InspectionImage)
                .HasColumnName("inspection_image")
-               .HasColumnType("nvarchar(max)");
+               .HasColumnType("text");
 
         builder.Property(x => x.InsuranceImage)
                .HasColumnName("insurance_image")
-               .HasColumnType("nvarchar(max)");
+               .HasColumnType("text");
 
         builder.Property(x => x.VerifiedAt)
                .HasColumnName("verified_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamp");
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("datetime")
+               .HasColumnType("timestamp")
                .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamp");
     }
 }

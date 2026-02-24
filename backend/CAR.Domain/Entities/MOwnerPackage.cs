@@ -9,7 +9,7 @@ namespace CAR.Domain.Entities
         public string? Name { get; set; }
         public string? Description { get; set; }
 
-        public double Price { get; set; }
+        public decimal Price { get; set; }
         public int DurationDays { get; set; }
         public int MaxPosts { get; set; }
 
@@ -18,5 +18,7 @@ namespace CAR.Domain.Entities
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        public ICollection<MOwnerSubscription> Subscriptions { get; set; } = new List<MOwnerSubscription>();
     }
 }

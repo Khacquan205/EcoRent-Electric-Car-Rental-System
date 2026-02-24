@@ -191,7 +191,7 @@ namespace CAR.Infrastructure.Services
             }).ToList();
         }
 
-        private async Task ValidatePackageRulesAsync(string name, double price, int durationDays, int maxPosts, int priorityLevel)
+        private async Task ValidatePackageRulesAsync(string name, decimal price, int durationDays, int maxPosts, int priorityLevel)
         {
             if (price <= 0)
             {

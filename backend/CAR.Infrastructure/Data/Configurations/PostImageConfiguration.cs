@@ -6,7 +6,7 @@ public class PostImageConfiguration : IEntityTypeConfiguration<TPostImage>
 {
     public void Configure(EntityTypeBuilder<TPostImage> builder)
     {
-        builder.ToTable("TPostImage");
+        builder.ToTable("m_post_image");
 
         builder.HasKey(x => x.Id);
 
@@ -21,7 +21,7 @@ public class PostImageConfiguration : IEntityTypeConfiguration<TPostImage>
 
         builder.Property(x => x.ImageUrl)
                .HasColumnName("image_url")
-               .HasColumnType("nvarchar(max)")
+               .HasColumnType("text")
                .IsRequired();
 
         builder.Property(x => x.SortOrder)
@@ -30,11 +30,11 @@ public class PostImageConfiguration : IEntityTypeConfiguration<TPostImage>
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("datetime")
+               .HasColumnType("timestamp")
                .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamp");
     }
 }

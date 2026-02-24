@@ -28,5 +28,15 @@ namespace CAR.Domain.Entities
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        // Navigation Properties
+        public MRole Role { get; set; } = null!;
+        public ICollection<MAuthentication> Authentications { get; set; } = new List<MAuthentication>();
+        public MCustomerProfile? CustomerProfile { get; set; }
+        public MOwnerProfile? OwnerProfile { get; set; }
+        public MStaffProfile? StaffProfile { get; set; }
+        public ICollection<MSearchHistory> SearchHistories { get; set; } = new List<MSearchHistory>();
+        public ICollection<MReview> ReviewsGiven { get; set; } = new List<MReview>();
+        public ICollection<MReport> ReportsMade { get; set; } = new List<MReport>();
     }
 }
