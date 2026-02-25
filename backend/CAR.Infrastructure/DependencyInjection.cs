@@ -1,7 +1,8 @@
-﻿using CAR.Application.Interfaces;
+using CAR.Application.Interfaces;
 using CAR.Application.Interfaces.Repositories;
 using CAR.Application.Interfaces.Services;
 using CAR.Infrastructure.Data;
+using CAR.Infrastructure.Options;
 using CAR.Infrastructure.Repositories;
 using CAR.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +40,11 @@ namespace CAR.Infrastructure
             services.AddScoped<IRepository<Domain.Entities.MUser>, Repository<Domain.Entities.MUser>>();
             services.AddScoped<IKycRepository, KycRepository>();
             services.AddScoped<IPhoneRepository, PhoneRepository>();
+            services.AddScoped<IPaymentRepository, PaymentRepository>();
+            services.AddScoped<INotificationRepository, NotificationRepository>();
+
+            // VNPay options
+            services.Configure<VnPaySettings>(configuration.GetSection(VnPaySettings.SectionName));
 
             // Services
             services.AddScoped<IEmailService, EmailService>();
@@ -47,6 +53,9 @@ namespace CAR.Infrastructure
             services.AddScoped<IKycOcrService, FptKycOcrService>();
             services.AddScoped<ITwilioSmsService, TwilioSmsService>();
             services.AddScoped<ICustomerService, CustomerService>();
+            services.AddScoped<IPaymentService, VnPayService>();
+            services.AddScoped<INotificationService, SignalRNotificationService>();
+            services.AddScoped<IOwnerKycService, OwnerKycService>();
 
             return services;
         }
@@ -57,12 +66,12 @@ namespace CAR.Infrastructure
             // Services
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IPostService, PostService>();
+            services.AddScoped<IPostModerationService, PostModerationService>();
             services.AddScoped<IOwnerService, OwnerService>();
             services.AddScoped<ISubscriptionService, SubscriptionService>();
             services.AddScoped<IIdentityVerificationService, IdentityVerificationService>();
             services.AddScoped<IKycOcrService, FptKycOcrService>();
             services.AddScoped<IFirebasePhoneService, FirebasePhoneService>();
-            services.AddScoped<ICustomerKycService, CustomerKycService>();
             services.AddScoped<IOwnerPackageService, OwnerPackageService>();
 
             return services;

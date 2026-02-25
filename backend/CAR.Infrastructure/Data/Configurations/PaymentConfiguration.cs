@@ -1,4 +1,4 @@
-﻿using CAR.Domain.Entities;
+using CAR.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -35,6 +35,18 @@ public class PaymentConfiguration : IEntityTypeConfiguration<MPayment>
         builder.Property(x => x.TransactionCode)
                .HasColumnName("transaction_code")
                .HasMaxLength(100);
+
+        builder.Property(x => x.VnpayTransactionId)
+               .HasColumnName("vnpay_transaction_id")
+               .HasMaxLength(50);
+
+        builder.Property(x => x.ResponseCode)
+               .HasColumnName("response_code")
+               .HasMaxLength(10);
+
+        builder.Property(x => x.PayDate)
+               .HasColumnName("pay_date")
+               .HasColumnType("timestamp");
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")

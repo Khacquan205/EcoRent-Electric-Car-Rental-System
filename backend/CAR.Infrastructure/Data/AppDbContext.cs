@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using CAR.Domain.Entities;
 
 namespace CAR.Infrastructure.Data
@@ -30,6 +30,7 @@ namespace CAR.Infrastructure.Data
         public DbSet<MOwnerSubscription> OwnerSubscriptions { get; set; }
         public DbSet<MKyc> Ky { get; set; }
         public DbSet<MPhone> Phones { get; set; }
+        public DbSet<MNotification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
