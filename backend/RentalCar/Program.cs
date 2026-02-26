@@ -1,4 +1,5 @@
-﻿using CAR.Infrastructure;
+using CAR.Infrastructure;
+using CAR.Infrastructure.Hubs;
 using CAR.Infrastructure.Options;
 using CAR.Application.Interfaces.Services;
 using CAR.Infrastructure.Services;
@@ -46,10 +47,26 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
         ClockSkew = TimeSpan.Zero
     };
+
+    // SignalR sends JWT via query string for WebSocket connections
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = ctx =>
+        {
+            var token = ctx.Request.Query["access_token"];
+            if (!string.IsNullOrEmpty(token) &&
+                ctx.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+            {
+                ctx.Token = token;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 // Configure form options for file upload
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
@@ -134,4 +151,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 app.Run();

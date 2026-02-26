@@ -23,5 +23,8 @@ namespace CAR.Domain.Entities
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         public MCustomerProfile CustomerProfile { get; set; } = null!;
+
+
+
     }
 }

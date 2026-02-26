@@ -3,6 +3,7 @@ using System;
 using CAR.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CAR.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260225171207_AddNotificationAndPostStatus")]
+    partial class AddNotificationAndPostStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -260,12 +263,21 @@ namespace CAR.Infrastructure.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("back_document_url");
 
+                    b.Property<string>("CccdNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("cccd_number");
+
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<int>("CustomerProfileId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_profile_id");
+
                     b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_of_birth");
 
                     b.Property<string>("FrontDocumentUrl")
@@ -278,22 +290,12 @@ namespace CAR.Infrastructure.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("full_name");
 
-                    b.Property<string>("IdCardNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("id_card_number");
-
-                    b.Property<int>("OwnerProfileId")
+                    b.Property<int>("Gender")
                         .HasColumnType("integer")
-                        .HasColumnName("owner_profile_id");
-
-                    b.Property<string>("RejectionReason")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("rejection_reason");
+                        .HasColumnName("gender");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.Property<int>("VerificationStatus")
@@ -301,16 +303,16 @@ namespace CAR.Infrastructure.Migrations
                         .HasColumnName("verification_status");
 
                     b.Property<DateTime?>("VerifiedAt")
-                        .HasColumnType("timestamp")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("verified_at");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IdCardNumber")
+                    b.HasIndex("CccdNumber")
                         .IsUnique()
-                        .HasFilter("id_card_number IS NOT NULL");
+                        .HasFilter("\"cccd_number\" IS NOT NULL");
 
-                    b.HasIndex("OwnerProfileId")
+                    b.HasIndex("CustomerProfileId")
                         .IsUnique();
 
                     b.ToTable("m_kyc", (string)null);
@@ -1231,13 +1233,13 @@ namespace CAR.Infrastructure.Migrations
 
             modelBuilder.Entity("CAR.Domain.Entities.MKyc", b =>
                 {
-                    b.HasOne("CAR.Domain.Entities.MOwnerProfile", "OwnerProfile")
+                    b.HasOne("CAR.Domain.Entities.MCustomerProfile", "CustomerProfile")
                         .WithOne("Kyc")
-                        .HasForeignKey("CAR.Domain.Entities.MKyc", "OwnerProfileId")
+                        .HasForeignKey("CAR.Domain.Entities.MKyc", "CustomerProfileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("OwnerProfile");
+                    b.Navigation("CustomerProfile");
                 });
 
             modelBuilder.Entity("CAR.Domain.Entities.MNotification", b =>
@@ -1451,6 +1453,8 @@ namespace CAR.Infrastructure.Migrations
 
             modelBuilder.Entity("CAR.Domain.Entities.MCustomerProfile", b =>
                 {
+                    b.Navigation("Kyc");
+
                     b.Navigation("Phones");
                 });
 
@@ -1462,8 +1466,6 @@ namespace CAR.Infrastructure.Migrations
             modelBuilder.Entity("CAR.Domain.Entities.MOwnerProfile", b =>
                 {
                     b.Navigation("IdentityVerification");
-
-                    b.Navigation("Kyc");
 
                     b.Navigation("Posts");
 

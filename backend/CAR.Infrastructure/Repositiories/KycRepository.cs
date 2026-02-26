@@ -3,35 +3,21 @@ using CAR.Domain.Entities;
 using CAR.Infrastructure.Data;
 using CAR.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
 
 namespace CAR.Infrastructure.Repositiories
 {
     public class KycRepository : Repository<MKyc>, IKycRepository
     {
-        public KycRepository(AppDbContext context) : base(context)
+        public KycRepository(AppDbContext context) : base(context) { }
+
+        public async Task<MKyc?> GetByOwnerProfileIdAsync(int ownerProfileId)
         {
+            return await _dbSet.FirstOrDefaultAsync(k => k.OwnerProfileId == ownerProfileId);
         }
 
-        public async Task<MKyc?> GetByCustomerIdAsync(int customerId)
+        public async Task<MKyc?> GetByIdCardNumberAsync(string idCardNumber)
         {
-            return await _context.Ky.FirstOrDefaultAsync(k => k.CustomerProfileId == customerId);
-        }
-
-        public async Task<MKyc?> GetByCccdNumberAsync(string cccdNumber)
-        {
-            return await _context.Ky.FirstOrDefaultAsync(k => k.CccdNumber == cccdNumber);
-        }
-
-        public async Task CreateKycAsync(MKyc kyc)
-        {
-            await _context.Ky.AddAsync(kyc);
-        }
-
-        public async Task UpdateKycAsync(MKyc kyc)
-        {
-            _context.Ky.Update(kyc);
-            await Task.CompletedTask;
+            return await _dbSet.FirstOrDefaultAsync(k => k.IdCardNumber == idCardNumber);
         }
     }
 }

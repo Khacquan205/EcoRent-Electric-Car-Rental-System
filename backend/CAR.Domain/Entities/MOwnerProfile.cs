@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -27,6 +27,7 @@ namespace CAR.Domain.Entities
         public DateTime? UpdatedAt { get; set; }
 
         public MUser User { get; set; } = null!;
+        public MKyc? Kyc { get; set; }
         public MIdentityVerification? IdentityVerification { get; set; }
         public ICollection<MPost> Posts { get; set; } = new List<MPost>();
         public ICollection<MReview> ReviewsReceived { get; set; } = new List<MReview>();

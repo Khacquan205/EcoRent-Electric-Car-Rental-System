@@ -18,5 +18,7 @@
 
         public MPost Post { get; set; } = null!;
         public MUser ReporterUser { get; set; } = null!;
+
+
     }
 }

@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using CAR.Domain.Enums;
 
 namespace CAR.Domain.Entities
@@ -26,7 +21,6 @@ namespace CAR.Domain.Entities
         public DateTime? UpdatedAt { get; set; }
 
         public MUser User { get; set; } = null!;
-        public MKyc? Kyc { get; set; }
         public ICollection<MPhone> Phones { get; set; } = new List<MPhone>();
     }
 }
