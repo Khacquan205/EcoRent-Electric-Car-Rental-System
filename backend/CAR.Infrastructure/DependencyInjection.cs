@@ -50,6 +50,7 @@ namespace CAR.Infrastructure
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IJwtService, JwtService>();
             services.AddScoped<IFirebaseService, FirebaseService>();
+            services.AddScoped<IGoogleAuthProvider, GoogleAuthProvider>();
             services.AddScoped<IKycOcrService, FptKycOcrService>();
             services.AddScoped<ITwilioSmsService, TwilioSmsService>();
             services.AddScoped<ICustomerService, CustomerService>();
