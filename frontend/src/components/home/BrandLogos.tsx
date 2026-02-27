@@ -1,53 +1,73 @@
-const brands = [
-  { name: "Honda", fontFamily: "Arial", letterSpacing: "0" },
-  { name: "Jaguar", fontFamily: "serif", letterSpacing: "2" },
-  { name: "Nissan", fontFamily: "Arial", letterSpacing: "0" },
-  { name: "Volvo", fontFamily: "Arial", letterSpacing: "4" },
+const evBrands = [
+  {
+    name: "VinFast",
+    svg: (
+      <svg className="h-7 w-auto" viewBox="0 0 120 24" fill="currentColor">
+        <text x="0" y="18" fontSize="18" fontWeight="800" fontFamily="Arial, sans-serif" letterSpacing="1">
+          VinFast
+        </text>
+      </svg>
+    ),
+  },
+  {
+    name: "Tesla",
+    svg: (
+      <svg className="h-7 w-auto" viewBox="0 0 90 24" fill="currentColor">
+        <text x="0" y="18" fontSize="18" fontWeight="700" fontFamily="Arial, sans-serif" letterSpacing="2">
+          TESLA
+        </text>
+      </svg>
+    ),
+  },
+  {
+    name: "Hyundai",
+    svg: (
+      <svg className="h-7 w-auto" viewBox="0 0 120 24" fill="currentColor">
+        <text x="0" y="18" fontSize="16" fontWeight="700" fontFamily="Arial, sans-serif" letterSpacing="3">
+          HYUNDAI
+        </text>
+      </svg>
+    ),
+  },
+  {
+    name: "BYD",
+    svg: (
+      <svg className="h-7 w-auto" viewBox="0 0 60 24" fill="currentColor">
+        <text x="0" y="18" fontSize="20" fontWeight="800" fontFamily="Arial, sans-serif" letterSpacing="2">
+          BYD
+        </text>
+      </svg>
+    ),
+  },
+  {
+    name: "Kia",
+    svg: (
+      <svg className="h-7 w-auto" viewBox="0 0 60 24" fill="currentColor">
+        <text x="0" y="18" fontSize="20" fontWeight="800" fontFamily="Arial, sans-serif" letterSpacing="3">
+          KIA
+        </text>
+      </svg>
+    ),
+  },
 ];
 
 const BrandLogos = () => {
   return (
-    <section className="border-t border-[#E5E5E5] bg-white py-16 lg:py-30">
+    <section className="border-t border-[#E5E5E5] bg-white py-12 lg:py-16">
       <div className="container mx-auto px-6">
-        <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16 lg:justify-between">
-          {brands.map((brand) => (
+        <p className="mb-8 text-center text-sm font-medium uppercase tracking-widest text-[#ACACAC]">
+          Các thương hiệu xe điện trên nền tảng
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-10 md:gap-16 lg:justify-between">
+          {evBrands.map((brand) => (
             <div
               key={brand.name}
-              className="flex items-center gap-2 text-[#242424] opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0"
+              className="text-[#ACACAC] opacity-60 transition-all duration-200 hover:text-[#1572D3] hover:opacity-100"
+              aria-label={brand.name}
             >
-              <svg
-                className="h-8 w-auto"
-                viewBox="0 0 100 20"
-                fill="currentColor"
-              >
-                <text
-                  x="0"
-                  y="16"
-                  fontSize="16"
-                  fontWeight="bold"
-                  fontFamily={brand.fontFamily}
-                  letterSpacing={brand.letterSpacing}
-                >
-                  {brand.name.toUpperCase()}
-                </text>
-              </svg>
+              {brand.svg}
             </div>
           ))}
-          {/* Audi - Special rings logo */}
-          <div className="flex items-center gap-2 text-[#242424] opacity-70 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-            <svg
-              className="h-8 w-auto"
-              viewBox="0 0 80 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <circle cx="28" cy="12" r="10" />
-              <circle cx="44" cy="12" r="10" />
-              <circle cx="60" cy="12" r="10" />
-            </svg>
-          </div>
         </div>
       </div>
     </section>

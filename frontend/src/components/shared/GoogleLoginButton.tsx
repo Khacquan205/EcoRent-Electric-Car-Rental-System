@@ -102,7 +102,7 @@ export function GoogleLoginButton({ onError, redirectTo }: Props) {
       <GoogleLogin
         onSuccess={handleCredential}
         onError={handleGoogleError}
-        width={448}
+        width={350}
         theme="outline"
         size="large"
         text="continue_with"

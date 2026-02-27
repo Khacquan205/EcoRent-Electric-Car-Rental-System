@@ -4,12 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowLeft, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import * as authApi from "@/services/auth";
 import { useAuthSession } from "@/components/providers";
 import { GoogleLoginButton } from "@/components/shared";
 import { buildSessionFromLoginResponse, isTokenExpired } from "@/lib/jwtDecode";
+import bgImage from "@/assets/bgLoginSignup.jpg";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -61,168 +62,173 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      <div className="flex min-h-screen">
-        {/* Left Side - Form */}
-        <div className="flex w-full flex-col justify-center px-6 py-12 lg:w-1/2 lg:px-16 xl:px-24">
-          <div className="mx-auto w-full max-w-md">
-            {/* Logo */}
-            <Link href="/" className="inline-flex items-center gap-2">
-              <Image
-                src="/Logo.png"
-                alt="EcoRent Logo"
-                width={40}
-                height={40}
-                className="h-10 w-10"
-              />
-              <span className="text-2xl font-bold text-[#1572D3]">EcoRent</span>
-            </Link>
+    <div className="relative flex h-screen items-center justify-center overflow-hidden px-4">
+      {/* Background image — shared with signup */}
+      <Image
+        src={bgImage}
+        alt=""
+        fill
+        className="scale-105 object-cover blur-md"
+        priority
+        quality={60}
+      />
 
-            {/* Header */}
-            <div className="mt-8">
-              <h1 className="text-3xl font-bold text-[#242424]">
-                Welcome back
-              </h1>
-              <p className="mt-2 text-[#747474]">
-                Sign in to your account to continue
-              </p>
-            </div>
+      {/* Overlay — darkens image so form card pops */}
+      <div className="absolute inset-0 bg-black/40" />
 
-            {/* Social Login */}
-            <div className="mt-8">
-              <GoogleLoginButton onError={setMessage} />
-            </div>
+      {/* Back to home — always clear above blur */}
+      <Link
+        href="/"
+        className="absolute left-4 top-4 z-20 inline-flex items-center gap-1.5 rounded-full bg-slate-900/80 px-3 py-1.5 text-xs font-medium text-slate-50 shadow-lg backdrop-blur-md transition-colors hover:bg-slate-900"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        <span>Về trang chủ</span>
+      </Link>
 
-            {/* Divider */}
-            <div className="relative my-8">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#E5E5E5]"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="bg-[#F8FAFC] px-4 text-[#747474]">
-                  or continue with email
-                </span>
-              </div>
-            </div>
+      <div className="relative z-10 w-full max-w-sm">
+        <div className="rounded-3xl border border-slate-100 bg-white px-6 py-8 shadow-xl shadow-slate-200/50">
+          {/* Logo */}
+          <Link href="/" className="inline-flex items-center gap-2">
+            <Image
+              src="/favicon.ico"
+              alt="EcoRent Logo"
+              width={36}
+              height={36}
+              className="h-9 w-9"
+            />
+            <span className="text-xl font-black text-[#1572D3]">EcoRent</span>
+          </Link>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Email */}
-              <div>
-                <label className="text-sm font-medium text-[#242424]">
-                  Email address
-                </label>
-                <div className="relative mt-1.5">
-                  <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#747474]" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-lg border border-[#E5E5E5] py-3 pl-10 pr-4 text-sm text-[#242424] outline-none transition-colors placeholder:text-[#B6B6B6] focus:border-[#1572D3] focus:ring-2 focus:ring-[#1572D3]/20"
-                    placeholder="Enter your email"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-[#242424]">
-                    Password
-                  </label>
-                  <Link
-                    href="/forgot-password"
-                    className="text-sm font-medium text-[#1572D3] hover:text-[#1260B0]"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative mt-1.5">
-                  <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#747474]" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-lg border border-[#E5E5E5] py-3 pl-10 pr-12 text-sm text-[#242424] outline-none transition-colors placeholder:text-[#B6B6B6] focus:border-[#1572D3] focus:ring-2 focus:ring-[#1572D3]/20"
-                    placeholder="Enter your password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#747474] hover:text-[#242424]"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Error Message */}
-              {message && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                  {message}
-                </div>
-              )}
-
-              {/* Remember Me */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="remember"
-                  className="h-4 w-4 rounded border-[#E5E5E5] text-[#1572D3] focus:ring-[#1572D3]"
-                />
-                <label htmlFor="remember" className="text-sm text-[#747474]">
-                  Remember me for 30 days
-                </label>
-              </div>
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="h-12 w-full bg-[#1572D3] text-white hover:bg-[#1260B0] disabled:opacity-50"
-              >
-                {isSubmitting ? "Signing in..." : "Sign in"}
-              </Button>
-            </form>
-
-            {/* Sign Up Link */}
-            <p className="mt-8 text-center text-sm text-[#747474]">
-              Don&apos;t have an account?{" "}
-              <Link
-                href="/register"
-                className="font-semibold text-[#1572D3] hover:text-[#1260B0]"
-              >
-                Sign up for free
-              </Link>
+          {/* Header */}
+          <div className="mt-5">
+            <h1 className="text-xl font-semibold text-[#242424]">
+              Welcome back
+            </h1>
+            <p className="mt-1 text-xs text-[#747474]">
+              Sign in to your account to continue.
             </p>
           </div>
+
+          {/* Social Login */}
+          <div className="mt-5">
+            <GoogleLoginButton onError={setMessage} />
+          </div>
+
+          {/* Divider */}
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-100" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-white px-2.5 text-[11px] text-slate-400">
+                or continue with email
+              </span>
+            </div>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            {/* Email */}
+            <div>
+              <label className="text-xs font-medium uppercase tracking-wide text-[#242424]">
+                Email address
+              </label>
+              <div className="relative mt-1">
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#747474]" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-lg border border-[#E5E5E5] py-2.5 pl-9 pr-3 text-sm text-[#242424] outline-none transition-colors placeholder:text-[#B6B6B6] focus:border-[#1572D3] focus:ring-2 focus:ring-[#1572D3]/20"
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium uppercase tracking-wide text-[#242424]">
+                  Password
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs font-medium text-[#1572D3] hover:text-[#1260B0]"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative mt-1">
+                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#747474]" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-lg border border-[#E5E5E5] py-2.5 pl-9 pr-10 text-sm text-[#242424] outline-none transition-colors placeholder:text-[#B6B6B6] focus:border-[#1572D3] focus:ring-2 focus:ring-[#1572D3]/20"
+                  placeholder="Enter your password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#747474] hover:text-[#242424]"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {message && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-600">
+                {message}
+              </div>
+            )}
+
+            {/* Remember Me */}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="remember"
+                className="h-4 w-4 rounded border-[#E5E5E5] text-[#1572D3] focus:ring-[#1572D3]"
+              />
+              <label htmlFor="remember" className="text-xs text-[#747474]">
+                Remember me for 30 days
+              </label>
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="mt-1 h-10 w-full bg-[#1572D3] text-sm font-medium text-white hover:bg-[#1260B0] disabled:opacity-50"
+            >
+              {isSubmitting ? "Signing in..." : "Sign in"}
+            </Button>
+          </form>
+
+          {/* Sign Up Link */}
+          <p className="mt-5 text-center text-xs text-slate-400">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/register"
+              className="font-semibold text-[#1572D3] hover:text-[#1260B0]"
+            >
+              Sign up for free
+            </Link>
+          </p>
         </div>
 
-        {/* Right Side - Video Background */}
-        <div className="relative hidden overflow-hidden lg:block lg:w-1/2">
-          {/* Video Background */}
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="absolute inset-0 h-full w-full object-cover"
-          >
-            <source
-              src="/car video/From KlickPin CF Pin by Halit Can on Pins by you _ Fast cars videos Good looking cars Car videos.mp4"
-              type="video/mp4"
-            />
-          </video>
-
-          {/* Dark Overlay */}
-          <div className="absolute inset-0 bg-black/40" />
-        </div>
+        {/* Brand note */}
+        <p className="mt-6 flex items-center justify-center gap-1.5 text-xs text-slate-400">
+          <Zap className="h-3.5 w-3.5 text-[#1572D3]" />
+          Nền tảng thuê xe điện P2P đầu tiên tại Việt Nam
+        </p>
       </div>
     </div>
   );

@@ -49,7 +49,7 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
 
   const ownerInfo = {
     name: "Trung tâm cho thuê xe EcoRent",
-    avatar: "/Logo.png",
+    avatar: "/favicon.ico",
     rating: 5,
     reviewCount: 3,
     totalRentals: 230,

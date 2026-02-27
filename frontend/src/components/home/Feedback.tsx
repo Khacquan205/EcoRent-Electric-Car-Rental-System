@@ -93,7 +93,7 @@ const Feedback = () => {
           &rdquo;
         </div>
         <div className="container mx-auto px-6">
-          <SectionHeader badge="FEEDBACK" title="What people say about us?" />
+          <SectionHeader badge="CỘNG ĐỒNG NÓI GÌ" title="Người dùng EcoRent chia sẻ trải nghiệm" />
 
           {/* Feedback Horizontal Scroll */}
           <div
