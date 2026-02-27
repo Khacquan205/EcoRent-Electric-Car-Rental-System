@@ -15,6 +15,7 @@ namespace CAR.Infrastructure.Services
         private readonly IEmailService _emailService;
         private readonly IJwtService _jwtService;
         private readonly IFirebaseService _firebaseService;
+        private readonly IGoogleAuthProvider _googleAuthProvider;
 
         public AuthService(
             IAuthenticationRepository authRepository,
@@ -23,7 +24,8 @@ namespace CAR.Infrastructure.Services
             IUnitOfWork unitOfWork,
             IEmailService emailService,
             IJwtService jwtService,
-            IFirebaseService firebaseService)
+            IFirebaseService firebaseService,
+            IGoogleAuthProvider googleAuthProvider)
         {
             _authRepository = authRepository;
             _userRepository = userRepository;
@@ -32,6 +34,7 @@ namespace CAR.Infrastructure.Services
             _emailService = emailService;
             _jwtService = jwtService;
             _firebaseService = firebaseService;
+            _googleAuthProvider = googleAuthProvider;
         }
 
         public async Task<AuthResponseDto> Register(RegisterRequestDto request)
@@ -119,7 +122,7 @@ namespace CAR.Infrastructure.Services
 
             // Send OTP email
             var emailSent = await _emailService.SendOtpEmailAsync(request.Email, otpCode);
-            
+
             if (!emailSent)
             {
                 return new AuthResponseDto
@@ -212,7 +215,7 @@ namespace CAR.Infrastructure.Services
             {
                 // Rollback transaction on error
                 await _unitOfWork.RollbackAsync();
-                
+
                 return new AuthResponseDto
                 {
                     Success = false,
@@ -288,7 +291,7 @@ namespace CAR.Infrastructure.Services
                     _userRepository.Remove(user);
                     _authRepository.Remove(auth);
                     await _unitOfWork.SaveChangesAsync();
-                    
+
                     return new AuthResponseDto
                     {
                         Success = false,
@@ -357,7 +360,7 @@ namespace CAR.Infrastructure.Services
             await _unitOfWork.SaveChangesAsync();
 
             var emailSent = await _emailService.SendOtpEmailAsync(request.Email, otpCode);
-            
+
             if (!emailSent)
             {
                 return new AuthResponseDto
@@ -465,118 +468,97 @@ namespace CAR.Infrastructure.Services
 
         public async Task<AuthResponseDto> LoginWithGoogleAsync(GoogleLoginRequestDto request)
         {
-            try
+            var userInfo = await _googleAuthProvider.ValidateIdTokenAsync(request.IdToken);
+
+            // Check if user already exists
+            var existingUser = await _userRepository.GetByEmailAsync(userInfo.Email);
+
+            if (existingUser == null)
             {
-                // Verify Google ID token
-                var userInfo = await _firebaseService.VerifyGoogleIdTokenAsync(request.IdToken);
-                
-                if (userInfo == null || string.IsNullOrEmpty(userInfo.Email))
+                // Create new user
+                var newUser = new MUser
                 {
-                    return new AuthResponseDto
-                    {
-                        Success = false,
-                        Message = "Invalid Google ID token"
-                    };
-                }
+                    Email = userInfo.Email,
+                    PasswordHash = string.Empty, // No password for Google login
+                    RoleId = 1, // CUSTOMER role
+                    Status = 1, // Active (no email verification needed for Google)
+                    CreatedAt = DateTime.UtcNow
+                };
 
-                // Check if user already exists
-                var existingUser = await _userRepository.GetByEmailAsync(userInfo.Email);
-                
-                if (existingUser == null)
+                await _userRepository.CreateUserAsync(newUser);
+                await _unitOfWork.SaveChangesAsync();
+
+                // Create authentication record
+                var newAuth = new MAuthentication
                 {
-                    // Create new user
-                    var newUser = new MUser
-                    {
-                        Email = userInfo.Email,
-                        PasswordHash = string.Empty, // No password for Google login
-                        RoleId = 1, // CUSTOMER role
-                        Status = 1, // Active (no email verification needed for Google)
-                        CreatedAt = DateTime.UtcNow
-                    };
+                    UserId = newUser.Id,
+                    Email = userInfo.Email,
+                    PasswordHash = string.Empty,
+                    AuthType = 2, // Google
+                    AuthProvider = 2, // Google
+                    GoogleId = userInfo.GoogleId, // Firebase UID
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
 
-                    await _userRepository.CreateUserAsync(newUser);
-                    await _unitOfWork.SaveChangesAsync();
+                await _authRepository.CreateAuthenticationAsync(newAuth);
+                await _unitOfWork.SaveChangesAsync();
 
-                    // Create authentication record
-                    var newAuth = new MAuthentication
+                existingUser = newUser;
+            }
+            else
+            {
+                // User exists, check/update Google authentication
+                var existingAuth = await _authRepository.GetByUserIdAsync(existingUser.Id);
+
+                if (existingAuth == null)
+                {
+                    // Create authentication record for existing user
+                    existingAuth = new MAuthentication
                     {
-                        UserId = newUser.Id,
+                        UserId = existingUser.Id,
                         Email = userInfo.Email,
-                        PasswordHash = string.Empty,
                         AuthType = 2, // Google
                         AuthProvider = 2, // Google
-                        GoogleId = userInfo.GoogleId, // Firebase UID
+                        GoogleId = userInfo.GoogleId,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow
                     };
 
-                    await _authRepository.CreateAuthenticationAsync(newAuth);
+                    await _authRepository.CreateAuthenticationAsync(existingAuth);
                     await _unitOfWork.SaveChangesAsync();
-
-                    existingUser = newUser;
                 }
-                else
+                else if (existingAuth.GoogleId != userInfo.GoogleId)
                 {
-                    // User exists, check/update Google authentication
-                    var existingAuth = await _authRepository.GetByUserIdAsync(existingUser.Id);
-                    
-                    if (existingAuth == null)
-                    {
-                        // Create authentication record for existing user
-                        existingAuth = new MAuthentication
-                        {
-                            UserId = existingUser.Id,
-                            Email = userInfo.Email,
-                            AuthType = 2, // Google
-                            AuthProvider = 2, // Google
-                            GoogleId = userInfo.GoogleId,
-                            IsActive = true,
-                            CreatedAt = DateTime.UtcNow
-                        };
-
-                        await _authRepository.CreateAuthenticationAsync(existingAuth);
-                        await _unitOfWork.SaveChangesAsync();
-                    }
-                    else if (existingAuth.GoogleId != userInfo.GoogleId)
-                    {
-                        // Update Google ID if different
-                        existingAuth.GoogleId = userInfo.GoogleId;
-                        existingAuth.AuthType = 2; // Google
-                        existingAuth.AuthProvider = 2; // Google
-                        existingAuth.IsActive = true;
-                        existingAuth.UpdatedAt = DateTime.UtcNow;
-                        _authRepository.Update(existingAuth);
-                        await _unitOfWork.SaveChangesAsync();
-                    }
+                    // Update Google ID if different
+                    existingAuth.GoogleId = userInfo.GoogleId;
+                    existingAuth.AuthType = 2; // Google
+                    existingAuth.AuthProvider = 2; // Google
+                    existingAuth.IsActive = true;
+                    existingAuth.UpdatedAt = DateTime.UtcNow;
+                    _authRepository.Update(existingAuth);
+                    await _unitOfWork.SaveChangesAsync();
                 }
-
-                // Generate system JWT
-                var accessToken = _jwtService.GenerateAccessToken(existingUser);
-                var expiresIn = 3600; // 1 hour in seconds
-
-                return new AuthResponseDto
-                {
-                    Success = true,
-                    Message = "Google login successful",
-                    AccessToken = accessToken,
-                    ExpiresIn = expiresIn,
-                    User = new UserInfoDto
-                    {
-                        Id = existingUser.Id,
-                        Email = existingUser.Email,
-                        RoleId = existingUser.RoleId,
-                        IsActive = existingUser.Status == 1
-                    }
-                };
             }
-            catch (Exception ex)
+
+            // Generate system JWT
+            var accessToken = _jwtService.GenerateAccessToken(existingUser);
+            var expiresIn = 3600; // 1 hour in seconds
+
+            return new AuthResponseDto
             {
-                return new AuthResponseDto
+                Success = true,
+                Message = "Google login successful",
+                AccessToken = accessToken,
+                ExpiresIn = expiresIn,
+                User = new UserInfoDto
                 {
-                    Success = false,
-                    Message = "Google login failed: " + ex.Message
-                };
-            }
+                    Id = existingUser.Id,
+                    Email = existingUser.Email,
+                    RoleId = existingUser.RoleId,
+                    IsActive = existingUser.Status == 1
+                }
+            };
         }
     }
 }

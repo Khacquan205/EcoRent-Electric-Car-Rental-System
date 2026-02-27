@@ -53,6 +53,7 @@ namespace CAR.Infrastructure
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IJwtService, JwtService>();
             services.AddScoped<IFirebaseService, FirebaseService>();
+            services.AddScoped<IGoogleAuthProvider, GoogleAuthProvider>();
             services.AddScoped<IKycOcrService, FptKycOcrService>();
             
             // KYC Liveness Service - choose based on configuration
