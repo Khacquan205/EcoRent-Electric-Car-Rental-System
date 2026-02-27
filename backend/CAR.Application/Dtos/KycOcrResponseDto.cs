@@ -12,6 +12,9 @@ namespace CAR.Application.Dtos
         
         public string CccdFaceId { get; set; }
         
+        /// <summary>Địa chỉ thường trú (từ mặt sau CCCD, nếu có).</summary>
+        public string? Address { get; set; }
+        
         public string FrontImageUrl { get; set; }
         
         public string BackImageUrl { get; set; }

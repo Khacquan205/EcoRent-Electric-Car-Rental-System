@@ -56,6 +56,7 @@ namespace CAR.Infrastructure.Services
                 Gender = "Male",
                 CccdNumber = "083204005843",
                 CccdFaceId = "mock-face-id-12345",
+                Address = "123 Đường ABC, Quận 1, TP.HCM",
                 FrontImageUrl = "https://via.placeholder.com/400x250/cccccc/000000?text=CCCD+Front",
                 BackImageUrl = "https://via.placeholder.com/400x250/cccccc/000000?text=CCCD+Back"
             };
@@ -185,6 +186,7 @@ namespace CAR.Infrastructure.Services
                 Gender = !string.IsNullOrEmpty(frontResult.Gender) ? frontResult.Gender : backResult.Gender,
                 CccdNumber = !string.IsNullOrEmpty(frontResult.CccdNumber) ? frontResult.CccdNumber : backResult.CccdNumber,
                 CccdFaceId = frontResult.CccdFaceId ?? backResult.CccdFaceId,
+                Address = !string.IsNullOrEmpty(frontResult.Address) ? frontResult.Address : backResult.Address,
                 FrontImageUrl = !string.IsNullOrEmpty(frontResult.FrontImageUrl) ? frontResult.FrontImageUrl : backResult.FrontImageUrl,
                 BackImageUrl = !string.IsNullOrEmpty(backResult.BackImageUrl) ? backResult.BackImageUrl : frontResult.BackImageUrl,
                 ErrorMessage = frontResult.ErrorMessage ?? backResult.ErrorMessage
@@ -228,6 +230,7 @@ namespace CAR.Infrastructure.Services
                 Gender = MapGender(fptData.Sex),
                 CccdNumber = fptData.Id ?? "",
                 CccdFaceId = "",
+                Address = string.IsNullOrEmpty(fptData.Address) ? fptData.Home : fptData.Address,
                 FrontImageUrl = "https://via.placeholder.com/400x250/cccccc/000000?text=CCCD+Front",
                 BackImageUrl = "https://via.placeholder.com/400x250/cccccc/000000?text=CCCD+Back"
             };

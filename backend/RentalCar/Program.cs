@@ -49,22 +49,37 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 
-    // SignalR sends JWT via query string for WebSocket connections
     options.Events = new JwtBearerEvents
     {
-        OnMessageReceived = ctx =>
+        OnMessageReceived = context =>
         {
-            var token = ctx.Request.Query["access_token"];
-            if (!string.IsNullOrEmpty(token) &&
-                ctx.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+            // 1. Prefer Authorization: Bearer <token> header (normal HTTP APIs)
+            var authHeader = context.Request.Headers["Authorization"].ToString();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
             {
-                ctx.Token = token;
+                context.Token = authHeader.Substring("Bearer ".Length).Trim();
+                return Task.CompletedTask;
             }
+
+            // 2. Fallback for SignalR WebSocket connections using access_token query parameter
+            var accessToken = context.Request.Query["access_token"];
+            if (!string.IsNullOrEmpty(accessToken) &&
+                context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+
+            return Task.CompletedTask;
+        },
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine("JWT ERROR: " + context.Exception.Message);
             return Task.CompletedTask;
         }
     };
 });
 builder.Services.AddAuthorization();
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationMiddlewareResultHandler, RentalCar.Middleware.JsonAuthorizationMiddlewareResultHandler>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddControllers();

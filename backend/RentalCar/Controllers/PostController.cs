@@ -77,6 +77,17 @@ namespace CAR.Controllers
             return Ok(new { Success = true, Message = "Post deleted successfully" });
         }
 
+        /// <summary>
+        /// Get a paginated list of approved posts for public listing.
+        /// </summary>
+        [HttpGet("/api/posts")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPublicPosts([FromQuery] int page = 1, [FromQuery] int pageSize = 12)
+        {
+            var result = await _postService.GetPublicPostsAsync(page, pageSize);
+            return Ok(result);
+        }
+
         private int GetUserId()
         {
             var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);

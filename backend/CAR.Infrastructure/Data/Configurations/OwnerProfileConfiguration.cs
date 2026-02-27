@@ -1,4 +1,4 @@
-﻿using CAR.Domain.Entities;
+using CAR.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,6 +22,22 @@ public class OwnerProfileConfiguration : IEntityTypeConfiguration<MOwnerProfile>
         builder.Property(x => x.Name)
                .HasColumnName("name")
                .HasMaxLength(255);
+
+        builder.Property(x => x.FullName)
+               .HasColumnName("full_name")
+               .HasMaxLength(200);
+
+        builder.Property(x => x.DateOfBirth)
+               .HasColumnName("date_of_birth")
+               .HasColumnType("timestamp with time zone");
+
+        builder.Property(x => x.Address)
+               .HasColumnName("address")
+               .HasMaxLength(500);
+
+        builder.Property(x => x.IdNumber)
+               .HasColumnName("id_number")
+               .HasMaxLength(50);
 
         builder.Property(x => x.Phone)
                .HasColumnName("phone")

@@ -1,3 +1,5 @@
+import { getSessionCookie } from "@/lib/authSession";
+
 type ApiErrorBody = unknown;
 
 export class ApiError extends Error {
@@ -46,6 +48,26 @@ export async function apiFetch<TResponse>(
     headers.set("Content-Type", "application/json");
   }
   headers.set("Accept", "application/json");
+
+  // Attach Authorization header automatically on the client if available.
+  if (typeof window !== "undefined" && !headers.has("Authorization")) {
+    let token: string | null = null;
+
+    try {
+      token = window.localStorage.getItem("accessToken");
+    } catch {
+      // Ignore localStorage access issues.
+    }
+
+    if (!token) {
+      const session = getSessionCookie();
+      token = session?.accessToken ?? null;
+    }
+
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+  }
 
   const res = await fetch(url, {
     ...init,
