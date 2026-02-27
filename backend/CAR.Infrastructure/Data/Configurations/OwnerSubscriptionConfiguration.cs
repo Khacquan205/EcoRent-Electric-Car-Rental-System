@@ -70,6 +70,16 @@ namespace CAR.Infrastructure.Data.Configurations
 
             builder.HasIndex(x => new { x.OwnerId, x.Status });
             builder.HasIndex(x => x.EndDate);
+
+            builder.HasOne(x => x.OwnerProfile)
+                .WithMany(x => x.Subscriptions)
+                .HasForeignKey(x => x.OwnerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(x => x.Package)
+                .WithMany(x => x.Subscriptions)
+                .HasForeignKey(x => x.PackageId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

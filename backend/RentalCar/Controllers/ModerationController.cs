@@ -9,16 +9,14 @@ namespace RentalCar.Controllers
 {
     [ApiController]
     [Route("api/moderation")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,STAFF")]
     public class ModerationController : ControllerBase
     {
         private readonly IPostModerationService _moderationService;
-        private readonly IOwnerKycService _ownerKycService;
 
-        public ModerationController(IPostModerationService moderationService, IOwnerKycService ownerKycService)
+        public ModerationController(IPostModerationService moderationService)
         {
             _moderationService = moderationService;
-            _ownerKycService = ownerKycService;
         }
 
         [HttpGet("posts/pending")]
@@ -42,31 +40,6 @@ namespace RentalCar.Controllers
             var staffId = GetCurrentUserId();
             var result = await _moderationService.RejectPostAsync(postId, staffId, request.Reason);
             return Ok(result);
-        }
-
-        // ── KYC ──────────────────────────────────────────────────────────
-
-        [HttpGet("kyc/pending")]
-        public async Task<IActionResult> GetPendingKyc()
-        {
-            var list = await _ownerKycService.GetPendingKycAsync();
-            return Ok(list);
-        }
-
-        [HttpPost("kyc/{ownerProfileId:int}/approve")]
-        public async Task<IActionResult> ApproveKyc(int ownerProfileId)
-        {
-            var adminId = GetCurrentUserId();
-            await _ownerKycService.ApproveKycAsync(ownerProfileId, adminId);
-            return Ok(new { message = "KYC approved" });
-        }
-
-        [HttpPost("kyc/{ownerProfileId:int}/reject")]
-        public async Task<IActionResult> RejectKyc(int ownerProfileId, [FromBody] RejectOwnerKycRequestDto request)
-        {
-            var adminId = GetCurrentUserId();
-            await _ownerKycService.RejectKycAsync(ownerProfileId, adminId, request.Reason);
-            return Ok(new { message = "KYC rejected" });
         }
 
         private int GetCurrentUserId()

@@ -1,6 +1,6 @@
 namespace CAR.Application.Dtos
 {
-    public class ActivateSubscriptionRequestDto
+    public class CreateSubscriptionRequestDto
     {
         public int PackageId { get; set; }
 

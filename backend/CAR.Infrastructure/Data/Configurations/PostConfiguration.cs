@@ -73,6 +73,15 @@ namespace CAR.Infrastructure.Data.Configurations
             builder.Property(x => x.UpdatedAt)
                 .HasColumnName("updated_at")
                 .HasColumnType("timestamptz");
+            builder.HasOne(x => x.OwnerProfile)
+                .WithMany(x => x.Posts)
+                .HasForeignKey(x => x.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.Location)
+                .WithMany()
+                .HasForeignKey(x => x.LocationId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

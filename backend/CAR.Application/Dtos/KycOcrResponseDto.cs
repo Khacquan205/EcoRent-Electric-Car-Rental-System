@@ -10,6 +10,12 @@ namespace CAR.Application.Dtos
         
         public string CccdNumber { get; set; }
         
+        public string CccdFaceId { get; set; }
+        
+        public string FrontImageUrl { get; set; }
+        
+        public string BackImageUrl { get; set; }
+        
         public string? ErrorMessage { get; set; }
     }
 }

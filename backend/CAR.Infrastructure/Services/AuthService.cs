@@ -489,7 +489,7 @@ namespace CAR.Infrastructure.Services
                     {
                         Email = userInfo.Email,
                         PasswordHash = string.Empty, // No password for Google login
-                        RoleId = 2, // Default user role
+                        RoleId = 1, // CUSTOMER role
                         Status = 1, // Active (no email verification needed for Google)
                         CreatedAt = DateTime.UtcNow
                     };

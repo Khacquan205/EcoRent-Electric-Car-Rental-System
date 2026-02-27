@@ -2,7 +2,7 @@ using System;
 
 namespace CAR.Application.Dtos
 {
-    public class ActivateSubscriptionResponseDto
+    public class CreateSubscriptionResponseDto
     {
         public long Id { get; set; }
 

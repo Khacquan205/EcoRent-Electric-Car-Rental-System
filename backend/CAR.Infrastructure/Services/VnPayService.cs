@@ -85,7 +85,9 @@ namespace CAR.Infrastructure.Services
                 .OrderBy(p => p.Key, StringComparer.Ordinal)
                 .ToList();
 
-            var hashData = string.Join("&", paramsToVerify.Select(p => $"{p.Key}={p.Value}"));
+            var hashData = string.Join("&", paramsToVerify.Select(p => 
+                $"{System.Net.WebUtility.UrlEncode(p.Key)}={System.Net.WebUtility.UrlEncode(p.Value)}"));
+            
             var computedHash = GenerateHmacSha512(_settings.HashSecret, hashData);
 
             if (!string.Equals(computedHash, receivedHash, StringComparison.OrdinalIgnoreCase))
@@ -131,6 +133,18 @@ namespace CAR.Infrastructure.Services
             }
 
             _paymentRepository.Update(payment);
+            
+            if (isSuccess)
+            {
+                var subscription = await _subscriptionRepository.Query().FirstOrDefaultAsync(s => s.Id == payment.SubscriptionId);
+                if (subscription != null)
+                {
+                    subscription.Status = 1; // ACTIVE
+                    subscription.UpdatedAt = DateTime.UtcNow;
+                    _subscriptionRepository.Update(subscription);
+                }
+            }
+
             await _unitOfWork.SaveChangesAsync();
 
             decimal.TryParse(amountStr, out var rawAmount);
@@ -153,11 +167,13 @@ namespace CAR.Infrastructure.Services
 
         private string BuildPaymentUrl(SortedDictionary<string, string> vnpParams)
         {
-            var hashData = string.Join("&", vnpParams.Select(p => $"{p.Key}={p.Value}"));
+            // For VNPay 2.1.0, the hash data MUST be URL-encoded just like the query string
+            var hashData = string.Join("&", vnpParams.Select(p => 
+                $"{System.Net.WebUtility.UrlEncode(p.Key)}={System.Net.WebUtility.UrlEncode(p.Value)}"));
+            
             var secureHash = GenerateHmacSha512(_settings.HashSecret, hashData);
 
-            var queryString = string.Join("&",
-                vnpParams.Select(p => $"{Uri.EscapeDataString(p.Key)}={Uri.EscapeDataString(p.Value)}"));
+            var queryString = hashData; // They are the same in 2.1.0
 
             return $"{_settings.BaseUrl}?{queryString}&vnp_SecureHash={secureHash}";
         }
@@ -166,7 +182,7 @@ namespace CAR.Infrastructure.Services
         {
             using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(key));
             var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(data));
-            return Convert.ToHexString(hash).ToLower();
+            return Convert.ToHexString(hash).ToUpper(); // VNPay usually expects Uppercase
         }
     }
 }

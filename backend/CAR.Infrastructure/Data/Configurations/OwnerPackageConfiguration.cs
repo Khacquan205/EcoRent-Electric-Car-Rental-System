@@ -46,11 +46,11 @@ public class OwnerPackageConfiguration : IEntityTypeConfiguration<MOwnerPackage>
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("timestamp")
+               .HasColumnType("timestamptz")
                .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("timestamp");
+               .HasColumnType("timestamptz");
     }
 }
