@@ -48,6 +48,11 @@ namespace CAR.Infrastructure.Services
                 _logger.LogWarning(ex, "Invalid Google ID token");
                 return null;
             }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Google ID token validation failed unexpectedly");
+                return null;
+            }
         }
     }
 }

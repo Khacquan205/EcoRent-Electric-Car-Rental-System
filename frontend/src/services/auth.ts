@@ -76,8 +76,8 @@ export async function changePassword(body: ChangePasswordRequest): Promise<ApiRe
   });
 }
 
-export async function loginGoogle(body: LoginGoogleRequest): Promise<ApiResult<Record<string, unknown>>> {
-  return apiFetch<ApiResult<Record<string, unknown>>>("/api/Auth/login-google", {
+export async function loginGoogle(body: LoginGoogleRequest): Promise<LoginResponse> {
+  return apiFetch<LoginResponse>("/api/Auth/login-google", {
     method: "POST",
     body,
   });
