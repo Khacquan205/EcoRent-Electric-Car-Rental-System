@@ -46,15 +46,20 @@ public class PaymentConfiguration : IEntityTypeConfiguration<MPayment>
 
         builder.Property(x => x.PayDate)
                .HasColumnName("pay_date")
-               .HasColumnType("timestamp");
+               .HasColumnType("timestamptz");
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("timestamp")
+               .HasColumnType("timestamptz")
                .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("timestamp");
+               .HasColumnType("timestamptz");
+
+        builder.HasOne(x => x.Subscription)
+               .WithMany(x => x.Payments)
+               .HasForeignKey(x => x.SubscriptionId)
+               .OnDelete(DeleteBehavior.Cascade);
     }
 }

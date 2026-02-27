@@ -42,6 +42,9 @@ namespace CAR.Infrastructure
             services.AddScoped<IPhoneRepository, PhoneRepository>();
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
+            services.AddScoped<IVehicleCategoryRepository, VehicleCategoryRepository>();
+            services.AddScoped<ILocationRepository, LocationRepository>();
+            services.AddScoped<IStaffProfileRepository, StaffProfileRepository>();
 
             // VNPay options
             services.Configure<VnPaySettings>(configuration.GetSection(VnPaySettings.SectionName));
@@ -52,6 +55,19 @@ namespace CAR.Infrastructure
             services.AddScoped<IFirebaseService, FirebaseService>();
             services.AddScoped<IGoogleAuthProvider, GoogleAuthProvider>();
             services.AddScoped<IKycOcrService, FptKycOcrService>();
+            
+            // KYC Liveness Service - choose based on configuration
+            var livenessProvider = configuration["KYC:LivenessProvider"]?.ToUpper() ?? "FPT";
+            if (livenessProvider == "MOCK")
+            {
+                services.AddScoped<IKycLivenessService, MockKycLivenessService>();
+            }
+            else
+            {
+                services.AddScoped<IKycLivenessService, FptKycLivenessService>();
+            }
+            services.AddScoped<IVideoTranscoder, FfmpegVideoTranscoder>();
+            services.AddScoped<IKycFaceStore, FileKycFaceStore>();
             services.AddScoped<ITwilioSmsService, TwilioSmsService>();
             services.AddScoped<ICustomerService, CustomerService>();
             services.AddScoped<IPaymentService, VnPayService>();
@@ -68,9 +84,8 @@ namespace CAR.Infrastructure
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IPostService, PostService>();
             services.AddScoped<IPostModerationService, PostModerationService>();
-            services.AddScoped<IOwnerService, OwnerService>();
+            services.AddScoped<IAdminAccountService, AdminAccountService>();
             services.AddScoped<ISubscriptionService, SubscriptionService>();
-            services.AddScoped<IIdentityVerificationService, IdentityVerificationService>();
             services.AddScoped<IKycOcrService, FptKycOcrService>();
             services.AddScoped<IFirebasePhoneService, FirebasePhoneService>();
             services.AddScoped<IOwnerPackageService, OwnerPackageService>();

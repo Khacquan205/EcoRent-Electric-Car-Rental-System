@@ -1,5 +1,6 @@
 using CAR.Application.Dtos;
 using CAR.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -18,13 +19,15 @@ namespace CAR.Infrastructure.Services
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly ILogger<FptKycOcrService> _logger;
+        private readonly IKycFaceStore _faceStore;
         private readonly string _kycProvider;
 
-        public FptKycOcrService(HttpClient httpClient, IConfiguration configuration, ILogger<FptKycOcrService> logger)
+        public FptKycOcrService(HttpClient httpClient, IConfiguration configuration, ILogger<FptKycOcrService> logger, IKycFaceStore faceStore)
         {
             _httpClient = httpClient;
             _configuration = configuration;
             _logger = logger;
+            _faceStore = faceStore;
             _kycProvider = _configuration["KYC:Provider"]?.ToUpper() ?? "MOCK";
         }
 
@@ -48,10 +51,13 @@ namespace CAR.Infrastructure.Services
         {
             return new KycOcrResponseDto
             {
-                FullName = "Nguyen Van A",
-                Dob = "1998-01-01",
+                FullName = "HUỲNH ANH NHỰT",
+                Dob = "25/01/2004",
                 Gender = "Male",
-                CccdNumber = "012345678901"
+                CccdNumber = "083204005843",
+                CccdFaceId = "mock-face-id-12345",
+                FrontImageUrl = "https://via.placeholder.com/400x250/cccccc/000000?text=CCCD+Front",
+                BackImageUrl = "https://via.placeholder.com/400x250/cccccc/000000?text=CCCD+Back"
             };
         }
 
@@ -59,7 +65,7 @@ namespace CAR.Infrastructure.Services
         {
             try
             {
-                var apiKey = _configuration["KYC:Fpt:ApiKey"];
+                var apiKey = _configuration["KYC:Fpt:ApiKey"] ?? "0RbR0SE14PJK3teU51RrTo2FUI89NItK";
                 var baseUrl = _configuration["KYC:Fpt:BaseUrl"] ?? "https://api.fpt.ai";
 
                 if (string.IsNullOrEmpty(apiKey))
@@ -67,65 +73,130 @@ namespace CAR.Infrastructure.Services
                     throw new InvalidOperationException("FPT KYC API Key is not configured");
                 }
 
-                using var formData = new MultipartFormDataContent();
+                // Xử lý ảnh trước để lấy thông tin chính
+                var frontResult = await ProcessSingleImageAsync(request.FrontImage, apiKey, baseUrl, "front");
                 
-                // FPT.AI chỉ cần 1 image, không phân biệt front/back
-                using var frontImageStream = request.FrontImage.OpenReadStream();
-                formData.Add(new StreamContent(frontImageStream), "image", request.FrontImage.FileName);
-
-                var requestUrl = $"{baseUrl}/vision/idr/vnm";
-                _logger.LogInformation("Calling FPT.AI OCR API: {RequestUrl}", requestUrl);
+                // Xử lý ảnh sau để bổ sung thông tin
+                var backResult = await ProcessSingleImageAsync(request.BackImage, apiKey, baseUrl, "back");
                 
-                var httpRequest = new HttpRequestMessage(HttpMethod.Post, requestUrl)
-                {
-                    Headers = { { "api-key", apiKey } },
-                    Content = formData
-                };
-
-                var response = await _httpClient.SendAsync(httpRequest);
+                // Lưu ảnh CCCD gốc để dùng cho liveness check
+                var cccdFaceId = await SaveOriginalCccdImageAsync(request.FrontImage);
                 
-                if (!response.IsSuccessStatusCode)
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogWarning("FPT API returned error {StatusCode}: {ErrorContent}", response.StatusCode, errorContent);
-                    
-                    return new KycOcrResponseDto
-                    {
-                        FullName = "",
-                        Dob = "",
-                        Gender = "",
-                        CccdNumber = "",
-                        ErrorMessage = "Không thể xác thực hình ảnh. Vui lòng tải lên ảnh rõ nét, đủ sáng và không bị mờ."
-                    };
-                }
-
-                var responseContent = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("FPT.AI Response: {ResponseContent}", responseContent);
+                // Kết hợp kết quả từ cả hai ảnh để có thông tin đầy đủ
+                var combinedResult = CombineOcrResults(frontResult, backResult);
+                combinedResult.CccdFaceId = cccdFaceId;
                 
-                var fptResponse = JsonSerializer.Deserialize<FptOcrResponse>(responseContent, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-                if (fptResponse?.Data == null || fptResponse.Data.Count == 0)
-                {
-                    return new KycOcrResponseDto
-                    {
-                        FullName = "",
-                        Dob = "",
-                        Gender = "",
-                        CccdNumber = "",
-                        ErrorMessage = "Không thể nhận dạng thông tin từ hình ảnh. Vui lòng thử lại với ảnh khác."
-                    };
-                }
-
-                return MapFptResponseToKycResponse(fptResponse.Data);
+                return combinedResult;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing FPT OCR");
                 throw;
             }
+        }
+
+        
+        private async Task<string> SaveOriginalCccdImageAsync(IFormFile frontImage)
+        {
+            try
+            {
+                // Generate a temporary userId for face storage
+                var tempUserId = $"temp_{Guid.NewGuid():N}";
+                var faceId = await _faceStore.SaveFaceAsync(frontImage.OpenReadStream(), tempUserId);
+                _logger.LogInformation("CCCD front image saved with ID: {FaceId}", faceId);
+                return faceId;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving CCCD front image");
+                throw;
+            }
+        }
+
+        private async Task<KycOcrResponseDto> ProcessSingleImageAsync(IFormFile image, string apiKey, string baseUrl, string imageType)
+        {
+            using var formData = new MultipartFormDataContent();
+            using var imageStream = image.OpenReadStream();
+            formData.Add(new StreamContent(imageStream), "image", image.FileName);
+
+            var requestUrl = $"{baseUrl}/vision/idr/vnm";
+            _logger.LogInformation("Calling FPT.AI OCR API for {ImageType}: {RequestUrl}", imageType, requestUrl);
+            
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, requestUrl)
+            {
+                Headers = { { "api-key", apiKey } },
+                Content = formData
+            };
+
+            var response = await _httpClient.SendAsync(httpRequest);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("FPT API returned error for {ImageType} {StatusCode}: {ErrorContent}", 
+                    imageType, response.StatusCode, errorContent);
+                
+                return new KycOcrResponseDto
+                {
+                    FullName = "",
+                    Dob = "",
+                    Gender = "",
+                    CccdNumber = "",
+                    CccdFaceId = "",
+                    FrontImageUrl = "",
+                    BackImageUrl = "",
+                    ErrorMessage = $"Không thể xác thực ảnh {imageType}. Vui lòng tải lên ảnh rõ nét, đủ sáng và không bị mờ."
+                };
+            }
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("FPT.AI Response for {ImageType}: {ResponseContent}", imageType, responseContent);
+            
+            var fptResponse = JsonSerializer.Deserialize<FptOcrResponse>(responseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (fptResponse?.Data == null || fptResponse.Data.Count == 0)
+            {
+                return new KycOcrResponseDto
+                {
+                    FullName = "",
+                    Dob = "",
+                    Gender = "",
+                    CccdNumber = "",
+                    CccdFaceId = "",
+                    FrontImageUrl = "",
+                    BackImageUrl = "",
+                    ErrorMessage = $"Không thể nhận dạng thông tin từ ảnh {imageType}."
+                };
+            }
+
+            return MapFptResponseToKycResponse(fptResponse.Data);
+        }
+
+        private KycOcrResponseDto CombineOcrResults(KycOcrResponseDto frontResult, KycOcrResponseDto backResult)
+        {
+            // Ưu tiên thông tin từ ảnh trước, nếu trống thì lấy từ ảnh sau
+            var combined = new KycOcrResponseDto
+            {
+                FullName = !string.IsNullOrEmpty(frontResult.FullName) ? frontResult.FullName : backResult.FullName,
+                Dob = !string.IsNullOrEmpty(frontResult.Dob) ? frontResult.Dob : backResult.Dob,
+                Gender = !string.IsNullOrEmpty(frontResult.Gender) ? frontResult.Gender : backResult.Gender,
+                CccdNumber = !string.IsNullOrEmpty(frontResult.CccdNumber) ? frontResult.CccdNumber : backResult.CccdNumber,
+                CccdFaceId = frontResult.CccdFaceId ?? backResult.CccdFaceId,
+                FrontImageUrl = !string.IsNullOrEmpty(frontResult.FrontImageUrl) ? frontResult.FrontImageUrl : backResult.FrontImageUrl,
+                BackImageUrl = !string.IsNullOrEmpty(backResult.BackImageUrl) ? backResult.BackImageUrl : frontResult.BackImageUrl,
+                ErrorMessage = frontResult.ErrorMessage ?? backResult.ErrorMessage
+            };
+
+            // Nếu cả hai đều có lỗi, trả về lỗi chi tiết hơn
+            if (!string.IsNullOrEmpty(frontResult.ErrorMessage) && !string.IsNullOrEmpty(backResult.ErrorMessage))
+            {
+                combined.ErrorMessage = "Không thể xác thực cả ảnh trước và ảnh sau. Vui lòng kiểm tra lại chất lượng hình ảnh.";
+            }
+
+            return combined;
         }
 
         private KycOcrResponseDto MapFptResponseToKycResponse(List<FptOcrData> data)
@@ -143,6 +214,9 @@ namespace CAR.Infrastructure.Services
                     Dob = "",
                     Gender = "",
                     CccdNumber = "",
+                    CccdFaceId = "",
+                    FrontImageUrl = "",
+                    BackImageUrl = "",
                     ErrorMessage = "Chất lượng hình ảnh thấp. Vui lòng tải lên ảnh rõ nét, đủ sáng và không bị mờ."
                 };
             }
@@ -152,7 +226,10 @@ namespace CAR.Infrastructure.Services
                 FullName = fptData.Name ?? "",
                 Dob = FormatDate(fptData.Dob),
                 Gender = MapGender(fptData.Sex),
-                CccdNumber = fptData.Id ?? ""
+                CccdNumber = fptData.Id ?? "",
+                CccdFaceId = "",
+                FrontImageUrl = "https://via.placeholder.com/400x250/cccccc/000000?text=CCCD+Front",
+                BackImageUrl = "https://via.placeholder.com/400x250/cccccc/000000?text=CCCD+Back"
             };
         }
 

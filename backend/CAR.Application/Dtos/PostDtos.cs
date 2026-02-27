@@ -1,0 +1,46 @@
+using System;
+
+namespace CAR.Application.Dtos
+{
+    public class PostListItemDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = null!;
+        public decimal Price { get; set; }
+        public short Status { get; set; }
+        public string? StatusName { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? ExpiredAt { get; set; }
+        public string? CategoryName { get; set; }
+    }
+
+    public class PostDetailDto
+    {
+        public int Id { get; set; }
+        public int CategoryId { get; set; }
+        public string CategoryName { get; set; } = null!;
+        public int? LocationId { get; set; }
+        public string? LocationName { get; set; }
+        public string Title { get; set; } = null!;
+        public string? Description { get; set; }
+        public decimal Price { get; set; }
+        public string? ContactPhone { get; set; }
+        public short Status { get; set; }
+        public string StatusName { get; set; } = null!;
+        public string? RejectReason { get; set; }
+        public short PriorityLevel { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public DateTime? ExpiredAt { get; set; }
+    }
+
+    public class UpdatePostRequestDto
+    {
+        public int CategoryId { get; set; }
+        public int? LocationId { get; set; }
+        public string Title { get; set; } = null!;
+        public string? Description { get; set; }
+        public decimal Price { get; set; }
+        public string? ContactPhone { get; set; }
+    }
+}
