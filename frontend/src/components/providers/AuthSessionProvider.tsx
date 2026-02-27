@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthSession, clearSessionCookie, getSessionCookie, setSessionCookie } from "@/lib/authSession";
 
 type AuthContextValue = {
@@ -33,7 +34,13 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
     };
   }, [session]);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
+
+  return (
+    <GoogleOAuthProvider clientId={clientId}>
+      <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+    </GoogleOAuthProvider>
+  );
 }
 
 export function useAuthSession() {

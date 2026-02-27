@@ -470,6 +470,15 @@ namespace CAR.Infrastructure.Services
         {
             var userInfo = await _googleAuthProvider.ValidateIdTokenAsync(request.IdToken);
 
+            if (userInfo == null)
+            {
+                return new AuthResponseDto
+                {
+                    Success = false,
+                    Message = "Invalid or expired Google token. Please sign in with Google again."
+                };
+            }
+
             // Check if user already exists
             var existingUser = await _userRepository.GetByEmailAsync(userInfo.Email);
 
