@@ -29,11 +29,22 @@ namespace CAR.Infrastructure.Services
             {
                 _logger.LogInformation("CustomerService: Getting profile for UserId: {UserId}", userId);
                 var customerProfile = await _customerProfileRepository.GetByUserIdAsync(userId);
-                
+
                 if (customerProfile == null)
                 {
-                    _logger.LogWarning("CustomerService: Customer profile not found for UserId: {UserId}", userId);
-                    return null;
+                    _logger.LogInformation("CustomerService: Customer profile not found for UserId: {UserId}. Creating default profile.", userId);
+
+                    customerProfile = new MCustomerProfile
+                    {
+                        UserId = userId,
+                        Name = string.Empty,
+                        Phone = null,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    await _customerProfileRepository.CreateCustomerProfileAsync(customerProfile);
+                    await _unitOfWork.SaveChangesAsync();
                 }
 
                 _logger.LogInformation("CustomerService: Found profile for UserId: {UserId}, ProfileId: {ProfileId}", userId, customerProfile.Id);

@@ -39,7 +39,7 @@ namespace CAR.Infrastructure.Services
 
         public async Task<AuthResponseDto> Register(RegisterRequestDto request)
         {
-            // Validate password match
+            // Validate password match (already validated by DataAnnotations, but keep extra guard)
             if (request.Password != request.ConfirmPassword)
             {
                 return new AuthResponseDto
@@ -53,11 +53,20 @@ namespace CAR.Infrastructure.Services
             var existingUser = await _userRepository.GetByEmailAsync(request.Email!);
             if (existingUser != null)
             {
-                // Check if user has active account (already verified)
+                // If account exists and was created with Google, do not allow local registration with same email
+                if (string.Equals(existingUser.LoginProvider, "Google", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new AuthResponseDto
+                    {
+                        Success = false,
+                        Message = "This email is already registered via Google. Please sign in with Google."
+                    };
+                }
+
+                // Existing local account logic: preserve current behavior (OTP-based activation, etc.)
                 var existingAuth = await _authRepository.GetByUserIdAsync(existingUser.Id);
                 if (existingAuth != null && existingAuth.IsActive)
                 {
-                    // Account already verified - cannot re-register
                     return new AuthResponseDto
                     {
                         Success = false,
@@ -66,7 +75,6 @@ namespace CAR.Infrastructure.Services
                 }
                 else if (existingAuth != null && existingAuth.CodeExpiresAt > DateTime.UtcNow && !existingAuth.IsActive)
                 {
-                    // OTP still valid but not verified - user should verify or resend OTP
                     return new AuthResponseDto
                     {
                         Success = false,
@@ -88,15 +96,30 @@ namespace CAR.Infrastructure.Services
             var passwordHash = HashPassword(request.Password!);
             var otpCode = GenerateOtp();
 
-            // Create MUser with CUSTOMER role but inactive status
+            // Create MUser with CUSTOMER role
+            // According to new auth flow:
+            // - Email from request
+            // - FullName from request.Name
+            // - ProfilePic (AvatarImgUrl) = null
+            // - Address = null
+            // - Phone = from request (optional)
+            // - Status = Active
+            // - CreatedAt/UpdatedAt = now
+            // - LoginProvider = Local
+            var now = DateTime.UtcNow;
             var user = new MUser
             {
                 RoleId = UserRoles.CUSTOMER,
                 Email = request.Email!,
+                FullName = request.Name,
                 PasswordHash = passwordHash,
                 Phone = request.Phone,
-                Status = 0, // Inactive until OTP verification
-                CreatedAt = DateTime.UtcNow
+                Address = null,
+                Status = 1, // Active
+                AvatarImgUrl = null,
+                LoginProvider = "Local",
+                CreatedAt = now,
+                UpdatedAt = now
             };
 
             await _userRepository.CreateUserAsync(user);
@@ -484,14 +507,22 @@ namespace CAR.Infrastructure.Services
 
             if (existingUser == null)
             {
-                // Create new user
+                // CASE 1: Email does not exist -> create new user as Google account
+                var now = DateTime.UtcNow;
+
                 var newUser = new MUser
                 {
                     Email = userInfo.Email,
-                    PasswordHash = string.Empty, // No password for Google login
-                    RoleId = 1, // CUSTOMER role
-                    Status = 1, // Active (no email verification needed for Google)
-                    CreatedAt = DateTime.UtcNow
+                    FullName = userInfo.Name ?? userInfo.Email.Split('@')[0],
+                    PasswordHash = string.Empty, // No local password for Google login
+                    RoleId = UserRoles.CUSTOMER,
+                    Status = 1, // Active
+                    Phone = null,
+                    Address = null,
+                    AvatarImgUrl = userInfo.AvatarUrl,
+                    LoginProvider = "Google",
+                    CreatedAt = now,
+                    UpdatedAt = now
                 };
 
                 await _userRepository.CreateUserAsync(newUser);
@@ -507,7 +538,8 @@ namespace CAR.Infrastructure.Services
                     AuthProvider = 2, // Google
                     GoogleId = userInfo.GoogleId, // Firebase UID
                     IsActive = true,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = now,
+                    UpdatedAt = now
                 };
 
                 await _authRepository.CreateAuthenticationAsync(newAuth);
@@ -517,7 +549,19 @@ namespace CAR.Infrastructure.Services
             }
             else
             {
-                // User exists, check/update Google authentication
+                // CASE 2: Email already exists
+
+                // If the existing account was created with Local provider, do NOT allow Google login
+                if (string.Equals(existingUser.LoginProvider, "Local", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new AuthResponseDto
+                    {
+                        Success = false,
+                        Message = "This email is already registered with a password. Please sign in using email and password."
+                    };
+                }
+
+                // User exists and is a Google account -> check/update Google authentication record
                 var existingAuth = await _authRepository.GetByUserIdAsync(existingUser.Id);
 
                 if (existingAuth == null)

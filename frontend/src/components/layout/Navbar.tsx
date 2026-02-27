@@ -16,10 +16,10 @@ import {
 import { useAuthSession } from "@/components/providers";
 
 const navLinks = [
-  { href: "/become-a-renter", label: "Become a renter" },
-  { href: "/cars", label: "Cars" },
-  { href: "/how-it-works", label: "How it work" },
-  { href: "/about-us", label: "Why choose us" },
+  { href: "/", label: "Trang chủ" },
+  { href: "/cars", label: "Xe cho thuê" },
+  { href: "/become-owner", label: "Trở thành chủ xe" },
+  { href: "/how-it-works", label: "Gói dịch vụ" }
 ];
 
 const Navbar = () => {
@@ -29,7 +29,7 @@ const Navbar = () => {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 shadow-sm backdrop-blur">
+    <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 shadow-sm backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-10">
         <Link
           href="/"
@@ -47,7 +47,7 @@ const Navbar = () => {
           </span>
         </Link>
 
-        <div className="hidden flex-1 items-center justify-center gap-6 lg:flex">
+        <div className="hidden flex-1 items-center justify-center gap-8 lg:flex">
           {navLinks.map((link) => {
             const isActive =
               link.href === "/"
@@ -87,12 +87,12 @@ const Navbar = () => {
                   variant="ghost"
                   className="rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-primary hover:shadow-sm hover:-translate-y-[1px]"
                 >
-                  Sign in
+                  Đăng nhập
                 </Button>
               </Link>
               <Link href="/register">
                 <Button className="rounded-full px-4 py-1.5 text-sm font-semibold shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-lg hover:bg-primary/90">
-                  Sign up
+                  Đăng ký
                 </Button>
               </Link>
             </>
@@ -113,7 +113,7 @@ const Navbar = () => {
             <SheetTitle className="text-left text-xl font-bold text-primary">
               EcoRent
             </SheetTitle>
-            <div className="mt-8 flex flex-col gap-4">
+            <div className="mt-8 flex flex-col gap-1">
               {navLinks.map((link) => {
                 const isActive =
                   link.href === "/"
@@ -125,7 +125,7 @@ const Navbar = () => {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`rounded-md px-3 py-2 text-base font-medium transition-colors duration-200 ${
+                    className={`rounded-lg px-3 py-2.5 text-base font-medium transition-colors duration-200 ${
                       isActive
                         ? "bg-accent text-accent-foreground"
                         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -136,7 +136,7 @@ const Navbar = () => {
                 );
               })}
 
-              <div className="my-2 h-px bg-border" />
+              <div className="my-3 h-px bg-border" />
 
               {isAuthed ? (
                 <NavUserMenu
@@ -150,12 +150,12 @@ const Navbar = () => {
                       variant="outline"
                       className="w-full transition-all duration-200 hover:-translate-y-[1px] hover:shadow-sm"
                     >
-                      Sign in
+                      Đăng nhập
                     </Button>
                   </Link>
                   <Link href="/register" onClick={() => setMobileOpen(false)}>
-                    <Button className="w-full transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md">
-                      Sign up
+                    <Button className="mt-2 w-full transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md">
+                      Đăng ký
                     </Button>
                   </Link>
                 </>

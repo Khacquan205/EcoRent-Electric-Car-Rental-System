@@ -14,6 +14,18 @@ namespace CAR.Domain.Entities
 
         public string? Name { get; set; }
 
+        /// <summary>Họ tên từ CCCD (KYC).</summary>
+        public string? FullName { get; set; }
+
+        /// <summary>Ngày sinh từ CCCD.</summary>
+        public DateTime? DateOfBirth { get; set; }
+
+        /// <summary>Địa chỉ thường trú (từ CCCD hoặc cập nhật sau).</summary>
+        public string? Address { get; set; }
+
+        /// <summary>Số CCCD/CMND.</summary>
+        public string? IdNumber { get; set; }
+
         public string? Phone { get; set; }
 
         public bool IdentityVerified { get; set; }

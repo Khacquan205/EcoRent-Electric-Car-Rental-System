@@ -34,124 +34,111 @@ namespace CAR.Infrastructure.Services
 
         public async Task SubmitKycAsync(int userId, OwnerKycSubmitRequestDto request)
         {
-            var owner = await _ownerProfileRepository.GetByUserIdAsync(userId);
-            if (owner == null)
+            var parsedDob = ParseDateOfBirth(request.DateOfBirth);
+
+            await _unitOfWork.BeginTransactionAsync();
+            try
             {
-                // Create owner profile if it doesn't exist
-                owner = new MOwnerProfile
+                var owner = await _ownerProfileRepository.GetByUserIdAsync(userId);
+                if (owner == null)
                 {
-                    UserId = userId,
-                    Name = request.FullName,
-                    IdentityVerified = false,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
-                await _ownerProfileRepository.AddAsync(owner);
-                await _unitOfWork.SaveChangesAsync();
-            }
-
-            var duplicate = await _kycRepository.GetByIdCardNumberAsync(request.IdCardNumber);
-            if (duplicate != null && duplicate.OwnerProfileId != owner.Id)
-                throw new UserFriendlyException(409, "ID_CARD_TAKEN", "This ID card number is already registered");
-
-            var existing = await _kycRepository.GetByOwnerProfileIdAsync(owner.Id);
-
-            if (existing != null)
-            {
-                if (existing.VerificationStatus == OwnerVerificationStatus.Approved)
-                    throw new UserFriendlyException(400, "KYC_ALREADY_APPROVED", "KYC already approved");
-
-                existing.IdCardNumber = request.IdCardNumber;
-                existing.FullName = request.FullName;
-                
-                // Parse date from string (support both DD/MM/YYYY and YYYY-MM-DD formats)
-                if (DateTime.TryParse(request.DateOfBirth, out var date1))
-                {
-                    existing.DateOfBirth = date1;
-                }
-                else if (DateTime.TryParseExact(request.DateOfBirth, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out var date2))
-                {
-                    existing.DateOfBirth = date2;
+                    owner = new MOwnerProfile
+                    {
+                        UserId = userId,
+                        Name = request.FullName,
+                        FullName = request.FullName,
+                        DateOfBirth = parsedDob,
+                        Address = request.Address,
+                        IdNumber = request.IdCardNumber,
+                        IdentityVerified = true,
+                        RatingAvg = 0,
+                        TotalPosts = 0,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    await _ownerProfileRepository.AddAsync(owner);
+                    await _unitOfWork.SaveChangesAsync();
                 }
                 else
                 {
-                    existing.DateOfBirth = null;
+                    owner.Name = request.FullName;
+                    owner.FullName = request.FullName;
+                    owner.DateOfBirth = parsedDob;
+                    owner.Address = request.Address ?? owner.Address;
+                    owner.IdNumber = request.IdCardNumber;
+                    owner.IdentityVerified = true;
+                    owner.UpdatedAt = DateTime.UtcNow;
+                    _ownerProfileRepository.Update(owner);
                 }
-                existing.FrontDocumentUrl = request.FrontDocumentUrl;
-                existing.BackDocumentUrl = request.BackDocumentUrl;
-                existing.VerificationStatus = OwnerVerificationStatus.Approved;
-                existing.RejectionReason = null;
-                existing.VerifiedAt = DateTime.UtcNow;
-                existing.UpdatedAt = DateTime.UtcNow;
 
-                _kycRepository.Update(existing);
-                
-                // Update owner profile with OCR data for existing KYC
-                var ownerProfile = await _ownerProfileRepository.GetByUserIdAsync(userId);
-                if (ownerProfile != null)
+                var duplicate = await _kycRepository.GetByIdCardNumberAsync(request.IdCardNumber);
+                if (duplicate != null && duplicate.OwnerProfileId != owner.Id)
+                    throw new UserFriendlyException(409, "ID_CARD_TAKEN", "This ID card number is already registered");
+
+                var existing = await _kycRepository.GetByOwnerProfileIdAsync(owner.Id);
+
+                if (existing != null)
                 {
-                    ownerProfile.Name = request.FullName;
-                    ownerProfile.IdentityVerified = true;
-                    ownerProfile.UpdatedAt = DateTime.UtcNow;
-                    _ownerProfileRepository.Update(ownerProfile);
+                    if (existing.VerificationStatus == OwnerVerificationStatus.Approved)
+                        throw new UserFriendlyException(400, "KYC_ALREADY_APPROVED", "KYC already approved");
+
+                    existing.IdCardNumber = request.IdCardNumber;
+                    existing.FullName = request.FullName;
+                    existing.DateOfBirth = parsedDob;
+                    if (request.FrontDocumentUrl != null) existing.FrontDocumentUrl = request.FrontDocumentUrl;
+                    if (request.BackDocumentUrl != null) existing.BackDocumentUrl = request.BackDocumentUrl;
+                    existing.VerificationStatus = OwnerVerificationStatus.Approved;
+                    existing.RejectionReason = null;
+                    existing.VerifiedAt = DateTime.UtcNow;
+                    existing.UpdatedAt = DateTime.UtcNow;
+
+                    _kycRepository.Update(existing);
                 }
-                
-                // Update user role to OWNER for existing KYC
-                var existingUser = await _userRepository.GetByIdAsync(userId);
-                if (existingUser != null)
+                else
                 {
-                    existingUser.RoleId = UserRoles.OWNER;
-                    existingUser.UpdatedAt = DateTime.UtcNow;
-                    _userRepository.Update(existingUser);
+                    var kyc = new MKyc
+                    {
+                        OwnerProfileId = owner.Id,
+                        IdCardNumber = request.IdCardNumber,
+                        FullName = request.FullName,
+                        DateOfBirth = parsedDob,
+                        FrontDocumentUrl = request.FrontDocumentUrl,
+                        BackDocumentUrl = request.BackDocumentUrl,
+                        VerificationStatus = OwnerVerificationStatus.Approved,
+                        VerifiedAt = DateTime.UtcNow,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _kycRepository.AddAsync(kyc);
                 }
+
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                    throw new UserFriendlyException(404, "USER_NOT_FOUND", "User not found");
+
+                if (user.RoleId != UserRoles.OWNER)
+                {
+                    user.RoleId = UserRoles.OWNER;
+                    user.UpdatedAt = DateTime.UtcNow;
+                    _userRepository.Update(user);
+                }
+
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitAsync();
             }
-            else
+            catch
             {
-                // Parse date for new KYC
-                DateTime? parsedDate = null;
-                if (DateTime.TryParse(request.DateOfBirth, out var date1))
-                {
-                    parsedDate = date1;
-                }
-                else if (DateTime.TryParseExact(request.DateOfBirth, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out var date2))
-                {
-                    parsedDate = date2;
-                }
-
-                var kyc = new MKyc
-                {
-                    OwnerProfileId = owner.Id,
-                    IdCardNumber = request.IdCardNumber,
-                    FullName = request.FullName,
-                    DateOfBirth = parsedDate,
-                    FrontDocumentUrl = request.FrontDocumentUrl,
-                    BackDocumentUrl = request.BackDocumentUrl,
-                    VerificationStatus = OwnerVerificationStatus.Approved,
-                    VerifiedAt = DateTime.UtcNow,
-                    CreatedAt = DateTime.UtcNow
-                };
-                await _kycRepository.AddAsync(kyc);
+                await _unitOfWork.RollbackAsync();
+                throw;
             }
+        }
 
-            // Update user role to OWNER immediately
-            var newUser = await _userRepository.GetByIdAsync(userId);
-            if (newUser != null)
-            {
-                newUser.RoleId = UserRoles.OWNER;
-                newUser.UpdatedAt = DateTime.UtcNow;
-                _userRepository.Update(newUser);
-            }
-
-            // Update owner profile with OCR data after KYC approval
-            if (owner != null)
-            {
-                owner.Name = request.FullName;
-                owner.IdentityVerified = true;
-                owner.UpdatedAt = DateTime.UtcNow;
-                _ownerProfileRepository.Update(owner);
-            }
-
-            await _unitOfWork.SaveChangesAsync();
+        private static DateTime? ParseDateOfBirth(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+            if (DateTime.TryParse(value, null, System.Globalization.DateTimeStyles.None, out var d)) return d;
+            if (DateTime.TryParseExact(value, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out var d2)) return d2;
+            if (DateTime.TryParseExact(value, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out var d3)) return d3;
+            return null;
         }
 
         public async Task<OwnerKycStatusDto> GetStatusAsync(int userId)

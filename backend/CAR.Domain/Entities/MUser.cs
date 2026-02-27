@@ -1,4 +1,4 @@
-﻿
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,15 +15,25 @@ namespace CAR.Domain.Entities
 
         public int RoleId { get; set; }
 
+        public string FullName { get; set; } = string.Empty;
+
         public string Email { get; set; } = null!;
 
         public string PasswordHash { get; set; } = null!;
 
         public string? Phone { get; set; }
 
+        public string? Address { get; set; }
+
         public short Status { get; set; }
 
         public string? AvatarImgUrl { get; set; }
+
+        /// <summary>
+        /// Login provider for this account.
+        /// Example: "Local", "Google"
+        /// </summary>
+        public string LoginProvider { get; set; } = "Local";
 
         public DateTime CreatedAt { get; set; }
 

@@ -210,5 +210,56 @@ namespace CAR.Infrastructure.Services
             _postRepository.Remove(post);
             await _unitOfWork.SaveChangesAsync();
         }
+
+        public async Task<PagedResultDto<PostListItemDto>> GetPublicPostsAsync(int page, int pageSize)
+        {
+            if (page < 1) page = 1;
+            if (pageSize <= 0) pageSize = 12;
+            if (pageSize > 100) pageSize = 100;
+
+            var query = _postRepository.Query()
+                .Include(p => p.Category)
+                .Where(p => p.Status == (short)PostStatus.Approved)
+                .OrderByDescending(p => p.CreatedAt);
+
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            var rawPosts = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Title,
+                    p.Price,
+                    p.Status,
+                    p.CreatedAt,
+                    p.ExpiredAt,
+                    CategoryName = p.Category.Name
+                })
+                .ToListAsync();
+
+            var items = rawPosts.Select(p => new PostListItemDto
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Price = p.Price,
+                Status = p.Status,
+                StatusName = Enum.GetName(typeof(PostStatus), p.Status) ?? p.Status.ToString(),
+                CreatedAt = p.CreatedAt,
+                ExpiredAt = p.ExpiredAt,
+                CategoryName = p.CategoryName
+            }).ToList();
+
+            return new PagedResultDto<PostListItemDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                TotalPages = totalPages,
+                CurrentPage = page
+            };
+        }
     }
 }
+

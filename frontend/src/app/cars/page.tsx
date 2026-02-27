@@ -1,198 +1,283 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Car, X } from "lucide-react";
-import { CarCard } from "@/components/cards";
-import { popularCars } from "@/lib/data";
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight, Car } from "lucide-react";
+import { CarPostCard } from "@/components/cards";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { getCars, CARS_PAGE_SIZE } from "@/services";
+import type { PostListItemDto } from "@/types/api";
+
+const PAGE_SIZE = CARS_PAGE_SIZE;
+
+const LOCATION_OPTIONS = [
+  { value: "all", label: "Tất cả địa điểm" },
+  { value: "hcm", label: "Hồ Chí Minh" },
+  { value: "hanoi", label: "Hà Nội" },
+  { value: "danang", label: "Đà Nẵng" },
+];
+
+const BRAND_OPTIONS = [
+  { value: "all", label: "Tất cả hãng" },
+  { value: "vinfast", label: "VinFast" },
+  { value: "tesla", label: "Tesla" },
+  { value: "hyundai", label: "Hyundai" },
+  { value: "kia", label: "Kia" },
+];
+
+const TYPE_OPTIONS = [
+  { value: "all", label: "Tất cả loại" },
+  { value: "sedan", label: "Sedan" },
+  { value: "suv", label: "SUV" },
+  { value: "hatchback", label: "Hatchback" },
+];
 
 export default function CarsPage() {
-  const [searchText, setSearchText] = useState("");
-  const [selectedBrand, setSelectedBrand] = useState("all");
+  const [page, setPage] = useState(1);
+  const [data, setData] = useState<{
+    items: PostListItemDto[];
+    totalCount: number;
+    totalPages: number;
+    currentPage: number;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Get unique brands from cars data
-  const brands = useMemo(() => {
-    const uniqueBrands = [...new Set(popularCars.map((car) => car.brand))];
-    return uniqueBrands.sort();
+  const [priceMin, setPriceMin] = useState(0);
+  const [priceMax, setPriceMax] = useState(50);
+  const [location, setLocation] = useState("all");
+  const [brand, setBrand] = useState("all");
+  const [type, setType] = useState("all");
+
+  const fetchCars = useCallback(async (pageNum: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await getCars({ page: pageNum, pageSize: PAGE_SIZE });
+      setData({
+        items: result.items,
+        totalCount: result.totalCount,
+        totalPages: result.totalPages,
+        currentPage: result.currentPage,
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không tải được danh sách xe");
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Filter cars based on search text and selected brand
-  const filteredCars = useMemo(() => {
-    return popularCars.filter((car) => {
-      const matchesSearch =
-        car.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        car.brand.toLowerCase().includes(searchText.toLowerCase());
-      const matchesBrand =
-        selectedBrand === "all" || car.brand === selectedBrand;
-      return matchesSearch && matchesBrand;
-    });
-  }, [searchText, selectedBrand]);
+  useEffect(() => {
+    fetchCars(page);
+  }, [page, fetchCars]);
 
-  const clearFilters = () => {
-    setSearchText("");
-    setSelectedBrand("all");
-  };
+  const items = data?.items ?? [];
+  const totalPages = data?.totalPages ?? 0;
+  const currentPage = data?.currentPage ?? 1;
+  const totalCount = data?.totalCount ?? 0;
 
-  const hasActiveFilters = searchText || selectedBrand !== "all";
+  const canPrev = currentPage > 1;
+  const canNext = currentPage < totalPages;
+
+  const startItem = totalCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const endItem = Math.min(currentPage * PAGE_SIZE, totalCount);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      <div className="container mx-auto px-6 py-10">
-        {/* Page Header */}
+    <div className="min-h-screen bg-slate-50/80">
+      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {/* Page header */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-[#242424] lg:text-4xl">
-            Our Electric Cars
+          <h1 className="text-3xl font-bold text-slate-900 lg:text-4xl">
+            Xe cho thuê
           </h1>
-          <p className="mt-2 text-[#747474]">
-            Find the perfect electric car for your next adventure
+          <p className="mt-2 text-slate-600">
+            Tìm xe điện phù hợp cho chuyến đi của bạn
           </p>
         </div>
 
-        {/* Filters Section */}
-        <div className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
-          {/* Search Input */}
-          <div className="relative">
-            <svg
-              className="absolute left-3 top-1/2 h-6.5 w-6.5 -translate-y-1/2 text-[#747474]"
-              viewBox="0 0 500 500"
-              fill="currentColor"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M184.5 303.5C231.168 303.5 269 265.668 269 219C269 172.332 231.168 134.5 184.5 134.5C137.832 134.5 100 172.332 100 219C100 265.668 137.832 303.5 184.5 303.5Z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="30"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+        {/* Horizontal filter bar */}
+        <div className="mt-8 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+          <span className="text-sm font-medium text-slate-500">Bộ lọc:</span>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="text-xs font-medium text-slate-500">Giá (triệu/ngày)</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                max={priceMax}
+                value={priceMin}
+                onChange={(e) => setPriceMin(Number(e.target.value) || 0)}
+                className="w-14 rounded-md border border-slate-200 px-2 py-1.5 text-sm"
+                aria-label="Giá tối thiểu"
               />
-              <path
-                d="M247.5 281.5L303 337"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="30"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              <span className="text-slate-400">–</span>
+              <input
+                type="number"
+                min={priceMin}
+                value={priceMax}
+                onChange={(e) => setPriceMax(Number(e.target.value) || 50)}
+                className="w-14 rounded-md border border-slate-200 px-2 py-1.5 text-sm"
+                aria-label="Giá tối đa"
               />
-              <path
-                d="M155 200C155 189 165 175 185 175"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="20"
-                strokeLinecap="round"
-              />
-              <path
-                d="M380 80L380 160"
-                stroke="currentColor"
-                strokeWidth="25"
-                strokeLinecap="round"
-              />
-              <path
-                d="M340 120L420 120"
-                stroke="currentColor"
-                strokeWidth="25"
-                strokeLinecap="round"
-              />
-              <path
-                d="M440 200L440 250"
-                stroke="currentColor"
-                strokeWidth="20"
-                strokeLinecap="round"
-              />
-              <path
-                d="M415 225L465 225"
-                stroke="currentColor"
-                strokeWidth="20"
-                strokeLinecap="round"
-              />
-              <path
-                d="M350 280L350 320"
-                stroke="currentColor"
-                strokeWidth="18"
-                strokeLinecap="round"
-              />
-              <path
-                d="M330 300L370 300"
-                stroke="currentColor"
-                strokeWidth="18"
-                strokeLinecap="round"
-              />
-            </svg>
+            </div>
             <input
-              type="text"
-              placeholder="Search by car name, brand..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="w-full rounded-lg border border-[#E5E5E5] py-3 pl-10 pr-4 text-sm text-[#242424] outline-none transition-colors placeholder:text-[#B6B6B6] focus:border-[#1572D3] focus:ring-2 focus:ring-[#1572D3]/20"
+              type="range"
+              min={0}
+              max={50}
+              value={priceMax}
+              onChange={(e) => setPriceMax(Number(e.target.value))}
+              className="h-2 w-24 cursor-pointer appearance-none rounded-full bg-slate-200 accent-primary"
+              aria-label="Thanh trượt giá tối đa"
             />
           </div>
 
-          {/* Brand Filter - Horizontal Pills */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <button
-              onClick={() => setSelectedBrand("all")}
-              className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
-                selectedBrand === "all"
-                  ? "bg-[#1572D3] text-white shadow-md"
-                  : "border border-[#E5E5E5] bg-white text-[#484848] hover:border-[#1572D3] hover:text-[#1572D3]"
-              }`}
-            >
-              All vehicles
-            </button>
-            {brands.map((brand) => (
-              <button
-                key={brand}
-                onClick={() => setSelectedBrand(brand)}
-                className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
-                  selectedBrand === brand
-                    ? "bg-[#1572D3] text-white shadow-md"
-                    : "border border-[#E5E5E5] bg-white text-[#484848] hover:border-[#1572D3] hover:text-[#1572D3]"
-                }`}
-              >
-                <Car className="h-4 w-4" />
-                {brand}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Results Count */}
-        <div className="mt-6">
-          <p className="text-sm text-[#747474]">
-            Showing{" "}
-            <span className="font-semibold text-[#242424]">
-              {filteredCars.length}
-            </span>{" "}
-            {filteredCars.length === 1 ? "car" : "cars"}
-            {hasActiveFilters && " matching your filters"}
-          </p>
-        </div>
-
-        {/* Cars Grid */}
-        <div className="mt-6">
-          {filteredCars.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredCars.map((car) => (
-                <CarCard key={car.id} car={car} />
+          <Select value={location} onValueChange={setLocation}>
+            <SelectTrigger className="w-[160px]" size="sm">
+              <SelectValue placeholder="Địa điểm" />
+            </SelectTrigger>
+            <SelectContent>
+              {LOCATION_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
               ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center rounded-2xl bg-white py-16">
-              <div className="text-6xl">🚗</div>
-              <h3 className="mt-4 text-xl font-semibold text-[#242424]">
-                No cars found
-              </h3>
-              <p className="mt-2 text-[#747474]">
-                Try adjusting your search or filter criteria
-              </p>
-              <button
-                onClick={clearFilters}
-                className="mt-4 rounded-lg bg-[#1572D3] px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1260B0]"
-              >
-                Clear all filters
-              </button>
-            </div>
-          )}
+            </SelectContent>
+          </Select>
+
+          <Select value={brand} onValueChange={setBrand}>
+            <SelectTrigger className="w-[140px]" size="sm">
+              <SelectValue placeholder="Hãng xe" />
+            </SelectTrigger>
+            <SelectContent>
+              {BRAND_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={type} onValueChange={setType}>
+            <SelectTrigger className="w-[140px]" size="sm">
+              <SelectValue placeholder="Loại xe" />
+            </SelectTrigger>
+            <SelectContent>
+              {TYPE_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+
+        {error && (
+          <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
+            {error}. Bạn có thể xem trang với dữ liệu mẫu.
+            <Link href="/" className="ml-2 font-medium underline">
+              Về trang chủ
+            </Link>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="mt-10 flex justify-center">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : (
+          <>
+            <p className="mt-6 text-sm text-slate-500">
+              Hiển thị {startItem}–{endItem} trong tổng {totalCount} bài đăng
+            </p>
+
+            {items.length > 0 ? (
+              <>
+                <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {items.map((post) => (
+                    <CarPostCard key={post.id} post={post} />
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={!canPrev}
+                      className="gap-1"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Trước
+                    </Button>
+                    <div className="flex items-center gap-1">
+                      {(() => {
+                        const windowSize = 5;
+                        const start = Math.max(
+                          1,
+                          Math.min(
+                            currentPage - Math.floor(windowSize / 2),
+                            totalPages - windowSize + 1
+                          )
+                        );
+                        const end = Math.min(start + windowSize - 1, totalPages);
+                        const pages: number[] = [];
+                        for (let i = start; i <= end; i++) pages.push(i);
+                        return pages.map((p) => (
+                          <Button
+                            key={p}
+                            variant={p === currentPage ? "default" : "ghost"}
+                            size="sm"
+                            className="h-9 w-9 rounded-full p-0"
+                            onClick={() => setPage(p)}
+                          >
+                            {p}
+                          </Button>
+                        ));
+                      })()}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => p + 1)}
+                      disabled={!canNext}
+                      className="gap-1"
+                    >
+                      Sau
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="mt-12 flex flex-col items-center justify-center rounded-2xl bg-white py-16 shadow-sm">
+                <Car className="h-14 w-14 text-slate-300" />
+                <h3 className="mt-4 text-xl font-semibold text-slate-700">
+                  Chưa có bài đăng
+                </h3>
+                <p className="mt-2 text-slate-500">
+                  Thử đổi bộ lọc hoặc quay lại sau
+                </p>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => setPage(1)}
+                >
+                  Về trang 1
+                </Button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
