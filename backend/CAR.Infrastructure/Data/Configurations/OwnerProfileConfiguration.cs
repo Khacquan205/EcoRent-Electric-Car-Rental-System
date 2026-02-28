@@ -40,6 +40,8 @@ public class OwnerProfileConfiguration : IEntityTypeConfiguration<MOwnerProfile>
                .HasColumnName("id_number")
                .HasMaxLength(50);
 
+        builder.HasIndex(x => x.IdNumber).IsUnique();
+
         builder.Property(x => x.Phone)
                .HasColumnName("phone")
                .HasMaxLength(20);

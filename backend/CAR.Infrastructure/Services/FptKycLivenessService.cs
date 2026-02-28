@@ -19,7 +19,6 @@ namespace CAR.Infrastructure.Services
         private readonly ILogger<FptKycLivenessService> _logger;
         private readonly IKycFaceStore _faceStore;
         private readonly IVideoTranscoder _videoTranscoder;
-        private readonly string _kycProvider;
 
         public FptKycLivenessService(
             HttpClient httpClient, 
@@ -33,34 +32,133 @@ namespace CAR.Infrastructure.Services
             _logger = logger;
             _faceStore = faceStore;
             _videoTranscoder = videoTranscoder;
-            _kycProvider = _configuration["KYC:Provider"]?.ToUpper() ?? "MOCK";
         }
 
         public async Task<KycLivenessResponseDto> ProcessLivenessCheckAsync(KycLivenessRequestDto request)
         {
-            if (_kycProvider == "MOCK")
-            {
-                _logger.LogInformation("Using MOCK KYC Liveness provider");
-                return GetMockResponse();
-            }
-
-            if (_kycProvider != "FPT")
-            {
-                throw new InvalidOperationException($"Unsupported KYC provider: {_kycProvider}");
-            }
-
             return await ProcessFptLivenessAsync(request);
         }
 
-        private KycLivenessResponseDto GetMockResponse()
+        private const double FaceMatchThreshold = 0.75;
+
+        public async Task<KycLivenessResponseDto> ProcessSelfieMatchAsync(KycSelfieMatchRequestDto request)
+        {
+            return await ProcessFptSelfieMatchAsync(request);
+        }
+
+        private async Task<KycLivenessResponseDto> ProcessFptSelfieMatchAsync(KycSelfieMatchRequestDto request)
+        {
+            try
+            {
+                if (request.SelfieImage == null || string.IsNullOrEmpty(request.CccdFaceId))
+                {
+                    _logger.LogWarning("Face verification FAIL: missing input (SelfieImage or CccdFaceId)");
+                    return FailSelfieResponse(0, "Selfie image and CccdFaceId are required");
+                }
+
+                var cccdFaceStream = await _faceStore.LoadFaceAsync(request.CccdFaceId);
+                if (cccdFaceStream == null)
+                {
+                    _logger.LogWarning("Face verification FAIL: CCCD face not found for CccdFaceId={CccdFaceId}", request.CccdFaceId);
+                    return FailSelfieResponse(0, "CCCD face image not found");
+                }
+
+                if (cccdFaceStream.CanSeek)
+                    cccdFaceStream.Position = 0;
+
+                var apiKey = _configuration["KYC:Fpt:ApiKey"] ?? throw new InvalidOperationException("FPT KYC API Key is not configured");
+                var baseUrl = _configuration["KYC:Fpt:BaseUrl"] ?? "https://api.fpt.ai";
+                var requestUrl = $"{baseUrl}/dmp/checkface/v1";
+
+                // Explicit order: file[0] = ID_CARD_FACE (from store), file[1] = SELFIE_FACE (from request). Compare ID vs SELFIE only.
+                using var formData = new MultipartFormDataContent();
+                var cccdContent = new StreamContent(cccdFaceStream);
+                cccdContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                formData.Add(cccdContent, "file[]", "id_card_face.jpg");
+
+                await using var selfieStream = request.SelfieImage.OpenReadStream();
+                if (selfieStream.CanSeek)
+                    selfieStream.Position = 0;
+                var selfieContent = new StreamContent(selfieStream);
+                selfieContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                var selfieFileName = string.IsNullOrWhiteSpace(request.SelfieImage.FileName) ? "selfie_face.jpg" : request.SelfieImage.FileName;
+                formData.Add(selfieContent, "file[]", selfieFileName);
+
+                _logger.LogInformation("Face verification: comparing ID_CARD_FACE (from store) vs SELFIE_FACE (from request)");
+
+                var httpRequest = new HttpRequestMessage(HttpMethod.Post, requestUrl)
+                {
+                    Headers = { { "api-key", apiKey } },
+                    Content = formData
+                };
+
+                var response = await _httpClient.SendAsync(httpRequest);
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("FPT checkface response: {StatusCode} {Content}", response.StatusCode, responseContent);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return FailSelfieResponse(0, "Face verification service error. Please try again or use a clearer photo.");
+                }
+
+                var checkFaceResult = JsonSerializer.Deserialize<FptCheckFaceResult>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (checkFaceResult == null || checkFaceResult.Data == null)
+                {
+                    _logger.LogWarning("Face verification FAIL: invalid or empty FPT response");
+                    return FailSelfieResponse(0, "Invalid response from face verification");
+                }
+
+                if (checkFaceResult.Code != "200")
+                {
+                    _logger.LogWarning("Face verification FAIL: FPT code={Code}, message={Message}", checkFaceResult.Code, checkFaceResult.Message);
+                    return FailSelfieResponse(0, checkFaceResult.Message ?? "No faces detected or invalid image. Please use a clear photo.");
+                }
+
+                var similarity = GetSimilarityFromFptData(checkFaceResult.Data);
+                if (similarity < 0 || similarity > 100)
+                {
+                    _logger.LogWarning("Face verification FAIL: invalid similarity value {Similarity}", similarity);
+                    return FailSelfieResponse(0, "Invalid similarity result. Please try again with clear photos.");
+                }
+
+                var matchScore = similarity / 100.0;
+                var isMatched = matchScore >= FaceMatchThreshold;
+
+                _logger.LogInformation(
+                    "[KYC] Real face match score from API: {MatchScore:F4} (threshold={Threshold}), isMatched={IsMatched}, similarity={Similarity:F2}%",
+                    matchScore, FaceMatchThreshold, isMatched, similarity);
+
+                return new KycLivenessResponseDto
+                {
+                    IsLive = true,
+                    IsMatch = isMatched,
+                    Confidence = matchScore,
+                    Raw = checkFaceResult,
+                    ErrorMessage = isMatched ? null : "Face does not match ID card. Please use a clear selfie."
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing selfie face match");
+                return FailSelfieResponse(0, "Face verification failed. Please try again.");
+            }
+        }
+
+        private static KycLivenessResponseDto FailSelfieResponse(double matchScore, string message)
         {
             return new KycLivenessResponseDto
             {
                 IsLive = true,
-                IsMatch = true,
-                Confidence = 0.96,
-                Raw = new { message = "Mock response for testing" }
+                IsMatch = false,
+                Confidence = matchScore,
+                ErrorMessage = message
             };
+        }
+
+        private static double GetSimilarityFromFptData(FptCheckFaceData data)
+        {
+            if (data == null) return 0;
+            return data.Similarity;
         }
 
         private async Task<KycLivenessResponseDto> ProcessFptLivenessAsync(KycLivenessRequestDto request)
@@ -271,27 +369,36 @@ namespace CAR.Infrastructure.Services
                 };
             }
 
-            // Map based on FPT Liveness v3 response structure
-            var isLive = fptResult.Liveness?.Result == "live" || false;
-            var isMatch = fptResult.FaceMatch?.Result == "match" || false;
-            var confidence = 0.0;
+            // If face match result is missing, do not pass (prevent auto-pass when face detection fails)
+            if (fptResult.FaceMatch == null)
+            {
+                _logger.LogWarning("Liveness: FaceMatch is null, returning FAIL");
+                return new KycLivenessResponseDto
+                {
+                    IsLive = fptResult.Liveness?.Result == "live",
+                    IsMatch = false,
+                    Confidence = 0,
+                    Raw = fptResult,
+                    ErrorMessage = "Face match result missing. Please try again."
+                };
+            }
 
-            // Use confidence from face match if available, otherwise from liveness
-            if (fptResult.FaceMatch?.Confidence != null)
-            {
-                confidence = double.TryParse(fptResult.FaceMatch.Confidence.ToString(), out var conf) ? conf : 0;
-            }
-            else if (fptResult.Liveness?.Confidence != null)
-            {
-                confidence = double.TryParse(fptResult.Liveness.Confidence.ToString(), out var conf) ? conf : 0;
-            }
+            // Use our threshold 0.75; do not trust FPT's isMatch boolean
+            var similarityRaw = fptResult.FaceMatch.Confidence;
+            var matchScore = similarityRaw / 100.0;
+            var isMatched = matchScore >= FaceMatchThreshold;
+
+            _logger.LogInformation(
+                "Liveness face match: similarity={Similarity:F2}, matchScore={MatchScore:F4}, threshold={Threshold}, isMatched={IsMatched}",
+                similarityRaw, matchScore, FaceMatchThreshold, isMatched);
 
             return new KycLivenessResponseDto
             {
-                IsLive = isLive,
-                IsMatch = isMatch,
-                Confidence = confidence,
-                Raw = fptResult
+                IsLive = fptResult.Liveness?.Result == "live",
+                IsMatch = isMatched,
+                Confidence = matchScore,
+                Raw = fptResult,
+                ErrorMessage = isMatched ? null : "Face does not match ID card."
             };
         }
     }
@@ -336,5 +443,20 @@ namespace CAR.Infrastructure.Services
         // For backward compatibility
         public string Result => IsMatch?.ToLower() == "true" ? "match" : "no_match";
         public double Confidence => double.TryParse(Similarity, out var conf) ? conf : 0;
+    }
+
+    /// <summary>FPT checkface/v1 response (compare two face images).</summary>
+    public class FptCheckFaceResult
+    {
+        public string Code { get; set; }
+        public string Message { get; set; }
+        public FptCheckFaceData Data { get; set; }
+    }
+
+    public class FptCheckFaceData
+    {
+        public bool IsMatch { get; set; }
+        public double Similarity { get; set; }
+        public bool IsBothImgIDCard { get; set; }
     }
 }

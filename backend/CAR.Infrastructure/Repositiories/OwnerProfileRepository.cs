@@ -16,6 +16,12 @@ namespace CAR.Infrastructure.Repositories
             return await _dbSet.FirstOrDefaultAsync(x => x.UserId == userId);
         }
 
+        public async Task<MOwnerProfile?> GetByIdNumberAsync(string idNumber)
+        {
+            if (string.IsNullOrWhiteSpace(idNumber)) return null;
+            return await _dbSet.FirstOrDefaultAsync(x => x.IdNumber == idNumber);
+        }
+
         public async Task<bool> ExistsByUserIdAsync(int userId)
         {
             return await _dbSet.AnyAsync(x => x.UserId == userId);

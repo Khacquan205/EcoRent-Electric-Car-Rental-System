@@ -14,9 +14,10 @@ namespace CAR.Infrastructure.Repositories
         public async Task<MOwnerSubscription?> GetValidActiveSubscriptionAsync(long ownerId, DateTime currentTime)
         {
             return await _dbSet
-                .Where(x => x.OwnerId == ownerId && 
+                .Include(x => x.Package)
+                .Where(x => x.OwnerId == ownerId &&
                            x.Status == 1 && // ACTIVE
-                           x.StartDate <= currentTime && 
+                           x.StartDate <= currentTime &&
                            x.EndDate >= currentTime &&
                            x.RemainingPosts > 0)
                 .FirstOrDefaultAsync();

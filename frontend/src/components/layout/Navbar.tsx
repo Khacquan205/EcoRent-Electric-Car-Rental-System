@@ -28,7 +28,7 @@ const ownerNavLinks = [
   { href: "/owner/subscription", label: "Gói của tôi" },
   { href: "/owner/packages", label: "Mua gói" },
   { href: "/owner/post/new", label: "Đăng xe" },
-  { href: "/owner/posts", label: "Tin của tôi" },
+  { href: "/owner/posts", label: "Thông báo mới" },
 ];
 
 const Navbar = () => {

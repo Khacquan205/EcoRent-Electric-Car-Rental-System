@@ -85,7 +85,11 @@ namespace CAR.Infrastructure.Services
             // Handle LocationId 0 case (Swagger default)
             if (request.LocationId == 0) request.LocationId = null;
 
-            var post = await _postRepository.CreatePendingPostAsync(request, verifiedOwner.Id, currentTime);
+            var post = await _postRepository.CreatePendingPostAsync(
+                request,
+                verifiedOwner.Id,
+                currentTime,
+                activeSubscription.EndDate);
 
             // Do NOT deduct slot here – deduct only when admin approves (see PostModerationService.ApprovePostAsync)
             await _unitOfWork.SaveChangesAsync();

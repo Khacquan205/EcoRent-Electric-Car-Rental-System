@@ -3,19 +3,20 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Upload, FileCheck, CheckCircle2 } from "lucide-react";
+import { ChevronRight, Upload, FileCheck, CheckCircle2, Camera, ImagePlus } from "lucide-react";
 import * as ownerApi from "@/services/owner";
 import { ApiError } from "@/services/client";
 
 const STEPS = [
   { id: 1, title: "Upload CCCD", desc: "Tải ảnh mặt trước và mặt sau" },
   { id: 2, title: "KYC Check", desc: "Nhận diện thông tin từ CCCD" },
-  { id: 3, title: "Xem lại & Xác nhận", desc: "Kiểm tra và gửi KYC" },
+  { id: 3, title: "Xác thực khuôn mặt", desc: "Camera hoặc tải ảnh selfie" },
+  { id: 4, title: "Xem lại & Xác nhận", desc: "Kiểm tra và gửi KYC" },
 ] as const;
 
 export default function BecomeOwnerPage() {
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [frontFile, setFrontFile] = useState<File | null>(null);
   const [backFile, setBackFile] = useState<File | null>(null);
   const [frontPreview, setFrontPreview] = useState<string | null>(null);
@@ -24,6 +25,12 @@ export default function BecomeOwnerPage() {
   const [ocrError, setOcrError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [faceVerified, setFaceVerified] = useState(false);
+  const [faceError, setFaceError] = useState<string | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [selfieFile, setSelfieFile] = useState<File | null>(null);
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+  const [faceLoading, setFaceLoading] = useState(false);
 
   useEffect(() => {
     ownerApi
@@ -62,8 +69,9 @@ export default function BecomeOwnerPage() {
     return () => {
       if (frontPreview) URL.revokeObjectURL(frontPreview);
       if (backPreview) URL.revokeObjectURL(backPreview);
+      if (selfiePreview) URL.revokeObjectURL(selfiePreview);
     };
-  }, [frontPreview, backPreview]);
+  }, [frontPreview, backPreview, selfiePreview]);
 
   const goToKycCheck = () => {
     if (frontFile && backFile) {
@@ -84,6 +92,14 @@ export default function BecomeOwnerPage() {
         return;
       }
       setOcrData(data);
+      setFaceVerified(false);
+      setFaceError(null);
+      setVideoFile(null);
+      setSelfieFile(null);
+      setSelfiePreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
       setStep(3);
     } catch (e) {
       setOcrError(e instanceof Error ? e.message : "Không thể nhận dạng CCCD.");
@@ -92,9 +108,69 @@ export default function BecomeOwnerPage() {
     }
   };
 
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setVideoFile(f);
+    e.target.value = "";
+  };
+
+  const handleSelfieChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) {
+      setSelfieFile(f);
+      setSelfiePreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(f);
+      });
+    }
+    e.target.value = "";
+  };
+
+  const runLiveness = async () => {
+    if (!ocrData?.cccdFaceId || !videoFile) return;
+    setFaceLoading(true);
+    setFaceError(null);
+    try {
+      const result = await ownerApi.kycLivenessCheck(videoFile, ocrData.cccdFaceId);
+      if (result.isMatch && result.isLive !== false) {
+        setFaceVerified(true);
+        setStep(4);
+      } else {
+        setFaceError(result.errorMessage ?? "Xác thực khuôn mặt không thành công. Bạn có thể thử tải ảnh selfie bên dưới.");
+      }
+    } catch (e) {
+      setFaceError(e instanceof Error ? e.message : "Xác thực camera thất bại. Bạn có thể tải ảnh selfie thay thế.");
+    } finally {
+      setFaceLoading(false);
+    }
+  };
+
+  const runSelfieVerify = async () => {
+    if (!ocrData?.cccdFaceId || !selfieFile) return;
+    setFaceLoading(true);
+    setFaceError(null);
+    try {
+      const result = await ownerApi.kycVerifyFaceUpload(selfieFile, ocrData.cccdFaceId);
+      if (result.isMatched) {
+        setFaceVerified(true);
+        setStep(4);
+      } else {
+        setFaceError(result.message ?? "Khuôn mặt không khớp. Vui lòng dùng ảnh selfie rõ mặt.");
+      }
+    } catch (e) {
+      setFaceError(e instanceof Error ? e.message : "Xác thực ảnh selfie thất bại.");
+    } finally {
+      setFaceLoading(false);
+    }
+  };
+
+  const duplicateCccdMessage =
+    "Số CCCD này đã được sử dụng để xác minh cho một tài khoản khác. Nếu đây không phải là bạn, vui lòng liên hệ tổng đài chăm sóc khách hàng để được hỗ trợ.";
+
   const submitKyc = async () => {
     if (!ocrData) return;
     setLoading(true);
+    setOcrError(null);
     try {
       await ownerApi.submitKycBecomeOwner({
         fullName: ocrData.fullName,
@@ -313,7 +389,7 @@ export default function BecomeOwnerPage() {
             </>
           )}
 
-          {/* STEP 3 – Review (read-only) + Submit */}
+          {/* STEP 3 – Face verification (camera or selfie fallback) */}
           {step === 3 && ocrData && (
             <>
               <h2 className="text-lg font-semibold text-slate-900">
@@ -321,7 +397,7 @@ export default function BecomeOwnerPage() {
                 {/* abvccaxczxc */}
               </h2>
               <p className="mt-1 text-sm text-slate-600">
-                Kiểm tra thông tin đã đọc từ CCCD. Không thể chỉnh sửa.
+                Kiểm tra thông tin đã đọc từ CCCD. Đã xác thực khuôn mặt.
               </p>
               {ocrError && (
                 <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -375,7 +451,7 @@ export default function BecomeOwnerPage() {
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setStep(2)}
+                  onClick={() => setStep(3)}
                   className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
                   Quay lại

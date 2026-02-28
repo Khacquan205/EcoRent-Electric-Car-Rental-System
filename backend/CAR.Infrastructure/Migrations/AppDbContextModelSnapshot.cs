@@ -134,7 +134,7 @@ namespace CAR.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
-                        .HasColumnName("name");
+                        .HasColumnName("Name");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -525,6 +525,9 @@ namespace CAR.Infrastructure.Migrations
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IdNumber")
+                        .IsUnique();
 
                     b.HasIndex("UserId")
                         .IsUnique();

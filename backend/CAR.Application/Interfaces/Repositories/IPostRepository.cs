@@ -6,6 +6,6 @@ namespace CAR.Application.Interfaces.Repositories
 {
     public interface IPostRepository : IRepository<MPost>
     {
-        Task<MPost> CreatePendingPostAsync(CreatePostRequestDto request, int ownerId, DateTime currentTime);
+        Task<MPost> CreatePendingPostAsync(CreatePostRequestDto request, int ownerId, DateTime currentTime, DateTime? expireAt);
     }
 }

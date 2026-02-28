@@ -17,50 +17,54 @@ namespace CAR.Infrastructure.Services
 
         public async Task<KycLivenessResponseDto> ProcessLivenessCheckAsync(KycLivenessRequestDto request)
         {
-            await Task.Delay(1000); // Simulate API call
+            await Task.Delay(1000);
 
-            _logger.LogInformation("Using Mock KYC Liveness Service");
+            if (request == null || request.Video == null || string.IsNullOrEmpty(request.CccdFaceId))
+            {
+                _logger.LogWarning("Mock liveness: invalid request, returning FAIL");
+                return new KycLivenessResponseDto
+                {
+                    IsLive = false,
+                    IsMatch = false,
+                    Confidence = 0,
+                    ErrorMessage = "Video and CccdFaceId are required"
+                };
+            }
 
-            // For testing: always return success with realistic response
+            _logger.LogInformation("Using Mock KYC Liveness Service: matchScore=0.96, isMatched=true");
             return new KycLivenessResponseDto
             {
                 IsLive = true,
                 IsMatch = true,
                 Confidence = 0.96,
-                Raw = new { 
-                    code = "0",
-                    message = "Success",
-                    liveness = new {
-                        code = "0",
-                        message = "Liveness verified successfully",
-                        is_live = "true",
-                        spoof_prob = "0.04",
-                        need_to_review = "false",
-                        is_deepfake = "false",
-                        deepfake_prob = "0.02",
-                        warning = ""
-                    },
-                    face_match = new {
-                        code = "0",
-                        message = "Face matched successfully",
-                        isMatch = "true",
-                        similarity = "0.96",
-                        warning = ""
-                    },
-                    timestamp = DateTime.UtcNow
-                }
+                Raw = new { message = "Mock response for testing" }
             };
+        }
 
-            // Alternative: Return failure for testing
-            /*
+        public async Task<KycLivenessResponseDto> ProcessSelfieMatchAsync(KycSelfieMatchRequestDto request)
+        {
+            await Task.Delay(500);
+
+            if (request == null || request.SelfieImage == null || string.IsNullOrEmpty(request.CccdFaceId))
+            {
+                _logger.LogWarning("Mock selfie match: invalid request, returning FAIL");
+                return new KycLivenessResponseDto
+                {
+                    IsLive = true,
+                    IsMatch = false,
+                    Confidence = 0,
+                    ErrorMessage = "Selfie image and CccdFaceId are required"
+                };
+            }
+
+            _logger.LogInformation("Using Mock KYC Liveness Service for selfie match: matchScore=0.92, isMatched=true");
             return new KycLivenessResponseDto
             {
-                IsLive = false,
-                IsMatch = false,
-                Confidence = 0,
-                ErrorMessage = "Mock liveness check failed - testing error scenario"
+                IsLive = true,
+                IsMatch = true,
+                Confidence = 0.92,
+                Raw = new { message = "Mock selfie match success" }
             };
-            */
         }
     }
 }
