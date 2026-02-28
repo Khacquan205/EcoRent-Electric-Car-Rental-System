@@ -321,6 +321,7 @@ export default function BecomeOwnerPage() {
             <>
               <h2 className="text-lg font-semibold text-slate-900">
                 Bước 3: Xem lại thông tin
+                {/* abvccaxczxc */}
               </h2>
               <p className="mt-1 text-sm text-slate-600">
                 Kiểm tra thông tin đã đọc từ CCCD. Không thể chỉnh sửa.
