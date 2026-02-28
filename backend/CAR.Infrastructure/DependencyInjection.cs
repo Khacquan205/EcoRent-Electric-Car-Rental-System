@@ -18,11 +18,15 @@ namespace CAR.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
-            // DbContext
+            // DbContext with retry for transient failures (e.g. remote DB like Render, connection drops)
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(
                     configuration.GetConnectionString("DefaultConnection"),
-                    b => b.MigrationsAssembly("CAR.Infrastructure")
+                    npgsqlOptions =>
+                    {
+                        npgsqlOptions.MigrationsAssembly("CAR.Infrastructure");
+                        npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
+                    }
                 )
             );
 

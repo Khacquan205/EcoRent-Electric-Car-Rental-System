@@ -54,10 +54,7 @@ export type SubmitKycBecomeOwnerRequest = {
   fullName: string;
   dateOfBirth: string;
   idNumber: string;
-  address?: string | null;
   gender?: string | null;
-  frontDocumentUrl?: string | null;
-  backDocumentUrl?: string | null;
 };
 
 export async function registerOwner(
@@ -150,19 +147,13 @@ export async function kycLiveness(
 export async function submitKycBecomeOwner(
   body: SubmitKycBecomeOwnerRequest,
 ): Promise<{ message: string; role: string }> {
-  return apiFetch<{ message: string; role: string }>(
-    "/api/owner/kyc/submit-kyc",
-    {
-      method: "POST",
-      body: {
-        idCardNumber: body.idNumber,
-        fullName: body.fullName,
-        dateOfBirth: body.dateOfBirth,
-        address: body.address ?? null,
-        gender: body.gender ?? null,
-        frontDocumentUrl: body.frontDocumentUrl ?? null,
-        backDocumentUrl: body.backDocumentUrl ?? null,
-      },
+  return apiFetch<{ message: string; role: string }>("/api/owner/kyc/submit-kyc", {
+    method: "POST",
+    body: {
+      idCardNumber: body.idNumber,
+      fullName: body.fullName,
+      dateOfBirth: body.dateOfBirth,
+      gender: body.gender ?? undefined,
     },
   );
 }

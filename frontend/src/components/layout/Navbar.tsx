@@ -15,16 +15,32 @@ import {
 } from "@/components/ui/sheet";
 import { useAuthSession } from "@/components/providers";
 
-const navLinks = [
+const defaultNavLinks = [
   { href: "/", label: "Trang chủ" },
   { href: "/cars", label: "Xe cho thuê" },
   { href: "/become-owner", label: "Trở thành chủ xe" },
-  { href: "/how-it-works", label: "Gói dịch vụ" }
+  { href: "/how-it-works", label: "Dịch vụ của chúng tôi" },
+];
+
+const ownerNavLinks = [
+  { href: "/", label: "Trang chủ" },
+  { href: "/cars", label: "Xe cho thuê" },
+  { href: "/owner/subscription", label: "Gói của tôi" },
+  { href: "/owner/packages", label: "Mua gói" },
+  { href: "/owner/post/new", label: "Đăng xe" },
+  { href: "/owner/posts", label: "Tin của tôi" },
 ];
 
 const Navbar = () => {
   const { session } = useAuthSession();
   const isAuthed = Boolean(session);
+  const isOwner = (session?.role ?? "").toUpperCase() === "OWNER";
+  const isAdminOrStaff =
+    (session?.role ?? "").toUpperCase() === "ADMIN" ||
+    (session?.role ?? "").toUpperCase() === "STAFF" ||
+    session?.roleId === 3 ||
+    session?.roleId === 4;
+  const navLinks = isOwner ? ownerNavLinks : defaultNavLinks;
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
@@ -78,6 +94,17 @@ const Navbar = () => {
         </div>
 
         <div className="hidden items-center gap-3 lg:flex">
+          {isAdminOrStaff && (
+            <Link href="/admin">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full border-primary/50 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10"
+              >
+                Quản trị
+              </Button>
+            </Link>
+          )}
           {isAuthed ? (
             <NavUserMenu />
           ) : (
@@ -114,6 +141,19 @@ const Navbar = () => {
               EcoRent
             </SheetTitle>
             <div className="mt-8 flex flex-col gap-1">
+              {isAdminOrStaff && (
+                <Link
+                  href="/admin"
+                  onClick={() => setMobileOpen(false)}
+                  className={`rounded-lg px-3 py-2.5 text-base font-medium transition-colors duration-200 ${
+                    pathname.startsWith("/admin")
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  }`}
+                >
+                  Quản trị
+                </Link>
+              )}
               {navLinks.map((link) => {
                 const isActive =
                   link.href === "/"

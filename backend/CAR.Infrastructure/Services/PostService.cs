@@ -57,7 +57,16 @@ namespace CAR.Infrastructure.Services
                 throw new UserFriendlyException(
                     403,
                     "NO_VALID_SUBSCRIPTION",
-                    "No valid active subscription found"
+                    "No valid active subscription found. Please buy a package first."
+                );
+            }
+
+            if (activeSubscription.RemainingPosts <= 0)
+            {
+                throw new UserFriendlyException(
+                    403,
+                    "NO_REMAINING_POSTS",
+                    "No remaining post slots. Your subscription has reached the post limit."
                 );
             }
 
@@ -78,8 +87,7 @@ namespace CAR.Infrastructure.Services
 
             var post = await _postRepository.CreatePendingPostAsync(request, verifiedOwner.Id, currentTime);
 
-            await _subscriptionService.ConsumeOnePostAsync(activeSubscription.Id);
-
+            // Do NOT deduct slot here – deduct only when admin approves (see PostModerationService.ApprovePostAsync)
             await _unitOfWork.SaveChangesAsync();
 
             return new CreatePostResponseDto

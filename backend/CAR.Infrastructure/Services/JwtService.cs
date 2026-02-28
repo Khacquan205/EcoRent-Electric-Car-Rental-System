@@ -20,39 +20,39 @@ namespace CAR.Infrastructure.Services
         }
 
         public string GenerateAccessToken(MUser user)
-        {
-            var jwtSettings = _configuration.GetSection("JwtSettings");
-            var secretKey = jwtSettings["SecretKey"] ?? throw new ArgumentNullException("JwtSettings:SecretKey");
-            var issuer = jwtSettings["Issuer"] ?? "EcoRentAPI";
-            var audience = jwtSettings["Audience"] ?? "EcoRentClient";
-            var expiresInMinutes = Convert.ToDouble(jwtSettings["ExpiresInMinutes"] ?? "60");
+                            {
+                                var jwtSettings = _configuration.GetSection("JwtSettings");
+                                var secretKey = jwtSettings["SecretKey"] ?? throw new ArgumentNullException("JwtSettings:SecretKey");
+                                var issuer = jwtSettings["Issuer"] ?? "EcoRentAPI";
+                                var audience = jwtSettings["Audience"] ?? "EcoRentClient";
+                                var expiresInMinutes = Convert.ToDouble(jwtSettings["ExpiresInMinutes"] ?? "60");
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+                                var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var roleCode = GetRoleCode(user.RoleId);
+                                var roleCode = GetRoleCode(user.RoleId);
 
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, roleCode),
-                new Claim("userId", user.Id.ToString()),
-                new Claim("email", user.Email),
-                new Claim("roleId", user.RoleId.ToString()),
-                new Claim("roleCode", roleCode),
-                new Claim("verify_level", "0")
-            };
+                                var claims = new[]
+                                {
+                                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                                    new Claim(ClaimTypes.Email, user.Email),
+                                    new Claim("role", roleCode),
+                                    new Claim("userId", user.Id.ToString()),
+                                    new Claim("email", user.Email),
+                                    new Claim("roleId", user.RoleId.ToString()),
+                                    new Claim("roleCode", roleCode),
+                                    new Claim("verify_level", "0")
+                                };
 
-            var token = new JwtSecurityToken(
-                issuer: issuer,
-                audience: audience,
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(expiresInMinutes),
-                signingCredentials: credentials
-            );
+                                var token = new JwtSecurityToken(
+                                    issuer: issuer,
+                                    audience: audience,
+                                    claims: claims,
+                                    expires: DateTime.UtcNow.AddMinutes(expiresInMinutes),
+                                    signingCredentials: credentials
+                                );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+                                return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         public string GenerateRefreshToken()

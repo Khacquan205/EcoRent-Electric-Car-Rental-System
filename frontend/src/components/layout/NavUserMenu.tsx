@@ -21,6 +21,11 @@ export default function NavUserMenu({ variant = "desktop", onNavigate }: Props) 
   }, []);
 
   const email = session?.email ?? null;
+  const isAdminOrStaff =
+    (session?.role ?? "").toUpperCase() === "ADMIN" ||
+    (session?.role ?? "").toUpperCase() === "STAFF" ||
+    session?.roleId === 3 ||
+    session?.roleId === 4;
 
   const initials = useMemo(() => {
     if (!email) return "U";
@@ -44,6 +49,15 @@ export default function NavUserMenu({ variant = "desktop", onNavigate }: Props) 
       <div className="grid gap-2">
         <p className="truncate px-2 py-1 text-sm font-medium text-foreground">{email}</p>
         <div className="h-px bg-border" />
+        {isAdminOrStaff && (
+          <Link
+            href="/admin"
+            onClick={onNavigate}
+            className="rounded-md px-3 py-2 text-sm font-medium text-primary hover:bg-accent hover:text-accent-foreground"
+          >
+            Quản trị (Admin)
+          </Link>
+        )}
         <Link
           href="/user"
           onClick={onNavigate}
@@ -90,6 +104,14 @@ export default function NavUserMenu({ variant = "desktop", onNavigate }: Props) 
       <PopoverContent align="end" className="w-56 p-2">
         <p className="truncate px-2 py-2 text-sm font-medium text-foreground">{email}</p>
         <div className="my-2 h-px bg-border" />
+        {isAdminOrStaff && (
+          <Link
+            href="/admin"
+            className="block rounded-md px-2 py-2 text-sm font-medium text-primary hover:bg-accent hover:text-accent-foreground"
+          >
+            Quản trị (Admin)
+          </Link>
+        )}
         <Link
           href="/user"
           className="block rounded-md px-2 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"

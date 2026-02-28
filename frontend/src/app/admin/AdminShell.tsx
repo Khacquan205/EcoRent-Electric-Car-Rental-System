@@ -11,6 +11,8 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/pending-posts", label: "Pending Car Posts" },
+  { href: "/admin/categories", label: "Categories" },
   { href: "/admin/packages", label: "Packages" },
   { href: "/admin/owners", label: "Owners" },
 ];
@@ -40,7 +42,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
             <div className="mt-4 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 px-3 py-3 text-white">
               <p className="text-xs opacity-90">Role</p>
-              <p className="text-sm font-semibold">ADMIN</p>
+              <p className="text-sm font-semibold">ADMIN / STAFF</p>
             </div>
 
             <nav className="mt-4 grid gap-1">

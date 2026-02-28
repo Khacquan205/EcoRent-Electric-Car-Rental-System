@@ -83,19 +83,13 @@ namespace RentalCar.Controllers
 
 
         /// <summary>
-        /// Submit KYC (một endpoint: full flow có liveness hoặc flow "Trở thành chủ xe" chỉ CCCD).
-        /// Khi không gửi FrontDocumentUrl/BackDocumentUrl thì không bắt buộc liveness.
+        /// Submit KYC with extracted CCCD data. Document upload is done in the OCR step; this endpoint does not accept document URLs.
         /// </summary>
         [HttpPost("submit-kyc")]
         [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> SubmitKyc([FromBody] OwnerKycSubmitRequestDto request)
         {
             var userId = GetCurrentUserId();
-            bool requireLiveness = !string.IsNullOrEmpty(request.FrontDocumentUrl) || !string.IsNullOrEmpty(request.BackDocumentUrl);
-            if (requireLiveness && (!_cache.TryGetValue($"KycLivenessPassed_{userId}", out bool livenessPassed) || !livenessPassed))
-            {
-                return BadRequest(new { success = false, message = "Bạn phải thực hiện xác định khuôn mặt (Liveness Check) thành công trước khi Submit KYC." });
-            }
 
             await _ownerKycService.SubmitKycAsync(userId, request);
 

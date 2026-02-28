@@ -1,20 +1,22 @@
-using CAR.Domain.Enums;
-
 namespace CAR.Domain.Entities
 {
+    /// <summary>
+    /// Customer profile: used for nearby car recommendation and location-based search.
+    /// Account (MUser) holds only auth; DisplayName and Address are here.
+    /// </summary>
     public partial class MCustomerProfile
     {
         public int Id { get; set; }
 
         public int UserId { get; set; }
 
-        public string? Name { get; set; }
+        public string? DisplayName { get; set; }
 
-        public string? Phone { get; set; }
+        public string? Address { get; set; }
 
-        public KycGender Gender { get; set; }
+        public double? Latitude { get; set; }
 
-        public DateTime? DateOfBirth { get; set; }
+        public double? Longitude { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

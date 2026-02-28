@@ -96,27 +96,14 @@ namespace CAR.Infrastructure.Services
             var passwordHash = HashPassword(request.Password!);
             var otpCode = GenerateOtp();
 
-            // Create MUser with CUSTOMER role
-            // According to new auth flow:
-            // - Email from request
-            // - FullName from request.Name
-            // - ProfilePic (AvatarImgUrl) = null
-            // - Address = null
-            // - Phone = from request (optional)
-            // - Status = Active
-            // - CreatedAt/UpdatedAt = now
-            // - LoginProvider = Local
+            // Create Account (MUser) - auth only; CustomerProfile created on verify with DisplayName + Address
             var now = DateTime.UtcNow;
             var user = new MUser
             {
                 RoleId = UserRoles.CUSTOMER,
                 Email = request.Email!,
-                FullName = request.Name,
                 PasswordHash = passwordHash,
-                Phone = request.Phone,
-                Address = null,
                 Status = 1, // Active
-                AvatarImgUrl = null,
                 LoginProvider = "Local",
                 CreatedAt = now,
                 UpdatedAt = now
@@ -129,7 +116,8 @@ namespace CAR.Infrastructure.Services
             {
                 UserId = user.Id,
                 Email = request.Email,
-                Name = request.Name,
+                Name = request.DisplayName,
+                Address = request.Address,
                 PasswordHash = passwordHash,
                 Code = otpCode,
                 CodeExpiresAt = DateTime.UtcNow.AddMinutes(5),
@@ -196,12 +184,12 @@ namespace CAR.Infrastructure.Services
                 user.UpdatedAt = DateTime.UtcNow;
                 _userRepository.Update(user);
 
-                // Create MCustomerProfile
+                // Create CustomerProfile (DisplayName, Address required for customer)
                 var customerProfile = new MCustomerProfile
                 {
                     UserId = user.Id,
-                    Name = auth.Name ?? string.Empty,
-                    Phone = user.Phone,
+                    DisplayName = auth.Name ?? string.Empty,
+                    Address = auth.Address ?? string.Empty,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -275,8 +263,8 @@ namespace CAR.Infrastructure.Services
                             var fallbackCustomerProfile = new MCustomerProfile
                             {
                                 UserId = user.Id,
-                                Name = user.Email.Split('@')[0] ?? string.Empty, // Use email prefix as temporary name
-                                Phone = null,
+                                DisplayName = user.Email.Split('@')[0] ?? string.Empty,
+                                Address = null,
                                 CreatedAt = DateTime.UtcNow,
                                 UpdatedAt = DateTime.UtcNow
                             };
@@ -512,19 +500,27 @@ namespace CAR.Infrastructure.Services
                 var newUser = new MUser
                 {
                     Email = userInfo.Email,
-                    FullName = userInfo.Name ?? userInfo.Email.Split('@')[0],
                     PasswordHash = string.Empty, // No local password for Google login
                     RoleId = UserRoles.CUSTOMER,
                     Status = 1, // Active
-                    Phone = null,
-                    Address = null,
-                    AvatarImgUrl = userInfo.AvatarUrl,
                     LoginProvider = "Google",
                     CreatedAt = now,
                     UpdatedAt = now
                 };
 
                 await _userRepository.CreateUserAsync(newUser);
+                await _unitOfWork.SaveChangesAsync();
+
+                // Create CustomerProfile for new Google user (DisplayName from Google; Address can be set later)
+                var customerProfile = new MCustomerProfile
+                {
+                    UserId = newUser.Id,
+                    DisplayName = userInfo.Name ?? userInfo.Email.Split('@')[0],
+                    Address = null,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                };
+                await _customerProfileRepository.CreateCustomerProfileAsync(customerProfile);
                 await _unitOfWork.SaveChangesAsync();
 
                 // Create authentication record

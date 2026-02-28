@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,37 +8,31 @@ using CAR.Domain.Enums;
 
 namespace CAR.Domain.Entities
 {
+    /// <summary>
+    /// Account entity: authentication only (Id, Email, PasswordHash, Role).
+    /// Customer-specific data (DisplayName, Address) lives in CustomerProfile.
+    /// Owner-specific data (FullName, IdCardNumber, etc.) lives in OwnerProfile.
+    /// </summary>
     public partial class MUser
     {
         public int Id { get; set; }
 
         public int RoleId { get; set; }
 
-        public string FullName { get; set; } = string.Empty;
-
         public string Email { get; set; } = null!;
 
         public string PasswordHash { get; set; } = null!;
 
-        public string? Phone { get; set; }
-
-        public string? Address { get; set; }
-
         public short Status { get; set; }
 
-        public string? AvatarImgUrl { get; set; }
-
-        /// <summary>
-        /// Login provider for this account.
-        /// Example: "Local", "Google"
-        /// </summary>
+        /// <summary>Login provider: "Local", "Google".</summary>
         public string LoginProvider { get; set; } = "Local";
 
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
 
-        // Navigation Properties
+        // Navigation
         public MRole Role { get; set; } = null!;
         public ICollection<MAuthentication> Authentications { get; set; } = new List<MAuthentication>();
         public MCustomerProfile? CustomerProfile { get; set; }
