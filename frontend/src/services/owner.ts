@@ -190,5 +190,5 @@ export async function submitKycBecomeOwner(
         gender: body.gender ?? undefined,
       },
     },
-  });
+  );
 }
