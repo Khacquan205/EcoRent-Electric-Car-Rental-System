@@ -28,7 +28,7 @@ export type RegisterOwnerResponse = ApiResult<Record<string, unknown>>;
 export type VerifyIdentityResponse = ApiResult<Record<string, unknown>>;
 export type OwnerMeResponse = ApiResult<Record<string, unknown>>;
 
-/** KYC OCR response (CCCD 2 mặt) */
+/** KYC OCR response (CCCD 2 mặt). cccdFaceId is used for liveness/selfie face verification. */
 export type KycOcrResponse = {
   fullName: string;
   dob: string;
@@ -41,15 +41,22 @@ export type KycOcrResponse = {
   errorMessage?: string | null;
 };
 
-/** KYC Liveness check response */
-export type KycLivenessResponse = {
-  isLive: boolean;
+/** Face verification result (liveness or selfie upload). */
+export type KycFaceVerificationResult = {
+  isLive?: boolean;
   isMatch: boolean;
   confidence: number;
   errorMessage?: string | null;
 };
 
-/** Submit KYC "Trở thành chủ xe" (no liveness) */
+/** Selfie upload verification result (matchScore 0–1, isMatched, message). */
+export type KycVerifyFaceUploadResult = {
+  matchScore: number;
+  isMatched: boolean;
+  message: string | null;
+};
+
+/** Submit KYC "Trở thành chủ xe" (legal identity only; no address) */
 export type SubmitKycBecomeOwnerRequest = {
   fullName: string;
   dateOfBirth: string;
@@ -104,6 +111,7 @@ export async function kycOcr(
     dob: data.dob ?? "",
     gender: data.gender ?? "",
     cccdNumber: data.cccdNumber ?? "",
+    cccdFaceId: data.cccdFaceId ?? null,
     address: data.address ?? null,
     cccdFaceId: data.cccdFaceId ?? null,
     frontImageUrl: data.frontImageUrl ?? null,
@@ -112,13 +120,13 @@ export async function kycOcr(
   };
 }
 
-/** Gọi API liveness check (video + cccdFaceId). Requires auth. */
-export async function kycLiveness(
-  video: Blob,
-  cccdFaceId: string,
-): Promise<KycLivenessResponse> {
+/** Face verification via live camera (video). Requires OCR passed first. */
+export async function kycLivenessCheck(
+  video: File,
+  cccdFaceId: string
+): Promise<KycFaceVerificationResult> {
   const formData = new FormData();
-  formData.append("Video", video, "liveness.mp4");
+  formData.append("Video", video);
   formData.append("CccdFaceId", cccdFaceId);
   const token = getAuthToken();
   const headers: Record<string, string> = {};
@@ -129,17 +137,41 @@ export async function kycLiveness(
     headers,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok)
-    throw new Error(
-      data.message ??
-        data.errorMessage ??
-        `Liveness check failed: ${res.status}`,
-    );
+  if (!res.ok) {
+    throw new Error(data.message ?? data.errorMessage ?? `Liveness check failed: ${res.status}`);
+  }
   return {
-    isLive: data.isLive ?? false,
+    isLive: data.isLive,
     isMatch: data.isMatch ?? false,
-    confidence: data.confidence ?? 0,
+    confidence: typeof data.confidence === "number" ? data.confidence : 0,
     errorMessage: data.errorMessage ?? null,
+  };
+}
+
+/** Face verification via selfie upload (fallback when camera fails). Requires OCR passed first. */
+export async function kycVerifyFaceUpload(
+  selfieImage: File,
+  cccdFaceId: string
+): Promise<KycVerifyFaceUploadResult> {
+  const formData = new FormData();
+  formData.append("SelfieImage", selfieImage);
+  formData.append("CccdFaceId", cccdFaceId);
+  const token = getAuthToken();
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch("/api/owner/kyc/verify-face-upload", {
+    method: "POST",
+    body: formData,
+    headers,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.message ?? data.errorMessage ?? `Face verification failed: ${res.status}`);
+  }
+  return {
+    matchScore: typeof data.matchScore === "number" ? data.matchScore : 0,
+    isMatched: data.isMatched ?? false,
+    message: data.message ?? null,
   };
 }
 
@@ -158,5 +190,5 @@ export async function submitKycBecomeOwner(
         gender: body.gender ?? undefined,
       },
     },
-  );
+  });
 }

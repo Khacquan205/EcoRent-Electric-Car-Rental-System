@@ -6,6 +6,7 @@ namespace CAR.Application.Interfaces.Repositories
     public interface IOwnerProfileRepository : IRepository<MOwnerProfile>
     {
         Task<MOwnerProfile?> GetByUserIdAsync(int userId);
+        Task<MOwnerProfile?> GetByIdNumberAsync(string idNumber);
         Task<bool> ExistsByUserIdAsync(int userId);
         Task<MOwnerProfile?> GetVerifiedOwnerByUserIdAsync(int userId);
     }

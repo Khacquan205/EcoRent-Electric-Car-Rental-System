@@ -59,17 +59,8 @@ namespace CAR.Infrastructure
             services.AddScoped<IFirebaseService, FirebaseService>();
             services.AddScoped<IGoogleAuthProvider, GoogleAuthProvider>();
             services.AddScoped<IKycOcrService, FptKycOcrService>();
-            
-            // KYC Liveness Service - choose based on configuration
-            var livenessProvider = configuration["KYC:LivenessProvider"]?.ToUpper() ?? "FPT";
-            if (livenessProvider == "MOCK")
-            {
-                services.AddScoped<IKycLivenessService, MockKycLivenessService>();
-            }
-            else
-            {
-                services.AddScoped<IKycLivenessService, FptKycLivenessService>();
-            }
+
+            // KYC Liveness Service is registered in Program.cs based on KYC:LivenessProvider
             services.AddScoped<IVideoTranscoder, FfmpegVideoTranscoder>();
             services.AddScoped<IKycFaceStore, FileKycFaceStore>();
             services.AddScoped<ITwilioSmsService, TwilioSmsService>();

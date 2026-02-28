@@ -23,8 +23,9 @@ public class AuthenticationConfiguration : IEntityTypeConfiguration<MAuthenticat
                .HasMaxLength(255)
                .IsRequired();
 
+        // PostgreSQL preserves case when column name has uppercase; DB may have "Name" if migration rename was not applied
         builder.Property(x => x.Name)
-               .HasColumnName("name")
+               .HasColumnName("Name")
                .HasMaxLength(255);
 
         builder.Property(x => x.Address)

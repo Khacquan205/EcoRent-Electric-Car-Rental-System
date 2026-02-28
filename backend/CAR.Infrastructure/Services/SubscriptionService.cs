@@ -4,6 +4,7 @@ using CAR.Application.Interfaces.Repositories;
 using CAR.Application.Interfaces.Services;
 using CAR.Domain.Entities;
 using CAR.Domain.Enums;
+using CAR.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -14,21 +15,28 @@ namespace CAR.Infrastructure.Services
 {
     public class SubscriptionService : ISubscriptionService
     {
+        private const short StatusPendingPayment = 0;
+        private const short StatusActive = 1;
+        private const short StatusInactive = 2; // Cancelled / deactivated
+
         private readonly IOwnerProfileRepository _ownerProfileRepository;
         private readonly IOwnerSubscriptionRepository _ownerSubscriptionRepository;
         private readonly IOwnerPackageRepository _ownerPackageRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly AppDbContext _dbContext;
 
         public SubscriptionService(
             IOwnerProfileRepository ownerProfileRepository,
             IOwnerSubscriptionRepository ownerSubscriptionRepository,
             IOwnerPackageRepository ownerPackageRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            AppDbContext dbContext)
         {
             _ownerProfileRepository = ownerProfileRepository;
             _ownerSubscriptionRepository = ownerSubscriptionRepository;
             _ownerPackageRepository = ownerPackageRepository;
             _unitOfWork = unitOfWork;
+            _dbContext = dbContext;
         }
 
         public async Task<CreateSubscriptionResponseDto> CreateSubscriptionAsync(int userId, CreateSubscriptionRequestDto request)
@@ -71,37 +79,55 @@ namespace CAR.Infrastructure.Services
                 );
             }
 
-            var existingActiveSubscription = await _ownerSubscriptionRepository.GetActiveSubscriptionByOwnerIdAsync(ownerProfile.Id);
-            if (existingActiveSubscription != null)
+            MOwnerSubscription? subscription = null;
+            var strategy = _dbContext.Database.CreateExecutionStrategy();
+            await strategy.ExecuteAsync(async () =>
             {
-                throw new UserFriendlyException(
-                    409,
-                    "ACTIVE_SUBSCRIPTION_EXISTS",
-                    "Owner already has an active subscription"
-                );
-            }
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+                try
+                {
+                    var activeSubscriptions = await _ownerSubscriptionRepository.Query()
+                        .Where(s => s.OwnerId == ownerProfile.Id && s.Status == StatusActive)
+                        .ToListAsync();
+                    foreach (var s in activeSubscriptions)
+                    {
+                        s.Status = StatusInactive;
+                        s.UpdatedAt = DateTime.UtcNow;
+                        _ownerSubscriptionRepository.Update(s);
+                    }
 
-            var now = DateTime.UtcNow;
-            var subscription = new MOwnerSubscription
-            {
-                OwnerId = ownerProfile.Id,
-                PackageId = package.Id,
-                StartDate = now,
-                EndDate = now.AddDays(package.DurationDays),
-                TotalPosts = package.MaxPosts,
-                RemainingPosts = package.MaxPosts,
-                Status = 0, // PENDING_PAYMENT
-                Source = request.Source,
-                CreatedAt = now,
-                UpdatedAt = now
-            };
+                    var now = DateTime.UtcNow;
+                    subscription = new MOwnerSubscription
+                    {
+                        OwnerId = ownerProfile.Id,
+                        PackageId = package.Id,
+                        StartDate = now,
+                        EndDate = now.AddDays(package.DurationDays),
+                        TotalPosts = package.MaxPosts,
+                        RemainingPosts = package.MaxPosts,
+                        Status = StatusPendingPayment,
+                        Source = request.Source,
+                        CreatedAt = now,
+                        UpdatedAt = now
+                    };
 
-            await _ownerSubscriptionRepository.AddAsync(subscription);
-            await _unitOfWork.SaveChangesAsync();
+                    await _ownerSubscriptionRepository.AddAsync(subscription);
+                    await _unitOfWork.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            });
+
+            if (subscription == null)
+                throw new InvalidOperationException("Subscription was not created.");
 
             return new CreateSubscriptionResponseDto
             {
-                Id = subscription.Id,
+                Id = subscription!.Id,
                 PackageId = subscription.PackageId,
                 StartDate = subscription.StartDate,
                 EndDate = subscription.EndDate,

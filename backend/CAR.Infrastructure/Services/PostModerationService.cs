@@ -63,22 +63,19 @@ namespace CAR.Infrastructure.Services
             post.StaffId = staffProfileId;
             post.UpdatedAt = DateTime.UtcNow;
 
-            var activeSubscription = await _ownerSubscriptionRepository.Query()
-                .Include(s => s.Package)
-                .Where(s => s.OwnerId == post.OwnerId && s.Status == 1 && s.EndDate > DateTime.UtcNow)
-                .OrderByDescending(s => s.CreatedAt)
-                .FirstOrDefaultAsync();
+            var activeSubscription = await _ownerSubscriptionRepository.GetValidActiveSubscriptionAsync(post.OwnerId, DateTime.UtcNow);
 
             if (activeSubscription != null)
             {
-                post.ExpiredAt = DateTime.UtcNow.AddDays(activeSubscription.Package.DurationDays);
+                if (post.ExpiredAt == null)
+                    post.ExpiredAt = DateTime.UtcNow.AddDays(30);
                 post.PriorityLevel = (short)activeSubscription.Package.PriorityLevel;
-                // Deduct 1 post slot only when approved (not when pending)
                 await _subscriptionService.ConsumeOnePostAsync(activeSubscription.Id);
             }
             else
             {
-                post.ExpiredAt = DateTime.UtcNow.AddDays(30); // Fallback
+                if (post.ExpiredAt == null)
+                    post.ExpiredAt = DateTime.UtcNow.AddDays(30);
                 post.PriorityLevel = 0;
             }
 

@@ -13,12 +13,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Cascades\haarcascade_frontalface_default.xml" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Cascades\haarcascade_frontalface_default.xml" LogicalName="CAR.Infrastructure.Cascades.haarcascade_frontalface_default.xml" />
+  </ItemGroup>
+  <ItemGroup>
     <Folder Include="Extensions\" />
     <Folder Include="Http\" />
     <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="OpenCvSharp4" Version="4.10.0.20240616" />
+    <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.10.0.20240616" />
     <PackageReference Include="FirebaseAdmin" Version="3.4.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.23" />

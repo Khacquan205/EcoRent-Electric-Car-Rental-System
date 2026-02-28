@@ -1,4 +1,4 @@
-﻿using CAR.Domain.Entities;
+using CAR.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

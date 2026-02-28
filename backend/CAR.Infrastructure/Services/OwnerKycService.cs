@@ -6,7 +6,10 @@ using CAR.Application.Interfaces.Services;
 using CAR.Domain.Constants;
 using CAR.Domain.Entities;
 using CAR.Domain.Enums;
+using CAR.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace CAR.Infrastructure.Services
 {
@@ -17,116 +20,147 @@ namespace CAR.Infrastructure.Services
         private readonly INotificationService _notificationService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserRepository _userRepository;
+        private readonly AppDbContext _dbContext;
+        private readonly ILogger<OwnerKycService> _logger;
 
         public OwnerKycService(
             IKycRepository kycRepository,
             IOwnerProfileRepository ownerProfileRepository,
             INotificationService notificationService,
             IUnitOfWork unitOfWork,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            AppDbContext dbContext,
+            ILogger<OwnerKycService> logger)
         {
             _kycRepository = kycRepository;
             _ownerProfileRepository = ownerProfileRepository;
             _notificationService = notificationService;
             _unitOfWork = unitOfWork;
             _userRepository = userRepository;
+            _dbContext = dbContext;
+            _logger = logger;
         }
 
         public async Task SubmitKycAsync(int userId, OwnerKycSubmitRequestDto request)
         {
             var parsedDob = ParseDateOfBirth(request.DateOfBirth);
+            var extractedIdNumber = request.IdCardNumber?.Trim();
 
-            await _unitOfWork.BeginTransactionAsync();
-            try
+            var strategy = _dbContext.Database.CreateExecutionStrategy();
+            await strategy.ExecuteAsync(async () =>
             {
-                var owner = await _ownerProfileRepository.GetByUserIdAsync(userId);
-                var gender = ParseGender(request.Gender);
-                if (owner == null)
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+                try
                 {
-                    owner = new MOwnerProfile
+                    if (!string.IsNullOrEmpty(extractedIdNumber))
                     {
-                        UserId = userId,
-                        Name = request.FullName,
-                        FullName = request.FullName,
-                        DateOfBirth = parsedDob,
-                        Gender = gender,
-                        IdNumber = request.IdCardNumber,
-                        IdentityVerified = true,
-                        RatingAvg = 0,
-                        TotalPosts = 0,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
-                    };
-                    await _ownerProfileRepository.AddAsync(owner);
+                        var otherOwner = await _ownerProfileRepository.GetByIdNumberAsync(extractedIdNumber);
+                        if (otherOwner != null && otherOwner.UserId != userId)
+                        {
+                            _logger.LogWarning("[SECURITY] Duplicate CCCD attempt detected for UserId = {UserId}", userId);
+                            throw new UserFriendlyException(409, "CCCD_ALREADY_USED", "This CCCD has already been used for another owner account.");
+                        }
+                    }
+
+                    var owner = await _ownerProfileRepository.GetByUserIdAsync(userId);
+                    var gender = ParseGender(request.Gender);
+                    if (owner == null)
+                    {
+                        owner = new MOwnerProfile
+                        {
+                            UserId = userId,
+                            Name = request.FullName,
+                            FullName = request.FullName,
+                            DateOfBirth = parsedDob,
+                            Gender = gender,
+                            IdNumber = request.IdCardNumber,
+                            IdentityVerified = true,
+                            RatingAvg = 0,
+                            TotalPosts = 0,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow
+                        };
+                        await _ownerProfileRepository.AddAsync(owner);
+                        await _unitOfWork.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        owner.Name = request.FullName;
+                        owner.FullName = request.FullName;
+                        owner.DateOfBirth = parsedDob;
+                        owner.Gender = gender;
+                        owner.IdNumber = request.IdCardNumber;
+                        owner.IdentityVerified = true;
+                        owner.UpdatedAt = DateTime.UtcNow;
+                        _ownerProfileRepository.Update(owner);
+                    }
+
+                    var duplicate = await _kycRepository.GetByIdCardNumberAsync(request.IdCardNumber);
+                    if (duplicate != null && duplicate.OwnerProfileId != owner.Id)
+                        throw new UserFriendlyException(409, "ID_CARD_TAKEN", "This ID card number is already registered");
+
+                    var existing = await _kycRepository.GetByOwnerProfileIdAsync(owner.Id);
+
+                    if (existing != null)
+                    {
+                        if (existing.VerificationStatus == OwnerVerificationStatus.Approved)
+                            throw new UserFriendlyException(400, "KYC_ALREADY_APPROVED", "KYC already approved");
+
+                        existing.IdCardNumber = request.IdCardNumber;
+                        existing.FullName = request.FullName;
+                        existing.DateOfBirth = parsedDob;
+                        existing.VerificationStatus = OwnerVerificationStatus.Approved;
+                        existing.RejectionReason = null;
+                        existing.VerifiedAt = DateTime.UtcNow;
+                        existing.UpdatedAt = DateTime.UtcNow;
+
+                        _kycRepository.Update(existing);
+                    }
+                    else
+                    {
+                        var kyc = new MKyc
+                        {
+                            OwnerProfileId = owner.Id,
+                            IdCardNumber = request.IdCardNumber,
+                            FullName = request.FullName,
+                            DateOfBirth = parsedDob,
+                            VerificationStatus = OwnerVerificationStatus.Approved,
+                            VerifiedAt = DateTime.UtcNow,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await _kycRepository.AddAsync(kyc);
+                    }
+
+                    var user = await _userRepository.GetByIdAsync(userId);
+                    if (user == null)
+                        throw new UserFriendlyException(404, "USER_NOT_FOUND", "User not found");
+
+                    if (user.RoleId != UserRoles.OWNER)
+                    {
+                        user.RoleId = UserRoles.OWNER;
+                        user.UpdatedAt = DateTime.UtcNow;
+                        _userRepository.Update(user);
+                    }
+
                     await _unitOfWork.SaveChangesAsync();
+                    await transaction.CommitAsync();
                 }
-                else
+                catch (DbUpdateException ex) when (IsDuplicateKeyException(ex))
                 {
-                    owner.Name = request.FullName;
-                    owner.FullName = request.FullName;
-                    owner.DateOfBirth = parsedDob;
-                    owner.Gender = gender;
-                    owner.IdNumber = request.IdCardNumber;
-                    owner.IdentityVerified = true;
-                    owner.UpdatedAt = DateTime.UtcNow;
-                    _ownerProfileRepository.Update(owner);
+                    _logger.LogWarning("[SECURITY] Duplicate CCCD attempt detected for UserId = {UserId}", userId);
+                    throw new UserFriendlyException(409, "CCCD_ALREADY_REGISTERED", "CCCD already registered.");
                 }
+            });
+        }
 
-                var duplicate = await _kycRepository.GetByIdCardNumberAsync(request.IdCardNumber);
-                if (duplicate != null && duplicate.OwnerProfileId != owner.Id)
-                    throw new UserFriendlyException(409, "ID_CARD_TAKEN", "This ID card number is already registered");
-
-                var existing = await _kycRepository.GetByOwnerProfileIdAsync(owner.Id);
-
-                if (existing != null)
-                {
-                    if (existing.VerificationStatus == OwnerVerificationStatus.Approved)
-                        throw new UserFriendlyException(400, "KYC_ALREADY_APPROVED", "KYC already approved");
-
-                    existing.IdCardNumber = request.IdCardNumber;
-                    existing.FullName = request.FullName;
-                    existing.DateOfBirth = parsedDob;
-                    existing.VerificationStatus = OwnerVerificationStatus.Approved;
-                    existing.RejectionReason = null;
-                    existing.VerifiedAt = DateTime.UtcNow;
-                    existing.UpdatedAt = DateTime.UtcNow;
-
-                    _kycRepository.Update(existing);
-                }
-                else
-                {
-                    var kyc = new MKyc
-                    {
-                        OwnerProfileId = owner.Id,
-                        IdCardNumber = request.IdCardNumber,
-                        FullName = request.FullName,
-                        DateOfBirth = parsedDob,
-                        VerificationStatus = OwnerVerificationStatus.Approved,
-                        VerifiedAt = DateTime.UtcNow,
-                        CreatedAt = DateTime.UtcNow
-                    };
-                    await _kycRepository.AddAsync(kyc);
-                }
-
-                var user = await _userRepository.GetByIdAsync(userId);
-                if (user == null)
-                    throw new UserFriendlyException(404, "USER_NOT_FOUND", "User not found");
-
-                if (user.RoleId != UserRoles.OWNER)
-                {
-                    user.RoleId = UserRoles.OWNER;
-                    user.UpdatedAt = DateTime.UtcNow;
-                    _userRepository.Update(user);
-                }
-
-                await _unitOfWork.SaveChangesAsync();
-                await _unitOfWork.CommitAsync();
-            }
-            catch
+        private static bool IsDuplicateKeyException(DbUpdateException ex)
+        {
+            for (var e = ex.InnerException; e != null; e = e.InnerException)
             {
-                await _unitOfWork.RollbackAsync();
-                throw;
+                if (e is PostgresException pg && pg.SqlState == "23505")
+                    return true;
             }
+            return false;
         }
 
         private static DateTime? ParseDateOfBirth(string? value)

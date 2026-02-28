@@ -1,9 +1,12 @@
 using CAR.Infrastructure;
+using CAR.Infrastructure.Data;
 using CAR.Infrastructure.Hubs;
 using CAR.Infrastructure.Options;
 using CAR.Application.Interfaces.Services;
 using CAR.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -143,8 +146,21 @@ builder.Services.AddCors(options =>
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 
-// Add HttpClient for FPT KYC service
+// Add HttpClient for FPT KYC OCR service
 builder.Services.AddHttpClient<IKycOcrService, FptKycOcrService>();
+
+// KYC Liveness: use real FPT face comparison unless explicitly set to MOCK (dog/different person → FAIL, same person → PASS)
+var livenessProvider = builder.Configuration["KYC:LivenessProvider"]?.Trim().ToUpper();
+if (livenessProvider == "MOCK")
+{
+    builder.Services.AddScoped<IKycLivenessService, MockKycLivenessService>();
+    Console.WriteLine("[KYC] Using Mock KYC Liveness Service (selfie verification always passes)");
+}
+else
+{
+    builder.Services.AddHttpClient<IKycLivenessService, FptKycLivenessService>();
+    Console.WriteLine("[KYC] Using FPT KYC Liveness Service (real face comparison: CCCD vs selfie)");
+}
 
 // Add Validation Filter globally
 builder.Services.AddControllers(options =>
@@ -153,6 +169,13 @@ builder.Services.AddControllers(options =>
 });
 
 var app = builder.Build();
+
+// Apply pending EF Core migrations on startup (container-friendly: schema always matches code)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
 
 // Initialize Firebase
 app.InitializeFirebase();

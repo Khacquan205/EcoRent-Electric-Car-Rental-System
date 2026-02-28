@@ -3,6 +3,7 @@ using CAR.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using OpenCvSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -80,13 +81,20 @@ namespace CAR.Infrastructure.Services
                 // Xử lý ảnh sau để bổ sung thông tin
                 var backResult = await ProcessSingleImageAsync(request.BackImage, apiKey, baseUrl, "back");
                 
-                // Lưu ảnh CCCD gốc để dùng cho liveness check
+                // Extract and save only the cropped face from CCCD front image (for ID_FACE vs SELFIE comparison)
                 var cccdFaceId = await SaveOriginalCccdImageAsync(request.FrontImage);
-                
+                if (string.IsNullOrEmpty(cccdFaceId))
+                {
+                    var failResult = CombineOcrResults(frontResult, backResult);
+                    failResult.CccdFaceId = "";
+                    failResult.ErrorMessage = "Không thể nhận diện khuôn mặt trên ảnh CCCD. Vui lòng tải ảnh mặt trước rõ, có khuôn mặt.";
+                    return failResult;
+                }
+
                 // Kết hợp kết quả từ cả hai ảnh để có thông tin đầy đủ
                 var combinedResult = CombineOcrResults(frontResult, backResult);
                 combinedResult.CccdFaceId = cccdFaceId;
-                
+
                 return combinedResult;
             }
             catch (Exception ex)
@@ -96,20 +104,180 @@ namespace CAR.Infrastructure.Services
             }
         }
 
-        
-        private async Task<string> SaveOriginalCccdImageAsync(IFormFile frontImage)
+        private static string? _cascadeTempPath;
+        private static readonly object CascadeLock = new object();
+
+        /// <summary>
+        /// Returns path to the Haar cascade XML file: from disk (output dir) or by extracting embedded resource to a temp file.
+        /// Ensures the cascade is available when the app runs from the startup project (e.g. RentalCar) where Content from Infrastructure is not copied.
+        /// </summary>
+        private string? GetCascadePath()
         {
+            var baseDir = AppContext.BaseDirectory;
+            var path1 = Path.Combine(baseDir, "Cascades", "haarcascade_frontalface_default.xml");
+            if (File.Exists(path1)) return path1;
+            var path2 = Path.Combine(baseDir, "haarcascade_frontalface_default.xml");
+            if (File.Exists(path2)) return path2;
+
+            if (_cascadeTempPath != null && File.Exists(_cascadeTempPath))
+                return _cascadeTempPath;
+
+            lock (CascadeLock)
+            {
+                if (_cascadeTempPath != null && File.Exists(_cascadeTempPath))
+                    return _cascadeTempPath;
+
+                var assembly = typeof(FptKycOcrService).Assembly;
+                const string resourceName = "CAR.Infrastructure.Cascades.haarcascade_frontalface_default.xml";
+                using var stream = assembly.GetManifestResourceStream(resourceName);
+                if (stream == null)
+                {
+                    _logger.LogWarning("Embedded cascade resource {Name} not found", resourceName);
+                    return null;
+                }
+
+                var tempPath = Path.Combine(Path.GetTempPath(), $"haarcascade_frontalface_default_{Guid.NewGuid():N}.xml");
+                try
+                {
+                    using var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.Read);
+                    stream.CopyTo(fs);
+                    _cascadeTempPath = tempPath;
+                    _logger.LogInformation("Haar cascade extracted to temp file for face detection");
+                    return _cascadeTempPath;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to extract cascade to temp file");
+                    try { File.Delete(tempPath); } catch { /* ignore */ }
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Detects face on CCCD front image, crops the face region, and saves only the cropped face to the store.
+        /// Ensures later verification compares CCCD_FACE vs SELFIE_FACE, not full ID image.
+        /// Returns null if no face is detected (caller should return FAIL).
+        /// </summary>
+        private async Task<string?> SaveOriginalCccdImageAsync(IFormFile frontImage)
+        {
+            if (frontImage == null || frontImage.Length == 0)
+            {
+                _logger.LogWarning("SaveOriginalCccdImageAsync: no front image");
+                return null;
+            }
+
+            byte[] imageBytes;
+            await using (var stream = frontImage.OpenReadStream())
+            using (var ms = new MemoryStream())
+            {
+                await stream.CopyToAsync(ms);
+                imageBytes = ms.ToArray();
+            }
+
+            if (imageBytes.Length == 0)
+            {
+                _logger.LogWarning("SaveOriginalCccdImageAsync: empty image bytes");
+                return null;
+            }
+
+            using var src = Cv2.ImDecode(imageBytes, ImreadModes.Color);
+            if (src.Empty())
+            {
+                _logger.LogWarning("SaveOriginalCccdImageAsync: could not decode image");
+                return null;
+            }
+
+            var cascadePath = GetCascadePath();
+            if (string.IsNullOrEmpty(cascadePath))
+            {
+                _logger.LogError("Haar cascade not available; cannot detect face on CCCD");
+                return null;
+            }
+
+            using var gray = new Mat();
+            Cv2.CvtColor(src, gray, ColorConversionCodes.BGR2GRAY);
+            Cv2.EqualizeHist(gray, gray);
+
+            using var cascade = new CascadeClassifier(cascadePath);
+            var faces = cascade.DetectMultiScale(gray, 1.1, 5, HaarDetectionTypes.DoRoughSearch, new OpenCvSharp.Size(30, 30));
+
+            if (faces == null || faces.Length == 0)
+            {
+                _logger.LogWarning("SaveOriginalCccdImageAsync: no face detected on CCCD front image");
+                return null;
+            }
+
+            // Use the largest detected face (ID photo is usually the main face on the card)
+            var faceRect = faces[0];
+            foreach (var r in faces)
+            {
+                if (r.Width * r.Height > faceRect.Width * faceRect.Height)
+                    faceRect = r;
+            }
+
+            var imageWidth = src.Width;
+            var imageHeight = src.Height;
+            var imageArea = imageWidth * imageHeight;
+            var faceArea = faceRect.Width * faceRect.Height;
+            _logger.LogInformation(
+                "SaveOriginalCccdImageAsync: face area vs image area — face={FaceArea} ({FaceW}x{FaceH}), image={ImageArea} ({ImageW}x{ImageH}), faceAreaPercent={Percent:F2}%",
+                faceArea, faceRect.Width, faceRect.Height, imageArea, imageWidth, imageHeight,
+                imageArea > 0 ? (100.0 * faceArea / imageArea) : 0);
+
+            const double minFaceFraction = 0.10;
+            if (imageWidth <= 0 || imageHeight <= 0)
+            {
+                _logger.LogWarning("SaveOriginalCccdImageAsync: invalid image dimensions");
+                return null;
+            }
+            if (faceRect.Width < minFaceFraction * imageWidth || faceRect.Height < minFaceFraction * imageHeight)
+            {
+                _logger.LogWarning(
+                    "SaveOriginalCccdImageAsync: face too small — face {FaceW}x{FaceH}, image {ImageW}x{ImageH} (min {MinPct}% each dimension)",
+                    faceRect.Width, faceRect.Height, imageWidth, imageHeight, minFaceFraction * 100);
+                return null;
+            }
+
+            const double minAspect = 0.5;
+            const double maxAspect = 2.0;
+            var aspectRatio = faceRect.Width > 0 ? (double)faceRect.Height / faceRect.Width : 0;
+            if (aspectRatio < minAspect || aspectRatio > maxAspect)
+            {
+                _logger.LogWarning(
+                    "SaveOriginalCccdImageAsync: unrealistic face aspect ratio — height/width={Aspect:F2} (valid range {Min}-{Max})",
+                    aspectRatio, minAspect, maxAspect);
+                return null;
+            }
+
+            // Add padding and clamp to image bounds
+            const int padding = 10;
+            var x = Math.Max(0, faceRect.X - padding);
+            var y = Math.Max(0, faceRect.Y - padding);
+            var w = Math.Min(src.Width - x, faceRect.Width + 2 * padding);
+            var h = Math.Min(src.Height - y, faceRect.Height + 2 * padding);
+            var cropRect = new Rect(x, y, w, h);
+
+            using var faceCrop = new Mat(src, cropRect);
+            using var faceClone = faceCrop.Clone();
+
+            if (!Cv2.ImEncode(".jpg", faceClone, out var croppedBytes) || croppedBytes == null || croppedBytes.Length == 0)
+            {
+                _logger.LogWarning("SaveOriginalCccdImageAsync: failed to encode cropped face");
+                return null;
+            }
+
             try
             {
-                // Generate a temporary userId for face storage
                 var tempUserId = $"temp_{Guid.NewGuid():N}";
-                var faceId = await _faceStore.SaveFaceAsync(frontImage.OpenReadStream(), tempUserId);
-                _logger.LogInformation("CCCD front image saved with ID: {FaceId}", faceId);
+                await using var croppedStream = new MemoryStream(croppedBytes);
+                var faceId = await _faceStore.SaveFaceAsync(croppedStream, tempUserId);
+                _logger.LogInformation("CCCD cropped face saved with ID: {FaceId} (face region only, for ID_FACE vs SELFIE comparison)", faceId);
                 return faceId;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving CCCD front image");
+                _logger.LogError(ex, "Error saving cropped CCCD face");
                 throw;
             }
         }

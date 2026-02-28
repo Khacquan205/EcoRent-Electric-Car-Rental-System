@@ -6,6 +6,7 @@ using CAR.Application.Interfaces.Repositories;
 using CAR.Application.Interfaces.Services;
 using CAR.Domain.Entities;
 using CAR.Domain.Enums;
+using CAR.Infrastructure.Data;
 using CAR.Infrastructure.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -14,21 +15,27 @@ namespace CAR.Infrastructure.Services
 {
     public class VnPayService : IPaymentService
     {
+        private const short SubscriptionStatusActive = 1;
+        private const short SubscriptionStatusInactive = 2;
+
         private readonly VnPaySettings _settings;
         private readonly IPaymentRepository _paymentRepository;
         private readonly IOwnerSubscriptionRepository _subscriptionRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly AppDbContext _dbContext;
 
         public VnPayService(
             IOptions<VnPaySettings> settings,
             IPaymentRepository paymentRepository,
             IOwnerSubscriptionRepository subscriptionRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            AppDbContext dbContext)
         {
             _settings = settings.Value;
             _paymentRepository = paymentRepository;
             _subscriptionRepository = subscriptionRepository;
             _unitOfWork = unitOfWork;
+            _dbContext = dbContext;
         }
 
         public async Task<string> CreatePaymentUrlAsync(int subscriptionId, string ipAddress)
@@ -133,21 +140,52 @@ namespace CAR.Infrastructure.Services
             }
 
             _paymentRepository.Update(payment);
-            
+
+            decimal.TryParse(amountStr, out var rawAmount);
+
             if (isSuccess)
             {
-                var subscription = await _subscriptionRepository.Query().FirstOrDefaultAsync(s => s.Id == payment.SubscriptionId);
+                var subscription = await _subscriptionRepository.Query()
+                    .FirstOrDefaultAsync(s => s.Id == payment.SubscriptionId);
                 if (subscription != null)
                 {
-                    subscription.Status = 1; // ACTIVE
-                    subscription.UpdatedAt = DateTime.UtcNow;
-                    _subscriptionRepository.Update(subscription);
+                    await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+                    try
+                    {
+                        var otherActives = await _subscriptionRepository.Query()
+                            .Where(s => s.OwnerId == subscription.OwnerId && s.Status == SubscriptionStatusActive && s.Id != subscription.Id)
+                            .ToListAsync();
+                        foreach (var s in otherActives)
+                        {
+                            s.Status = SubscriptionStatusInactive;
+                            s.UpdatedAt = DateTime.UtcNow;
+                            _subscriptionRepository.Update(s);
+                        }
+                        subscription.Status = SubscriptionStatusActive;
+                        subscription.UpdatedAt = DateTime.UtcNow;
+                        _subscriptionRepository.Update(subscription);
+                        await _unitOfWork.SaveChangesAsync();
+                        await transaction.CommitAsync();
+                    }
+                    catch
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                    return new PaymentResponseDto
+                    {
+                        Success = true,
+                        OrderId = txnRef,
+                        TransactionId = vnpayTxnId,
+                        Amount = rawAmount / 100,
+                        ResponseCode = responseCode,
+                        Message = "Payment successful",
+                        PayDate = payment.PayDate
+                    };
                 }
             }
 
             await _unitOfWork.SaveChangesAsync();
-
-            decimal.TryParse(amountStr, out var rawAmount);
 
             return new PaymentResponseDto
             {

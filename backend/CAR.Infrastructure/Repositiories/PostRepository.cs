@@ -12,7 +12,7 @@ namespace CAR.Infrastructure.Repositories
         {
         }
 
-        public async Task<MPost> CreatePendingPostAsync(CreatePostRequestDto request, int ownerId, DateTime currentTime)
+        public async Task<MPost> CreatePendingPostAsync(CreatePostRequestDto request, int ownerId, DateTime currentTime, DateTime? expireAt)
         {
             var post = new MPost
             {
@@ -26,6 +26,7 @@ namespace CAR.Infrastructure.Repositories
                 Status = 0, // PENDING
                 StaffId = null,
                 PriorityLevel = 0,
+                ExpiredAt = expireAt,
                 CreatedAt = currentTime
             };
 
