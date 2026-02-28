@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Upload, FileCheck, CheckCircle2, Camera, ImagePlus } from "lucide-react";
+import { ChevronRight, Upload, FileCheck, CheckCircle2, Camera, ImagePlus, Video } from "lucide-react";
 import * as ownerApi from "@/services/owner";
 import { ApiError } from "@/services/client";
 
@@ -42,8 +42,10 @@ export default function BecomeOwnerPage() {
   const [recordedPreview, setRecordedPreview] = useState<string | null>(null);
   const [livenessError, setLivenessError] = useState<string | null>(null);
   const [livenessResult, setLivenessResult] =
-    useState<ownerApi.KycLivenessResponse | null>(null);
+    useState<ownerApi.KycFaceVerificationResult | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
+  /** Face step: which input method user chose. null = show picker. */
+  const [faceMediaMode, setFaceMediaMode] = useState<"upload_image" | "upload_video" | "camera" | null>(null);
 
   useEffect(() => {
     ownerApi
@@ -83,8 +85,9 @@ export default function BecomeOwnerPage() {
       if (frontPreview) URL.revokeObjectURL(frontPreview);
       if (backPreview) URL.revokeObjectURL(backPreview);
       if (selfiePreview) URL.revokeObjectURL(selfiePreview);
+      if (recordedPreview) URL.revokeObjectURL(recordedPreview);
     };
-  }, [frontPreview, backPreview, selfiePreview]);
+  }, [frontPreview, backPreview, selfiePreview, recordedPreview]);
 
   const goToKycCheck = () => {
     if (frontFile && backFile) {
@@ -197,8 +200,12 @@ export default function BecomeOwnerPage() {
     setLoading(true);
     setLivenessError(null);
     try {
-      const result = await ownerApi.kycLiveness(
-        recordedBlob,
+      const videoFile =
+        recordedBlob instanceof File
+          ? recordedBlob
+          : new File([recordedBlob], "liveness.webm", { type: recordedBlob.type });
+      const result = await ownerApi.kycLivenessCheck(
+        videoFile,
         ocrData.cccdFaceId,
       );
       if (result.errorMessage) {
@@ -255,8 +262,12 @@ export default function BecomeOwnerPage() {
         return null;
       });
       setStep(3);
-      // Auto-start camera for liveness step
-      void startCamera();
+      setFaceMediaMode(null);
+      setRecordedBlob(null);
+      setRecordedPreview((p) => {
+        if (p) URL.revokeObjectURL(p);
+        return null;
+      });
     } catch (e) {
       setOcrError(e instanceof Error ? e.message : "Không thể nhận dạng CCCD.");
     } finally {
@@ -545,162 +556,293 @@ export default function BecomeOwnerPage() {
             </>
           )}
 
-          {/* STEP 3 – Face verification (camera or selfie fallback) */}
+          {/* STEP 3 – Face verification: Upload ảnh | Tải video | Mở camera */}
           {step === 3 && ocrData && (
             <>
               <h2 className="text-lg font-semibold text-slate-900">
                 Bước 3: Xác thực khuôn mặt
               </h2>
               <p className="mt-1 text-sm text-slate-600">
-                Quay video khuôn mặt để xác minh bạn là người thật và khớp với
-                ảnh CCCD.
+                Chọn một cách để xác minh khuôn mặt khớp với CCCD: tải ảnh selfie, tải video, hoặc mở camera.
               </p>
 
-              {livenessError && (
+              {(faceError || livenessError) && (
                 <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                  {livenessError}
+                  {faceError ?? livenessError}
                 </div>
               )}
 
-              <div className="mt-6 flex flex-col items-center gap-4">
-                {/* Live camera preview */}
-                {!recordedPreview && (
-                  <div className="relative w-full max-w-sm overflow-hidden rounded-xl border-2 border-slate-200 bg-black aspect-[4/3]">
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      muted
-                      playsInline
-                      className="h-full w-full object-cover mirror"
-                      style={{ transform: "scaleX(-1)" }}
-                    />
-                    {isRecording && (
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                        <span className="h-3 w-3 animate-pulse rounded-full bg-red-500" />
-                        <span className="text-xs font-medium text-white drop-shadow">
-                          Đang quay...
-                        </span>
-                      </div>
-                    )}
-                    {!cameraReady && !livenessError && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-sm text-slate-400">
-                          Đang khởi tạo camera...
-                        </span>
-                      </div>
-                    )}
+              {/* Media mode picker (tabs) */}
+              {faceMediaMode === null && (
+                <div className="mt-6">
+                  <p className="mb-3 text-sm font-medium text-slate-700">Chọn cách xác thực:</p>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <button
+                      type="button"
+                      onClick={() => setFaceMediaMode("upload_image")}
+                      className="flex flex-col items-center gap-2 rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center transition-colors hover:border-[#1572D3] hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-[#1572D3]"
+                    >
+                      <ImagePlus className="h-10 w-10 text-slate-600" />
+                      <span className="text-sm font-medium text-slate-800">Tải ảnh selfie</span>
+                      <span className="text-xs text-slate-500">JPG, PNG</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFaceMediaMode("upload_video")}
+                      className="flex flex-col items-center gap-2 rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center transition-colors hover:border-[#1572D3] hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-[#1572D3]"
+                    >
+                      <Video className="h-10 w-10 text-slate-600" />
+                      <span className="text-sm font-medium text-slate-800">Tải video</span>
+                      <span className="text-xs text-slate-500">MP4, WebM</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFaceMediaMode("camera");
+                        setLivenessError(null);
+                        void startCamera();
+                      }}
+                      className="flex flex-col items-center gap-2 rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center transition-colors hover:border-[#1572D3] hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-[#1572D3]"
+                    >
+                      <Camera className="h-10 w-10 text-slate-600" />
+                      <span className="text-sm font-medium text-slate-800">Mở camera</span>
+                      <span className="text-xs text-slate-500">Quay trực tiếp</span>
+                    </button>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Recorded video preview */}
-                {recordedPreview && (
-                  <div className="relative w-full max-w-sm overflow-hidden rounded-xl border-2 border-emerald-200 bg-black aspect-[4/3]">
-                    <video
-                      src={recordedPreview}
-                      controls
-                      className="h-full w-full object-cover"
-                      style={{ transform: "scaleX(-1)" }}
-                    />
-                    <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-emerald-500/90 px-2 py-0.5">
-                      <CheckCircle2 className="h-3 w-3 text-white" />
-                      <span className="text-xs font-medium text-white">
-                        Đã quay xong
-                      </span>
-                    </div>
+              {/* --- Upload Image branch --- */}
+              {faceMediaMode === "upload_image" && (
+                <div className="mt-6 flex flex-col gap-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFaceMediaMode(null);
+                        setSelfieFile(null);
+                        setSelfiePreview((p) => {
+                          if (p) URL.revokeObjectURL(p);
+                          return null;
+                        });
+                        setFaceError(null);
+                      }}
+                      className="text-sm text-slate-600 hover:text-slate-900"
+                    >
+                      ← Chọn lại
+                    </button>
                   </div>
-                )}
+                  <label className="block text-sm font-medium text-slate-700">Ảnh selfie (mặt rõ, nhìn thẳng)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleSelfieChange}
+                    className="sr-only"
+                    id="selfie-upload-step3"
+                  />
+                  <label
+                    htmlFor="selfie-upload-step3"
+                    className="flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 hover:border-slate-300 hover:bg-slate-100"
+                  >
+                    {selfiePreview ? (
+                      <img src={selfiePreview} alt="Selfie" className="max-h-48 rounded-lg object-contain" />
+                    ) : (
+                      <>
+                        <ImagePlus className="h-10 w-10 text-slate-400" />
+                        <p className="mt-2 text-sm text-slate-500">Chọn ảnh selfie</p>
+                      </>
+                    )}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => void runSelfieVerify()}
+                    disabled={!selfieFile || faceLoading}
+                    className="rounded-lg bg-[#1572D3] px-4 py-2 text-sm font-medium text-white hover:bg-[#1260B0] disabled:opacity-50"
+                  >
+                    {faceLoading ? "Đang xác thực..." : "Xác thực khuôn mặt"}
+                  </button>
+                </div>
+              )}
 
-                {/* Recording controls */}
-                <div className="flex flex-wrap gap-3 justify-center">
-                  {!recordedPreview && !isRecording && cameraReady && (
+              {/* --- Upload Video branch --- */}
+              {faceMediaMode === "upload_video" && (
+                <div className="mt-6 flex flex-col gap-4">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={startRecording}
-                      className="inline-flex items-center rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600"
+                      onClick={() => {
+                        setFaceMediaMode(null);
+                        setRecordedBlob(null);
+                        setRecordedPreview((p) => {
+                          if (p) URL.revokeObjectURL(p);
+                          return null;
+                        });
+                        setLivenessError(null);
+                      }}
+                      className="text-sm text-slate-600 hover:text-slate-900"
                     >
-                      <Camera className="mr-2 h-4 w-4" />
-                      Bắt đầu quay (5 giây)
+                      ← Chọn lại
                     </button>
-                  )}
-                  {isRecording && (
-                    <button
-                      type="button"
-                      onClick={stopRecording}
-                      className="inline-flex items-center rounded-lg bg-slate-600 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-                    >
-                      <Video className="mr-2 h-4 w-4" />
-                      Dừng quay
-                    </button>
-                  )}
-                  {recordedPreview && !loading && (
-                    <button
-                      type="button"
-                      onClick={() => void retryLiveness()}
-                      className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                    >
-                      Quay lại video
-                    </button>
+                  </div>
+                  {!recordedPreview ? (
+                    <>
+                      <label className="block text-sm font-medium text-slate-700">Chọn file video (MP4 hoặc WebM)</label>
+                      <input
+                        type="file"
+                        accept="video/mp4,video/webm,.mp4,.webm"
+                        onChange={handleVideoUpload}
+                        className="sr-only"
+                        id="video-upload-step3"
+                      />
+                      <label
+                        htmlFor="video-upload-step3"
+                        className="flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 hover:border-slate-300 hover:bg-slate-100"
+                      >
+                        <Video className="h-10 w-10 text-slate-400" />
+                        <p className="mt-2 text-sm text-slate-500">Chọn file video</p>
+                      </label>
+                    </>
+                  ) : (
+                    <>
+                      <div className="relative w-full max-w-sm overflow-hidden rounded-xl border-2 border-slate-200 bg-black aspect-[4/3]">
+                        <video src={recordedPreview} controls className="h-full w-full object-cover" />
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRecordedBlob(null);
+                            if (recordedPreview) URL.revokeObjectURL(recordedPreview);
+                            setRecordedPreview(null);
+                          }}
+                          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          Chọn video khác
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void runLivenessCheck()}
+                          disabled={loading}
+                          className="rounded-lg bg-[#1572D3] px-4 py-2 text-sm font-medium text-white hover:bg-[#1260B0] disabled:opacity-50"
+                        >
+                          {loading ? "Đang xác thực..." : "Xác thực khuôn mặt"}
+                        </button>
+                      </div>
+                    </>
                   )}
                 </div>
+              )}
 
-                {/* Upload fallback */}
-                {!recordedPreview && !isRecording && (
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-xs text-slate-400">hoặc</span>
-                    <label
-                      htmlFor="video-upload"
-                      className="inline-flex cursor-pointer items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              {/* --- Camera branch --- */}
+              {faceMediaMode === "camera" && (
+                <div className="mt-6 flex flex-col items-center gap-4">
+                  <div className="flex items-center gap-2 self-start">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        stopCamera();
+                        setFaceMediaMode(null);
+                        setRecordedBlob(null);
+                        setRecordedPreview((p) => {
+                          if (p) URL.revokeObjectURL(p);
+                          return null;
+                        });
+                        setLivenessError(null);
+                      }}
+                      className="text-sm text-slate-600 hover:text-slate-900"
                     >
-                      <Upload className="mr-2 h-4 w-4" />
-                      Tải lên video MP4
-                    </label>
-                    <input
-                      id="video-upload"
-                      type="file"
-                      accept="video/mp4,.mp4"
-                      className="sr-only"
-                      onChange={handleVideoUpload}
-                    />
+                      ← Chọn lại
+                    </button>
                   </div>
-                )}
+                  {!recordedPreview && (
+                    <div className="relative w-full max-w-sm overflow-hidden rounded-xl border-2 border-slate-200 bg-black aspect-[4/3]">
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        muted
+                        playsInline
+                        className="h-full w-full object-cover"
+                        style={{ transform: "scaleX(-1)" }}
+                      />
+                      {isRecording && (
+                        <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                          <span className="h-3 w-3 animate-pulse rounded-full bg-red-500" />
+                          <span className="text-xs font-medium text-white drop-shadow">Đang quay...</span>
+                        </div>
+                      )}
+                      {!cameraReady && !livenessError && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-sm text-slate-400">Đang khởi tạo camera...</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {recordedPreview && (
+                    <div className="relative w-full max-w-sm overflow-hidden rounded-xl border-2 border-emerald-200 bg-black aspect-[4/3]">
+                      <video src={recordedPreview} controls className="h-full w-full object-cover" style={{ transform: "scaleX(-1)" }} />
+                      <div className="absolute top-3 left-3 rounded-full bg-emerald-500/90 px-2 py-0.5 text-xs font-medium text-white">
+                        Đã quay xong
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    {!recordedPreview && !isRecording && cameraReady && (
+                      <button
+                        type="button"
+                        onClick={startRecording}
+                        className="inline-flex items-center rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600"
+                      >
+                        <Camera className="mr-2 h-4 w-4" />
+                        Bắt đầu quay (5 giây)
+                      </button>
+                    )}
+                    {isRecording && (
+                      <button type="button" onClick={stopRecording} className="inline-flex items-center rounded-lg bg-slate-600 px-4 py-2 text-sm font-medium text-white">
+                        <Video className="mr-2 h-4 w-4" /> Dừng quay
+                      </button>
+                    )}
+                    {recordedPreview && !loading && (
+                      <button type="button" onClick={() => void retryLiveness()} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                        Quay lại video
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 text-center max-w-sm">
+                    Nhìn thẳng vào camera, giữ khuôn mặt rõ. Video tự động dừng sau 5 giây.
+                  </p>
+                </div>
+              )}
 
-                <p className="text-xs text-slate-500 text-center max-w-sm">
-                  Hãy nhìn thẳng vào camera, giữ khuôn mặt rõ ràng và đủ ánh
-                  sáng. Video sẽ tự động dừng sau 5 giây.
-                </p>
-              </div>
-
-              <div className="mt-6 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    stopCamera();
-                    setStep(2);
-                  }}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  Quay lại
-                </button>
-                {recordedPreview && (
+              {faceMediaMode === "camera" && recordedPreview && (
+                <div className="mt-4 flex justify-end">
                   <button
                     type="button"
                     onClick={() => void runLivenessCheck()}
                     disabled={loading}
                     className="inline-flex items-center rounded-lg bg-[#1572D3] px-4 py-2 text-sm font-medium text-white hover:bg-[#1260B0] disabled:opacity-50"
                   >
-                    {loading ? (
-                      <>
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                        <span className="ml-2">Đang xác thực...</span>
-                      </>
-                    ) : (
-                      <>
-                        <FileCheck className="mr-2 h-4 w-4" />
-                        Xác thực khuôn mặt
-                      </>
-                    )}
+                    {loading ? "Đang xác thực..." : "Xác thực khuôn mặt"}
                   </button>
-                )}
+                </div>
+              )}
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopCamera();
+                    setFaceMediaMode(null);
+                    setRecordedBlob(null);
+                    setRecordedPreview((p) => {
+                      if (p) URL.revokeObjectURL(p);
+                      return null;
+                    });
+                    setStep(2);
+                  }}
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Quay lại
+                </button>
               </div>
             </>
           )}
