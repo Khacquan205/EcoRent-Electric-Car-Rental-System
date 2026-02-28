@@ -113,6 +113,7 @@ export async function kycOcr(
     cccdNumber: data.cccdNumber ?? "",
     cccdFaceId: data.cccdFaceId ?? null,
     address: data.address ?? null,
+    cccdFaceId: data.cccdFaceId ?? null,
     frontImageUrl: data.frontImageUrl ?? null,
     backImageUrl: data.backImageUrl ?? null,
     errorMessage: data.errorMessage ?? null,
@@ -178,13 +179,16 @@ export async function kycVerifyFaceUpload(
 export async function submitKycBecomeOwner(
   body: SubmitKycBecomeOwnerRequest,
 ): Promise<{ message: string; role: string }> {
-  return apiFetch<{ message: string; role: string }>("/api/owner/kyc/submit-kyc", {
-    method: "POST",
-    body: {
-      idCardNumber: body.idNumber,
-      fullName: body.fullName,
-      dateOfBirth: body.dateOfBirth,
-      gender: body.gender ?? undefined,
+  return apiFetch<{ message: string; role: string }>(
+    "/api/owner/kyc/submit-kyc",
+    {
+      method: "POST",
+      body: {
+        idCardNumber: body.idNumber,
+        fullName: body.fullName,
+        dateOfBirth: body.dateOfBirth,
+        gender: body.gender ?? undefined,
+      },
     },
   });
 }

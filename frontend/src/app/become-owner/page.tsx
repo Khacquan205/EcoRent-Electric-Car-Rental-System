@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Upload, FileCheck, CheckCircle2, Camera, ImagePlus } from "lucide-react";
@@ -31,6 +31,19 @@ export default function BecomeOwnerPage() {
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
   const [faceLoading, setFaceLoading] = useState(false);
+
+  // Liveness state
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [recordedPreview, setRecordedPreview] = useState<string | null>(null);
+  const [livenessError, setLivenessError] = useState<string | null>(null);
+  const [livenessResult, setLivenessResult] =
+    useState<ownerApi.KycLivenessResponse | null>(null);
+  const [cameraReady, setCameraReady] = useState(false);
 
   useEffect(() => {
     ownerApi
@@ -81,6 +94,147 @@ export default function BecomeOwnerPage() {
     }
   };
 
+  /* ---------- Camera / Liveness helpers ---------- */
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    setCameraReady(false);
+  }, []);
+
+  const startCamera = useCallback(async () => {
+    try {
+      setLivenessError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: 640, height: 480 },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      setCameraReady(true);
+    } catch {
+      setLivenessError(
+        "Không thể truy cập camera. Vui lòng cho phép quyền camera.",
+      );
+    }
+  }, []);
+
+  /** Pick the best mime type: prefer mp4 (backend requirement), fallback to webm */
+  const pickMimeType = useCallback((): string => {
+    if (MediaRecorder.isTypeSupported("video/mp4")) return "video/mp4";
+    if (MediaRecorder.isTypeSupported("video/mp4;codecs=avc1"))
+      return "video/mp4;codecs=avc1";
+    if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9"))
+      return "video/webm;codecs=vp9";
+    return "video/webm";
+  }, []);
+
+  const startRecording = useCallback(() => {
+    if (!streamRef.current) return;
+    chunksRef.current = [];
+    setRecordedBlob(null);
+    if (recordedPreview) {
+      URL.revokeObjectURL(recordedPreview);
+      setRecordedPreview(null);
+    }
+    const mimeType = pickMimeType();
+    const recorder = new MediaRecorder(streamRef.current, { mimeType });
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunksRef.current.push(e.data);
+    };
+    recorder.onstop = () => {
+      // Always produce an mp4-typed blob so the backend accepts it
+      const blob = new Blob(chunksRef.current, { type: "video/mp4" });
+      setRecordedBlob(blob);
+      setRecordedPreview(URL.createObjectURL(blob));
+      stopCamera();
+    };
+    mediaRecorderRef.current = recorder;
+    recorder.start();
+    setIsRecording(true);
+    // Auto-stop after 5 seconds
+    setTimeout(() => {
+      if (recorder.state === "recording") {
+        recorder.stop();
+        setIsRecording(false);
+      }
+    }, 5000);
+  }, [recordedPreview, stopCamera, pickMimeType]);
+
+  /** Handle file upload fallback (user picks an MP4 file) */
+  const handleVideoUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setRecordedBlob(file);
+      setRecordedPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(file);
+      });
+      setLivenessError(null);
+      stopCamera();
+      e.target.value = "";
+    },
+    [stopCamera],
+  );
+
+  const stopRecording = useCallback(() => {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "recording"
+    ) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  }, []);
+
+  const runLivenessCheck = async () => {
+    if (!recordedBlob || !ocrData?.cccdFaceId) return;
+    setLoading(true);
+    setLivenessError(null);
+    try {
+      const result = await ownerApi.kycLiveness(
+        recordedBlob,
+        ocrData.cccdFaceId,
+      );
+      if (result.errorMessage) {
+        setLivenessError(result.errorMessage);
+        return;
+      }
+      if (!result.isLive || !result.isMatch) {
+        setLivenessError(
+          `Xác thực khuôn mặt thất bại. ${!result.isLive ? "Không phát hiện người thật." : ""} ${!result.isMatch ? "Khuôn mặt không khớp với CCCD." : ""} Vui lòng thử lại.`,
+        );
+        return;
+      }
+      setLivenessResult(result);
+      setStep(4);
+    } catch (e) {
+      setLivenessError(
+        e instanceof Error
+          ? e.message
+          : "Xác thực khuôn mặt thất bại. Vui lòng thử lại.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const retryLiveness = async () => {
+    setRecordedBlob(null);
+    if (recordedPreview) {
+      URL.revokeObjectURL(recordedPreview);
+      setRecordedPreview(null);
+    }
+    setLivenessError(null);
+    setLivenessResult(null);
+    await startCamera();
+  };
+
   const runOcr = async () => {
     if (!frontFile || !backFile) return;
     setLoading(true);
@@ -101,6 +255,8 @@ export default function BecomeOwnerPage() {
         return null;
       });
       setStep(3);
+      // Auto-start camera for liveness step
+      void startCamera();
     } catch (e) {
       setOcrError(e instanceof Error ? e.message : "Không thể nhận dạng CCCD.");
     } finally {
@@ -393,8 +549,167 @@ export default function BecomeOwnerPage() {
           {step === 3 && ocrData && (
             <>
               <h2 className="text-lg font-semibold text-slate-900">
-                Bước 3: Xem lại thông tin
-                {/* abvccaxczxc */}
+                Bước 3: Xác thực khuôn mặt
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Quay video khuôn mặt để xác minh bạn là người thật và khớp với
+                ảnh CCCD.
+              </p>
+
+              {livenessError && (
+                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {livenessError}
+                </div>
+              )}
+
+              <div className="mt-6 flex flex-col items-center gap-4">
+                {/* Live camera preview */}
+                {!recordedPreview && (
+                  <div className="relative w-full max-w-sm overflow-hidden rounded-xl border-2 border-slate-200 bg-black aspect-[4/3]">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      muted
+                      playsInline
+                      className="h-full w-full object-cover mirror"
+                      style={{ transform: "scaleX(-1)" }}
+                    />
+                    {isRecording && (
+                      <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                        <span className="h-3 w-3 animate-pulse rounded-full bg-red-500" />
+                        <span className="text-xs font-medium text-white drop-shadow">
+                          Đang quay...
+                        </span>
+                      </div>
+                    )}
+                    {!cameraReady && !livenessError && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-sm text-slate-400">
+                          Đang khởi tạo camera...
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Recorded video preview */}
+                {recordedPreview && (
+                  <div className="relative w-full max-w-sm overflow-hidden rounded-xl border-2 border-emerald-200 bg-black aspect-[4/3]">
+                    <video
+                      src={recordedPreview}
+                      controls
+                      className="h-full w-full object-cover"
+                      style={{ transform: "scaleX(-1)" }}
+                    />
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-emerald-500/90 px-2 py-0.5">
+                      <CheckCircle2 className="h-3 w-3 text-white" />
+                      <span className="text-xs font-medium text-white">
+                        Đã quay xong
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Recording controls */}
+                <div className="flex flex-wrap gap-3 justify-center">
+                  {!recordedPreview && !isRecording && cameraReady && (
+                    <button
+                      type="button"
+                      onClick={startRecording}
+                      className="inline-flex items-center rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600"
+                    >
+                      <Camera className="mr-2 h-4 w-4" />
+                      Bắt đầu quay (5 giây)
+                    </button>
+                  )}
+                  {isRecording && (
+                    <button
+                      type="button"
+                      onClick={stopRecording}
+                      className="inline-flex items-center rounded-lg bg-slate-600 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+                    >
+                      <Video className="mr-2 h-4 w-4" />
+                      Dừng quay
+                    </button>
+                  )}
+                  {recordedPreview && !loading && (
+                    <button
+                      type="button"
+                      onClick={() => void retryLiveness()}
+                      className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      Quay lại video
+                    </button>
+                  )}
+                </div>
+
+                {/* Upload fallback */}
+                {!recordedPreview && !isRecording && (
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-xs text-slate-400">hoặc</span>
+                    <label
+                      htmlFor="video-upload"
+                      className="inline-flex cursor-pointer items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      Tải lên video MP4
+                    </label>
+                    <input
+                      id="video-upload"
+                      type="file"
+                      accept="video/mp4,.mp4"
+                      className="sr-only"
+                      onChange={handleVideoUpload}
+                    />
+                  </div>
+                )}
+
+                <p className="text-xs text-slate-500 text-center max-w-sm">
+                  Hãy nhìn thẳng vào camera, giữ khuôn mặt rõ ràng và đủ ánh
+                  sáng. Video sẽ tự động dừng sau 5 giây.
+                </p>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopCamera();
+                    setStep(2);
+                  }}
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Quay lại
+                </button>
+                {recordedPreview && (
+                  <button
+                    type="button"
+                    onClick={() => void runLivenessCheck()}
+                    disabled={loading}
+                    className="inline-flex items-center rounded-lg bg-[#1572D3] px-4 py-2 text-sm font-medium text-white hover:bg-[#1260B0] disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <>
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        <span className="ml-2">Đang xác thực...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FileCheck className="mr-2 h-4 w-4" />
+                        Xác thực khuôn mặt
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* STEP 4 – Review (read-only) + Submit */}
+          {step === 4 && ocrData && (
+            <>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Bước 4: Xem lại thông tin
               </h2>
               <p className="mt-1 text-sm text-slate-600">
                 Kiểm tra thông tin đã đọc từ CCCD. Đã xác thực khuôn mặt.
