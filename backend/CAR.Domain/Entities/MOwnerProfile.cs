@@ -3,9 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CAR.Domain.Enums;
 
 namespace CAR.Domain.Entities
 {
+    /// <summary>
+    /// Owner profile: legal identity for KYC (FullName, IdCardNumber, DateOfBirth, Gender).
+    /// No Address here; that is customer/location data.
+    /// </summary>
     public partial class MOwnerProfile
     {
         public int Id { get; set; }
@@ -14,17 +19,17 @@ namespace CAR.Domain.Entities
 
         public string? Name { get; set; }
 
-        /// <summary>Họ tên từ CCCD (KYC).</summary>
+        /// <summary>Họ tên pháp lý (KYC).</summary>
         public string? FullName { get; set; }
-
-        /// <summary>Ngày sinh từ CCCD.</summary>
-        public DateTime? DateOfBirth { get; set; }
-
-        /// <summary>Địa chỉ thường trú (từ CCCD hoặc cập nhật sau).</summary>
-        public string? Address { get; set; }
 
         /// <summary>Số CCCD/CMND.</summary>
         public string? IdNumber { get; set; }
+
+        /// <summary>Ngày sinh (KYC).</summary>
+        public DateTime? DateOfBirth { get; set; }
+
+        /// <summary>Giới tính (KYC).</summary>
+        public KycGender Gender { get; set; }
 
         public string? Phone { get; set; }
 

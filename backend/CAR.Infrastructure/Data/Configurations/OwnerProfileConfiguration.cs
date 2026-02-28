@@ -31,9 +31,10 @@ public class OwnerProfileConfiguration : IEntityTypeConfiguration<MOwnerProfile>
                .HasColumnName("date_of_birth")
                .HasColumnType("timestamp with time zone");
 
-        builder.Property(x => x.Address)
-               .HasColumnName("address")
-               .HasMaxLength(500);
+        builder.Property(x => x.Gender)
+               .HasColumnName("gender")
+               .HasColumnType("integer")
+               .IsRequired();
 
         builder.Property(x => x.IdNumber)
                .HasColumnName("id_number")

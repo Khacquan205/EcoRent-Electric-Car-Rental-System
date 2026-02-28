@@ -1,0 +1,57 @@
+import { apiFetch } from "./client";
+import type { PostListItemDto } from "@/types/api";
+
+export interface CreatePostRequest {
+  categoryId: number;
+  locationId?: number | null;
+  title: string;
+  description?: string | null;
+  price: number;
+  contactPhone?: string | null;
+}
+
+export interface CreatePostResponse {
+  id: number;
+  status: number;
+}
+
+export interface PostDetail {
+  id: number;
+  categoryId: number;
+  categoryName: string;
+  locationId?: number | null;
+  locationName?: string | null;
+  title: string;
+  description?: string | null;
+  price: number;
+  contactPhone?: string | null;
+  status: number;
+  statusName: string;
+  rejectReason?: string | null;
+  priorityLevel: number;
+  createdAt: string;
+  updatedAt?: string | null;
+  expiredAt?: string | null;
+}
+
+export async function createPost(
+  body: CreatePostRequest
+): Promise<CreatePostResponse> {
+  return apiFetch<CreatePostResponse>("/api/Post/create-post", {
+    method: "POST",
+    body,
+  });
+}
+
+export async function getMyPosts(): Promise<PostListItemDto[]> {
+  const result = await apiFetch<PostListItemDto[] | { items?: PostListItemDto[] }>(
+    "/api/Post/my-posts",
+    { method: "GET" }
+  );
+  if (Array.isArray(result)) return result;
+  return (result as { items?: PostListItemDto[] }).items ?? [];
+}
+
+export async function getPostDetail(postId: number): Promise<PostDetail> {
+  return apiFetch<PostDetail>(`/api/Post/${postId}`, { method: "GET" });
+}

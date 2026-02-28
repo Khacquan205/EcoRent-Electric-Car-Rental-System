@@ -34,12 +34,12 @@ export type KycOcrResponse = {
   errorMessage?: string | null;
 };
 
-/** Submit KYC "Trở thành chủ xe" (no liveness) */
+/** Submit KYC "Trở thành chủ xe" (legal identity only; no address) */
 export type SubmitKycBecomeOwnerRequest = {
   fullName: string;
   dateOfBirth: string;
   idNumber: string;
-  address?: string | null;
+  gender?: string | null;
 };
 
 export async function registerOwner(body: RegisterOwnerRequest): Promise<RegisterOwnerResponse> {
@@ -92,10 +92,7 @@ export async function submitKycBecomeOwner(
       idCardNumber: body.idNumber,
       fullName: body.fullName,
       dateOfBirth: body.dateOfBirth,
-      address: body.address ?? undefined,
-      gender: undefined,
-      frontDocumentUrl: undefined,
-      backDocumentUrl: undefined,
+      gender: body.gender ?? undefined,
     },
   });
 }

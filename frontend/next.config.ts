@@ -4,6 +4,13 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
 
+  async rewrites() {
+    const backend = process.env.BACKEND_BASE_URL ?? "http://localhost:8080";
+    return [
+      { source: "/hubs/:path*", destination: `${backend}/hubs/:path*` },
+    ];
+  },
+
   images: {
     remotePatterns: [
       {

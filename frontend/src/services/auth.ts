@@ -3,6 +3,9 @@ import { apiFetch } from "./client";
 export type RegisterRequest = {
   email: string;
   password: string;
+  confirmPassword: string;
+  displayName: string;
+  address: string;
 };
 
 export type VerifyRegistrationRequest = {

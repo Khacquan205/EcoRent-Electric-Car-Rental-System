@@ -94,7 +94,7 @@ export default function BecomeOwnerPage() {
         fullName: ocrData.fullName,
         dateOfBirth: ocrData.dob,
         idNumber: ocrData.cccdNumber,
-        address: ocrData.address ?? undefined,
+        gender: ocrData.gender ?? undefined,
       });
       setSubmitSuccess(true);
     } catch (e) {

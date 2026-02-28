@@ -37,6 +37,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    options.MapInboundClaims = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -46,7 +47,9 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings["Issuer"] ?? "EcoRentAPI",
         ValidAudience = jwtSettings["Audience"] ?? "EcoRentClient",
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
+        // JWT payload uses short name "role"; [Authorize(Roles = "ADMIN,STAFF")] must use same type
+        RoleClaimType = "role"
     };
 
     options.Events = new JwtBearerEvents
