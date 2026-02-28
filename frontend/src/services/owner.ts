@@ -147,13 +147,16 @@ export async function kycLiveness(
 export async function submitKycBecomeOwner(
   body: SubmitKycBecomeOwnerRequest,
 ): Promise<{ message: string; role: string }> {
-  return apiFetch<{ message: string; role: string }>("/api/owner/kyc/submit-kyc", {
-    method: "POST",
-    body: {
-      idCardNumber: body.idNumber,
-      fullName: body.fullName,
-      dateOfBirth: body.dateOfBirth,
-      gender: body.gender ?? undefined,
+  return apiFetch<{ message: string; role: string }>(
+    "/api/owner/kyc/submit-kyc",
+    {
+      method: "POST",
+      body: {
+        idCardNumber: body.idNumber,
+        fullName: body.fullName,
+        dateOfBirth: body.dateOfBirth,
+        gender: body.gender ?? undefined,
+      },
     },
   );
 }
