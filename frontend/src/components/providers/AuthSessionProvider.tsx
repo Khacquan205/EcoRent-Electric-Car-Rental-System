@@ -34,7 +34,10 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
     };
   }, [session]);
 
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
+  // Must match backend Google:ClientId (appsettings.json). Set NEXT_PUBLIC_GOOGLE_CLIENT_ID in .env.local to override.
+  const clientId =
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ||
+    "817931884201-4gqdq87vk385re6q9c6mh669m9rj2s8n.apps.googleusercontent.com";
 
   return (
     <GoogleOAuthProvider clientId={clientId}>

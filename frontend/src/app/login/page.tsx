@@ -10,6 +10,7 @@ import * as authApi from "@/services/auth";
 import { useAuthSession } from "@/components/providers";
 import { GoogleLoginButton } from "@/components/shared";
 import { buildSessionFromLoginResponse, isTokenExpired } from "@/lib/jwtDecode";
+import { ApiError } from "@/services/client";
 import bgImage from "@/assets/bgLoginSignup.jpg";
 
 export default function LoginPage() {
@@ -27,21 +28,22 @@ export default function LoginPage() {
     setMessage(null);
     try {
       const res = await authApi.login({ email, password });
-      if (!res.success) {
-        setMessage(res.message || "Đăng nhập thất bại");
+      const norm = authApi.normalizeAuthResponse(res as Record<string, unknown>);
+      if (!norm.success) {
+        setMessage(norm.message || "Đăng nhập thất bại");
         return;
       }
 
-      if (res.accessToken) {
-        if (isTokenExpired(res.accessToken)) {
-          setMessage("Login failed: received token is already expired.");
+      if (norm.accessToken) {
+        if (isTokenExpired(norm.accessToken)) {
+          setMessage("Token đã hết hạn. Vui lòng đăng nhập lại.");
           return;
         }
 
         const session = buildSessionFromLoginResponse(
-          res.accessToken,
-          res.expiresIn,
-          res.user,
+          norm.accessToken,
+          norm.expiresIn,
+          norm.user,
         );
         setSession({ ...session, email: session.email ?? email });
 
@@ -55,6 +57,19 @@ export default function LoginPage() {
         router.push("/");
       }
     } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.status === 503) {
+          setMessage(
+            "Không kết nối được máy chủ. Hãy chắc chắn backend đã chạy và đúng port (mặc định 5084)."
+          );
+          return;
+        }
+        if (err.body && typeof err.body === "object") {
+          const b = err.body as { message?: string; Message?: string };
+          setMessage(String(b.message ?? b.Message ?? err.message));
+          return;
+        }
+      }
       setMessage(err instanceof Error ? err.message : "Đăng nhập thất bại");
     } finally {
       setIsSubmitting(false);

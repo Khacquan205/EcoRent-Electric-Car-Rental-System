@@ -6,6 +6,7 @@ import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 import * as authApi from "@/services/auth";
 import { useAuthSession } from "@/components/providers";
 import { buildSessionFromLoginResponse, isTokenExpired } from "@/lib/jwtDecode";
+import { ApiError } from "@/services/client";
 
 type Props = {
   /** Called with an error message when Google login fails */
@@ -40,26 +41,27 @@ export function GoogleLoginButton({ onError, redirectTo }: Props) {
     setIsLoading(true);
     try {
       const res = await authApi.loginGoogle({ idToken });
+      const norm = authApi.normalizeAuthResponse(res as Record<string, unknown>);
 
-      if (!res.success) {
-        onError?.(res.message || "Google login failed.");
+      if (!norm.success) {
+        onError?.(norm.message || "Đăng nhập Google thất bại.");
         return;
       }
 
-      if (!res.accessToken) {
-        onError?.("Google login failed: no access token returned.");
+      if (!norm.accessToken) {
+        onError?.("Đăng nhập Google thất bại: không nhận được token.");
         return;
       }
 
-      if (isTokenExpired(res.accessToken)) {
-        onError?.("Google login failed: received token is already expired.");
+      if (isTokenExpired(norm.accessToken)) {
+        onError?.("Token đã hết hạn. Vui lòng thử lại.");
         return;
       }
 
       const session = buildSessionFromLoginResponse(
-        res.accessToken,
-        res.expiresIn,
-        res.user,
+        norm.accessToken,
+        norm.expiresIn,
+        norm.user,
       );
 
       setSession(session);
@@ -76,9 +78,18 @@ export function GoogleLoginButton({ onError, redirectTo }: Props) {
         router.push("/");
       }
     } catch (err) {
-      onError?.(
-        err instanceof Error ? err.message : "Google login failed.",
-      );
+      if (err instanceof ApiError) {
+        if (err.status === 503) {
+          onError?.("Không kết nối được máy chủ. Kiểm tra backend đã chạy chưa.");
+          return;
+        }
+        if (err.body && typeof err.body === "object") {
+          const b = err.body as { message?: string; Message?: string };
+          onError?.(String(b.message ?? b.Message ?? err.message));
+          return;
+        }
+      }
+      onError?.(err instanceof Error ? err.message : "Đăng nhập Google thất bại.");
     } finally {
       setIsLoading(false);
     }
