@@ -26,6 +26,16 @@ namespace RentalCar.Controllers
             return Ok(posts);
         }
 
+        /// <summary>
+        /// List posts for moderation dashboard. Optional filters: status (0=Pending, 1=Approved, 2=Rejected), ownerId, fromDate, toDate.
+        /// </summary>
+        [HttpGet("posts")]
+        public async Task<IActionResult> GetModerationPosts([FromQuery] short? status, [FromQuery] int? ownerId, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
+        {
+            var posts = await _moderationService.GetModerationPostsAsync(status, ownerId, fromDate, toDate);
+            return Ok(posts);
+        }
+
         [HttpPost("posts/{postId:int}/approve")]
         public async Task<IActionResult> ApprovePost(int postId)
         {

@@ -19,10 +19,11 @@ export default function RegisterPage() {
   const [showOtpForm, setShowOtpForm] = useState(false);
   const [otp, setOtp] = useState("");
   const [formData, setFormData] = useState({
-    fullName: "",
+    displayName: "",
+    address: "",
     email: "",
     password: "",
-    phone: "",
+    confirmPassword: "",
     agreeTerms: false,
   });
 
@@ -36,15 +37,19 @@ export default function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      setMessage("Mật khẩu và xác nhận mật khẩu không khớp");
+      return;
+    }
     setIsSubmitting(true);
     setMessage(null);
     try {
       const res = await authApi.register({
         email: formData.email,
         password: formData.password,
-        confirmPassword: formData.password,
-        name: formData.fullName.trim(),
-        phone: formData.phone?.trim() || undefined,
+        confirmPassword: formData.confirmPassword,
+        displayName: formData.displayName,
+        address: formData.address,
       });
       const success = (res as { success?: boolean }).success ?? (res as { Success?: boolean }).Success;
       const msg = (res as { message?: string }).message ?? (res as { Message?: string }).Message ?? "";
@@ -320,23 +325,39 @@ export default function RegisterPage() {
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-3.5">
 
-              {/* Full name */}
+              {/* Display name */}
               <div>
                 <label className="text-xs font-medium uppercase tracking-wide text-slate-700">
-                  Họ và tên
+                  Tên hiển thị
                 </label>
                 <div className="relative mt-1">
                   <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    name="fullName"
-                    value={formData.fullName}
+                    name="displayName"
+                    value={formData.displayName}
                     onChange={handleChange}
                     className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-300 focus:border-[#1572D3] focus:ring-2 focus:ring-[#1572D3]/15"
                     placeholder="Nguyễn Văn A"
                     required
                   />
                 </div>
+              </div>
+
+              {/* Address (for nearby car recommendation) */}
+              <div>
+                <label className="text-xs font-medium uppercase tracking-wide text-slate-700">
+                  Địa chỉ
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-300 focus:border-[#1572D3] focus:ring-2 focus:ring-[#1572D3]/15"
+                  placeholder="Quận 1, TP.HCM"
+                  required
+                />
               </div>
 
               {/* Email */}
@@ -386,6 +407,23 @@ export default function RegisterPage() {
                     )}
                   </button>
                 </div>
+
+                {/* Confirm Password */}
+                <div className="relative mt-1">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-300 focus:border-[#1572D3] focus:ring-2 focus:ring-[#1572D3]/15"
+                    placeholder="Xác nhận mật khẩu"
+                    required
+                  />
+                </div>
+                {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                  <p className="mt-1 text-xs text-red-600">Mật khẩu không khớp</p>
+                )}
 
                 {/* Password requirements */}
                 {formData.password && (
@@ -441,7 +479,7 @@ export default function RegisterPage() {
               {/* Submit */}
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || formData.password !== formData.confirmPassword}
                 className="mt-1 h-10 w-full rounded-xl bg-[#1572D3] text-sm font-semibold text-white hover:bg-[#1260B0] disabled:opacity-50"
               >
                 {isSubmitting ? "Đang tạo tài khoản..." : "Tạo tài khoản"}

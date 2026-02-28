@@ -10,7 +10,11 @@ namespace CAR.Domain.Entities
 
         public string Email { get; set; } = null!;
 
+        /// <summary>Display name for customer (stored during registration, used when creating CustomerProfile on verify).</summary>
         public string? Name { get; set; }
+
+        /// <summary>Address for customer (stored during registration, used when creating CustomerProfile on verify).</summary>
+        public string? Address { get; set; }
 
         public string PasswordHash { get; set; } = null!;
 

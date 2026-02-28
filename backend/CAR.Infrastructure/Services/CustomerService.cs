@@ -2,7 +2,6 @@ using CAR.Application.Interfaces.Services;
 using CAR.Application.Interfaces.Repositories;
 using CAR.Application.Dtos;
 using CAR.Domain.Entities;
-using CAR.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace CAR.Infrastructure.Services
@@ -37,8 +36,8 @@ namespace CAR.Infrastructure.Services
                     customerProfile = new MCustomerProfile
                     {
                         UserId = userId,
-                        Name = string.Empty,
-                        Phone = null,
+                        DisplayName = string.Empty,
+                        Address = null,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow
                     };
@@ -68,11 +67,10 @@ namespace CAR.Infrastructure.Services
                     return null;
                 }
 
-                // Update profile
-                customerProfile.Name = request.Name;
-                customerProfile.Phone = request.Phone;
-                customerProfile.Gender = MapGender(request.Gender);
-                customerProfile.DateOfBirth = request.DateOfBirth;
+                customerProfile.DisplayName = request.DisplayName;
+                customerProfile.Address = request.Address;
+                customerProfile.Latitude = request.Latitude;
+                customerProfile.Longitude = request.Longitude;
                 customerProfile.UpdatedAt = DateTime.UtcNow;
 
                 await _customerProfileRepository.UpdateCustomerProfileAsync(customerProfile);
@@ -95,23 +93,12 @@ namespace CAR.Infrastructure.Services
             {
                 Id = customerProfile.Id,
                 UserId = customerProfile.UserId,
-                Name = customerProfile.Name ?? "",
-                Phone = customerProfile.Phone ?? "",
-                Gender = customerProfile.Gender.ToString(),
-                DateOfBirth = customerProfile.DateOfBirth,
+                DisplayName = customerProfile.DisplayName ?? "",
+                Address = customerProfile.Address ?? "",
+                Latitude = customerProfile.Latitude,
+                Longitude = customerProfile.Longitude,
                 CreatedAt = customerProfile.CreatedAt,
                 UpdatedAt = customerProfile.UpdatedAt
-            };
-        }
-
-        private KycGender MapGender(string gender)
-        {
-            return gender.ToLower() switch
-            {
-                "male" => KycGender.Male,
-                "female" => KycGender.Female,
-                "other" => KycGender.Other,
-                _ => KycGender.Other
             };
         }
     }

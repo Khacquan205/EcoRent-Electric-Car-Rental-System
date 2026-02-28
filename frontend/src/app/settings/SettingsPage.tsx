@@ -68,31 +68,21 @@ export default function SettingsPage() {
         <input
           className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30"
           disabled={!editing}
-          value={profile.fullName || ""}
+          value={profile.displayName ?? ""}
           onChange={(e) =>
-            setProfile({ ...profile, fullName: e.target.value })
+            setProfile({ ...profile, displayName: e.target.value })
           }
-          placeholder="Họ và tên"
+          placeholder="Tên hiển thị"
         />
 
         <input
           className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30"
           disabled={!editing}
-          value={profile.phoneNumber || ""}
-          onChange={(e) =>
-            setProfile({ ...profile, phoneNumber: e.target.value })
-          }
-          placeholder="Số điện thoại"
-        />
-
-        <input
-          className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30"
-          disabled={!editing}
-          value={profile.address || ""}
+          value={profile.address ?? ""}
           onChange={(e) =>
             setProfile({ ...profile, address: e.target.value })
           }
-          placeholder="Địa chỉ"
+          placeholder="Địa chỉ (gợi ý xe gần bạn)"
         />
       </div>
 

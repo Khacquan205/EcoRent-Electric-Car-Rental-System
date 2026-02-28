@@ -2,6 +2,7 @@ using CAR.Application.Dtos.Moderation;
 using CAR.Application.Exceptions;
 using CAR.Application.Interfaces.Repositories;
 using CAR.Application.Interfaces.Services;
+using CAR.Domain.Constants;
 using CAR.Domain.Entities;
 using CAR.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -13,20 +14,26 @@ namespace CAR.Infrastructure.Services
         private readonly IPostRepository _postRepository;
         private readonly IOwnerSubscriptionRepository _ownerSubscriptionRepository;
         private readonly IStaffProfileRepository _staffProfileRepository;
+        private readonly IUserRepository _userRepository;
         private readonly INotificationService _notificationService;
+        private readonly ISubscriptionService _subscriptionService;
         private readonly IUnitOfWork _unitOfWork;
 
         public PostModerationService(
             IPostRepository postRepository,
             IOwnerSubscriptionRepository ownerSubscriptionRepository,
             IStaffProfileRepository staffProfileRepository,
+            IUserRepository userRepository,
             INotificationService notificationService,
+            ISubscriptionService subscriptionService,
             IUnitOfWork unitOfWork)
         {
             _postRepository = postRepository;
             _ownerSubscriptionRepository = ownerSubscriptionRepository;
             _staffProfileRepository = staffProfileRepository;
+            _userRepository = userRepository;
             _notificationService = notificationService;
+            _subscriptionService = subscriptionService;
             _unitOfWork = unitOfWork;
         }
 
@@ -43,15 +50,19 @@ namespace CAR.Infrastructure.Services
                 throw new UserFriendlyException(400, "POST_NOT_PENDING", "Post is not in pending status");
 
             var staffProfile = await _staffProfileRepository.GetByUserIdAsync(staffId);
+            int? staffProfileId = staffProfile?.Id;
             if (staffProfile == null)
-                throw new UserFriendlyException(403, "STAFF_PROFILE_NOT_FOUND", "Logged in staff/admin does not have a profile. Please create a staff profile first.");
+            {
+                var user = await _userRepository.GetByIdAsync(staffId);
+                if (user == null || user.RoleId != UserRoles.ADMIN)
+                    throw new UserFriendlyException(403, "STAFF_PROFILE_NOT_FOUND", "Logged in staff/admin does not have a profile. Please create a staff profile first.");
+                staffProfileId = null;
+            }
 
             post.Status = (short)PostStatus.Approved;
-            post.StaffId = staffProfile.Id;
+            post.StaffId = staffProfileId;
             post.UpdatedAt = DateTime.UtcNow;
 
-            // Set Expiration Date and Priority based on Owner's active subscription
-            // Default to 30 days if no active subscription (should not happen if flow is followed)
             var activeSubscription = await _ownerSubscriptionRepository.Query()
                 .Include(s => s.Package)
                 .Where(s => s.OwnerId == post.OwnerId && s.Status == 1 && s.EndDate > DateTime.UtcNow)
@@ -62,6 +73,8 @@ namespace CAR.Infrastructure.Services
             {
                 post.ExpiredAt = DateTime.UtcNow.AddDays(activeSubscription.Package.DurationDays);
                 post.PriorityLevel = (short)activeSubscription.Package.PriorityLevel;
+                // Deduct 1 post slot only when approved (not when pending)
+                await _subscriptionService.ConsumeOnePostAsync(activeSubscription.Id);
             }
             else
             {
@@ -99,11 +112,17 @@ namespace CAR.Infrastructure.Services
                 throw new UserFriendlyException(400, "POST_NOT_PENDING", "Post is not in pending status");
 
             var staffProfile = await _staffProfileRepository.GetByUserIdAsync(staffId);
+            int? staffProfileId = staffProfile?.Id;
             if (staffProfile == null)
-                throw new UserFriendlyException(403, "STAFF_PROFILE_NOT_FOUND", "Logged in staff/admin does not have a profile. Please create a staff profile first.");
+            {
+                var user = await _userRepository.GetByIdAsync(staffId);
+                if (user == null || user.RoleId != UserRoles.ADMIN)
+                    throw new UserFriendlyException(403, "STAFF_PROFILE_NOT_FOUND", "Logged in staff/admin does not have a profile. Please create a staff profile first.");
+                staffProfileId = null;
+            }
 
             post.Status = (short)PostStatus.Rejected;
-            post.StaffId = staffProfile.Id;
+            post.StaffId = staffProfileId;
             post.RejectReason = reason;
             post.UpdatedAt = DateTime.UtcNow;
 
@@ -140,6 +159,43 @@ namespace CAR.Infrastructure.Services
                     OwnerName = p.OwnerProfile.Name,
                     CategoryId = p.CategoryId,
                     CreatedAt = p.CreatedAt
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<ModerationPostListItemDto>> GetModerationPostsAsync(short? status, int? ownerId, DateTime? fromDate, DateTime? toDate)
+        {
+            var query = _postRepository.Query()
+                .Include(p => p.OwnerProfile)
+                .Include(p => p.Category)
+                .AsQueryable();
+
+            if (status.HasValue)
+                query = query.Where(p => p.Status == status.Value);
+            if (ownerId.HasValue)
+                query = query.Where(p => p.OwnerId == ownerId.Value);
+            if (fromDate.HasValue)
+                query = query.Where(p => p.CreatedAt >= fromDate.Value);
+            if (toDate.HasValue)
+            {
+                var endOfDay = toDate.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(p => p.CreatedAt <= endOfDay);
+            }
+
+            return await query
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new ModerationPostListItemDto
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    CategoryName = p.Category.Name,
+                    OwnerId = p.OwnerId,
+                    OwnerName = p.OwnerProfile.Name,
+                    CreatedAt = p.CreatedAt,
+                    Status = p.Status,
+                    RejectReason = p.RejectReason,
+                    Price = p.Price,
+                    Description = p.Description
                 })
                 .ToListAsync();
         }

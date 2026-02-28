@@ -23,6 +23,14 @@ public class AuthenticationConfiguration : IEntityTypeConfiguration<MAuthenticat
                .HasMaxLength(255)
                .IsRequired();
 
+        builder.Property(x => x.Name)
+               .HasColumnName("name")
+               .HasMaxLength(255);
+
+        builder.Property(x => x.Address)
+               .HasColumnName("address")
+               .HasMaxLength(500);
+
         builder.Property(x => x.PasswordHash)
                .HasColumnName("password_hash")
                .HasMaxLength(500)

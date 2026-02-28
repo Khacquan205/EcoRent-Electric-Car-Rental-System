@@ -40,6 +40,7 @@ namespace CAR.Infrastructure.Services
             try
             {
                 var owner = await _ownerProfileRepository.GetByUserIdAsync(userId);
+                var gender = ParseGender(request.Gender);
                 if (owner == null)
                 {
                     owner = new MOwnerProfile
@@ -48,7 +49,7 @@ namespace CAR.Infrastructure.Services
                         Name = request.FullName,
                         FullName = request.FullName,
                         DateOfBirth = parsedDob,
-                        Address = request.Address,
+                        Gender = gender,
                         IdNumber = request.IdCardNumber,
                         IdentityVerified = true,
                         RatingAvg = 0,
@@ -64,7 +65,7 @@ namespace CAR.Infrastructure.Services
                     owner.Name = request.FullName;
                     owner.FullName = request.FullName;
                     owner.DateOfBirth = parsedDob;
-                    owner.Address = request.Address ?? owner.Address;
+                    owner.Gender = gender;
                     owner.IdNumber = request.IdCardNumber;
                     owner.IdentityVerified = true;
                     owner.UpdatedAt = DateTime.UtcNow;
@@ -85,8 +86,6 @@ namespace CAR.Infrastructure.Services
                     existing.IdCardNumber = request.IdCardNumber;
                     existing.FullName = request.FullName;
                     existing.DateOfBirth = parsedDob;
-                    if (request.FrontDocumentUrl != null) existing.FrontDocumentUrl = request.FrontDocumentUrl;
-                    if (request.BackDocumentUrl != null) existing.BackDocumentUrl = request.BackDocumentUrl;
                     existing.VerificationStatus = OwnerVerificationStatus.Approved;
                     existing.RejectionReason = null;
                     existing.VerifiedAt = DateTime.UtcNow;
@@ -102,8 +101,6 @@ namespace CAR.Infrastructure.Services
                         IdCardNumber = request.IdCardNumber,
                         FullName = request.FullName,
                         DateOfBirth = parsedDob,
-                        FrontDocumentUrl = request.FrontDocumentUrl,
-                        BackDocumentUrl = request.BackDocumentUrl,
                         VerificationStatus = OwnerVerificationStatus.Approved,
                         VerifiedAt = DateTime.UtcNow,
                         CreatedAt = DateTime.UtcNow
@@ -139,6 +136,18 @@ namespace CAR.Infrastructure.Services
             if (DateTime.TryParseExact(value, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out var d2)) return d2;
             if (DateTime.TryParseExact(value, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out var d3)) return d3;
             return null;
+        }
+
+        private static KycGender ParseGender(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return KycGender.Unknown;
+            return value.ToLowerInvariant() switch
+            {
+                "male" or "nam" => KycGender.Male,
+                "female" or "nữ" or "nu" => KycGender.Female,
+                "other" or "khác" => KycGender.Other,
+                _ => KycGender.Unknown
+            };
         }
 
         public async Task<OwnerKycStatusDto> GetStatusAsync(int userId)

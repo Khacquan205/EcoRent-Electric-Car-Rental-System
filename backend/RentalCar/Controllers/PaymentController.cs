@@ -31,7 +31,7 @@ namespace CAR.Controllers
         }
 
         /// <summary>
-        /// VNPay return callback – verifies hash and updates payment status.
+        /// VNPay return callback – verifies hash and updates payment status (when VNPay redirects to backend).
         /// </summary>
         [HttpGet("vnpay-return")]
         [AllowAnonymous]
@@ -39,6 +39,23 @@ namespace CAR.Controllers
         {
             var queryParams = Request.Query
                 .ToDictionary(k => k.Key, v => v.Value.ToString());
+
+            var result = await _paymentService.HandlePaymentReturnAsync(queryParams);
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Verify VNPay return from frontend (e.g. when ReturnUrl is frontend and frontend sends query params here).
+        /// </summary>
+        [HttpPost("verify-vnpay-return")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyVnPayReturn([FromBody] IDictionary<string, string> queryParams)
+        {
+            if (queryParams == null || queryParams.Count == 0)
+            {
+                return BadRequest(new { success = false, message = "Missing query params" });
+            }
 
             var result = await _paymentService.HandlePaymentReturnAsync(queryParams);
 

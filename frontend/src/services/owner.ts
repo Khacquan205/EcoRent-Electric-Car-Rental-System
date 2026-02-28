@@ -40,15 +40,12 @@ export type KycOcrResponse = {
   errorMessage?: string | null;
 };
 
-/** Submit KYC "Trở thành chủ xe" (no liveness) */
+/** Submit KYC "Trở thành chủ xe" (legal identity only; no address) */
 export type SubmitKycBecomeOwnerRequest = {
   fullName: string;
   dateOfBirth: string;
   idNumber: string;
-  address?: string | null;
   gender?: string | null;
-  frontDocumentUrl?: string | null;
-  backDocumentUrl?: string | null;
 };
 
 export async function registerOwner(
@@ -109,19 +106,13 @@ export async function kycOcr(
 export async function submitKycBecomeOwner(
   body: SubmitKycBecomeOwnerRequest,
 ): Promise<{ message: string; role: string }> {
-  return apiFetch<{ message: string; role: string }>(
-    "/api/owner/kyc/submit-kyc",
-    {
-      method: "POST",
-      body: {
-        idCardNumber: body.idNumber,
-        fullName: body.fullName,
-        dateOfBirth: body.dateOfBirth,
-        address: body.address ?? null,
-        gender: body.gender ?? null,
-        frontDocumentUrl: body.frontDocumentUrl ?? null,
-        backDocumentUrl: body.backDocumentUrl ?? null,
-      },
+  return apiFetch<{ message: string; role: string }>("/api/owner/kyc/submit-kyc", {
+    method: "POST",
+    body: {
+      idCardNumber: body.idNumber,
+      fullName: body.fullName,
+      dateOfBirth: body.dateOfBirth,
+      gender: body.gender ?? undefined,
     },
   );
 }

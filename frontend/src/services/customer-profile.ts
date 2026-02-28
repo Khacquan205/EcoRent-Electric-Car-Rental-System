@@ -1,11 +1,14 @@
 import { apiFetch } from "./client";
 
 export interface CustomerProfile {
-  fullName?: string | null;
-  email?: string | null;
-  phone?: string | null;
+  id?: number;
+  userId?: number;
+  displayName?: string | null;
   address?: string | null;
-  avatarUrl?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  createdAt?: string;
+  updatedAt?: string | null;
 }
 
 export type CustomerProfileUpdate = Partial<CustomerProfile>;

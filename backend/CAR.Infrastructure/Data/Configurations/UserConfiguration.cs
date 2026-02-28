@@ -18,11 +18,6 @@ public class UserConfiguration : IEntityTypeConfiguration<MUser>
                .HasColumnName("role_id")
                .IsRequired();
 
-        builder.Property(x => x.FullName)
-               .HasColumnName("full_name")
-               .HasMaxLength(200)
-               .IsRequired();
-
         builder.Property(x => x.Email)
                .HasColumnName("email")
                .HasMaxLength(255)
@@ -33,22 +28,10 @@ public class UserConfiguration : IEntityTypeConfiguration<MUser>
                .HasMaxLength(255)
                .IsRequired();
 
-        builder.Property(x => x.Phone)
-               .HasColumnName("phone")
-               .HasMaxLength(20);
-
-        builder.Property(x => x.Address)
-               .HasColumnName("address")
-               .HasMaxLength(255);
-
         builder.Property(x => x.Status)
                .HasColumnName("status")
                .HasColumnType("smallint")
                .IsRequired();
-
-        builder.Property(x => x.AvatarImgUrl)
-               .HasColumnName("avatar_img_url")
-               .HasColumnType("text");
 
         builder.Property(x => x.LoginProvider)
                .HasColumnName("login_provider")
