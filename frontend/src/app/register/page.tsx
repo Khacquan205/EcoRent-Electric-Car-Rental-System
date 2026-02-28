@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Zap, CheckCircle2, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import * as authApi from "@/services/auth";
+import { ApiError } from "@/services/client";
 import { GoogleLoginButton } from "@/components/shared";
 import bgImage from "@/assets/bgLoginSignup.jpg";
 
@@ -50,17 +51,35 @@ export default function RegisterPage() {
         displayName: formData.displayName,
         address: formData.address,
       });
-      if (!res.success) {
-        setMessage(res.message || "Registration failed");
+      const success = (res as { success?: boolean }).success ?? (res as { Success?: boolean }).Success;
+      const msg = (res as { message?: string }).message ?? (res as { Message?: string }).Message ?? "";
+      if (!success) {
+        setMessage(msg || "Đăng ký thất bại.");
+        const showOtpAnyway = /OTP|Gửi lại|resend|email/i.test(msg);
+        if (showOtpAnyway) setShowOtpForm(true);
         return;
       }
-      setMessage(
-        res.message ||
-          "Registration successful. Please enter the OTP sent to your email.",
-      );
+      setMessage(msg || "Đăng ký thành công. Vui lòng nhập mã OTP đã gửi đến email.");
       setShowOtpForm(true);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Registration failed");
+      if (err instanceof ApiError) {
+        if (err.status === 503) {
+          setMessage(
+            "Không kết nối được máy chủ. Hãy chắc chắn backend đã chạy (Docker hoặc dotnet run) và đúng port (mặc định 5084)."
+          );
+          return;
+        }
+        if (err.body && typeof err.body === "object") {
+          const b = err.body as { Message?: string; message?: string; Errors?: string[]; errors?: string[] };
+          const errList = b.Errors ?? b.errors ?? [];
+          const msg = errList.length ? errList.join(". ") : (b.Message ?? b.message ?? err.message);
+          setMessage(String(msg));
+        } else {
+          setMessage(err.message || "Đăng ký thất bại.");
+        }
+      } else {
+        setMessage(err instanceof Error ? err.message : "Đăng ký thất bại.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -74,16 +93,21 @@ export default function RegisterPage() {
         email: formData.email,
         code: otp,
       });
-      if (!res.success) {
-        setMessage(res.message || "Verification failed");
+      const success = (res as { success?: boolean }).success ?? (res as { Success?: boolean }).Success;
+      const msg = (res as { message?: string }).message ?? (res as { Message?: string }).Message ?? "";
+      if (!success) {
+        setMessage(msg || "Xác thực thất bại.");
         return;
       }
-      setMessage(
-        res.message || "Verification successful. Redirecting to login...",
-      );
+      setMessage(msg || "Xác thực thành công. Đang chuyển đến đăng nhập...");
       router.push(`/login?email=${encodeURIComponent(formData.email)}`);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Verification failed");
+      if (err instanceof ApiError && err.body && typeof err.body === "object") {
+        const b = err.body as { Message?: string; message?: string };
+        setMessage(String(b.Message ?? b.message ?? (err instanceof Error ? err.message : "Xác thực thất bại.")));
+      } else {
+        setMessage(err instanceof Error ? err.message : "Xác thực thất bại.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -93,10 +117,21 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     setMessage(null);
     try {
-      await authApi.resendOtp({ email: formData.email });
-      setMessage("OTP has been resent to your email.");
+      const res = await authApi.resendOtp({ email: formData.email });
+      const success = (res as { success?: boolean }).success ?? (res as { Success?: boolean }).Success;
+      const msg = (res as { message?: string }).message ?? (res as { Message?: string }).Message ?? "";
+      if (success) {
+        setMessage(msg || "Đã gửi lại mã OTP đến email của bạn.");
+      } else {
+        setMessage(msg || "Gửi lại OTP thất bại.");
+      }
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Failed to resend OTP");
+      if (err instanceof ApiError && err.body && typeof err.body === "object") {
+        const b = err.body as { message?: string; Message?: string };
+        setMessage(String(b.message ?? b.Message ?? (err instanceof Error ? err.message : "Gửi lại OTP thất bại.")));
+      } else {
+        setMessage(err instanceof Error ? err.message : "Gửi lại OTP thất bại.");
+      }
     } finally {
       setIsSubmitting(false);
     }

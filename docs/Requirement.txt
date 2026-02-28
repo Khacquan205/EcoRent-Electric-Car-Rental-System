@@ -1,0 +1,70 @@
+Functional Requirement
+Main Flow 1: Luồng mua gói đăng bài (Subscription/Package Purchase)
+Mục đích: Chủ xe nạp "quyền lợi" vào tài khoản trước khi đăng tin.
+Xem danh sách gói: Chủ xe vào mục "Gói dịch vụ". Hệ thống hiển thị các tùy chọn (Ví dụ: Gói Tiết kiệm - 3 tin/tháng, Gói Đại lý - 20 tin/tháng).
+Chọn gói & Thanh toán: Chủ xe chọn gói phù hợp và tiến hành thanh toán qua cổng điện tử (VNPay, Momo, ShopeePay) hoặc chuyển khoản.
+Xác nhận & Cấp quyền: Sau khi giao dịch thành công, hệ thống cập nhật số dư "lượt đăng tin" vào tài khoản của chủ xe.
+Thông báo: Gửi thông báo xác nhận thanh toán và thời hạn sử dụng gói.
+
+Main Flow 2: Luồng đăng bài cho thuê xe (Listing Creation)
+Mục đích: Đưa thông tin xe lên sàn để khách hàng tìm kiếm.
+Nhập thông tin xe
+Chủ xe chọn Model xe từ danh mục (Ví dụ: VinFast VF8, VF9, VFe34, Tesla Model 3...).
+Hệ thống tự động đổ dữ liệu (Auto-fill): Hiển thị các thông số kỹ thuật mặc định như: Loại cổng sạc, Dung lượng pin, Số ghế. Điều này giúp bài đăng trông chuyên nghiệp và chính xác hơn.
+Thông số: Quãng đường di chuyển thực tế, tình trạng xe, biển số.
+Hình ảnh: Tải lên ảnh thực tế của xe (ngoại thất, nội thất, bảng điều khiển pin).
+Giá thuê: Giá theo ngày hoặc theo tháng (thỏa thuận).
+2.  Tải lên Giấy tờ xe (Verification Documents)
+Đây là phần bắt buộc để Staff có căn cứ duyệt bài:
+Ảnh Đăng ký xe (Cà vẹt): Mặt trước và mặt sau để xác minh chính chủ và biển số.
+Ảnh Đăng kiểm: Xác nhận xe còn hạn lưu hành và đảm bảo an toàn kỹ thuật.
+Ảnh Bảo hiểm xe: (Nếu có) Tăng độ tin cậy cho khách thuê.
+Lưu ý: Các ảnh này sẽ được hệ thống lưu trữ riêng, không hiển thị công khai cho khách thuê để bảo mật thông tin chủ xe.
+
+3. Thông tin liên hệ: Chủ xe nhập số điện thoại và Zalo (đây là thông tin quan trọng nhất để khách liên hệ).
+4. Kiểm duyệt (Optional): Staff kiểm tra thông tin và duyệt bài đăng
+
+Main Flow 3: Luồng quảng cáo bài đăng (Promotion/Boosting)
+Mục đích: Tăng khả năng tiếp cận khách hàng cho các tin đăng đang hoạt động.
+Chọn tin đăng: Chủ xe vào danh sách xe đang cho thuê và chọn nút "Đẩy tin" hoặc "Quảng cáo".
+Chọn hình thức quảng cáo:
+Đẩy tin (Push-to-top): Đưa tin lên đầu trang danh sách theo khung giờ.
+Tin VIP/Nổi bật: Gắn nhãn đặc biệt và xuất hiện tại vị trí ưu tiên (Trang chủ, khung bên cạnh).
+Gói hiển thị theo khu vực: Ưu tiên hiển thị cho khách hàng ở cùng tỉnh thành.
+Sử dụng ngân sách: Chủ xe thanh toán trực tiếp để kích hoạt.
+Kích hoạt & Theo dõi: Tin đăng bắt đầu được ưu tiên hiển thị. Hệ thống báo hiệu trạng thái "Đang quảng cáo".
+Main Flow 4: Báo cáo Thống kê (Hệ thống Quản trị - Admin)
+
+A. Thống kê Tài chính (Revenue & Finance)
+Dữ liệu này được tổng hợp từ Main Flow 1 (Mua gói) và Main Flow 3 (Quảng cáo).
+Tổng doanh thu (GMV): Tổng số tiền thu được từ việc bán các gói đăng bài và dịch vụ quảng cáo trong một khoảng thời gian (ngày/tháng/năm).
+Phân tích doanh thu theo sản phẩm: * Doanh thu từ Gói đăng bài (Basic, Premium, Combo).
+Doanh thu từ Dịch vụ đẩy tin/Quảng cáo (Push-to-top).
+Tỷ lệ chuyển đổi mua hàng (Conversion Rate): Tỷ lệ phần trăm chủ xe mới đăng ký thực hiện hành vi mua gói trả phí lần đầu.
+B. Thống kê Tăng trưởng & Vận hành (Growth & Operations)
+Đo lường sức khỏe của hệ thống và sự phong phú của nguồn cung.
+Số lượng người dùng mới: Thống kê số lượng Chủ xe và Khách thuê đăng ký tài khoản mới.
+Thống kê tin đăng (Listings): * Tổng số bài đăng mới trong ngày.
+Tổng số bài đăng đang hoạt động (Active).
+Tỷ lệ tin đăng bị từ chối/vi phạm.
+Hiệu suất sàn (Marketplace Liquidity): Tổng số lượt khách hàng bấm vào nút "Hiện số điện thoại" hoặc "Chat Zalo" (Đây là chỉ số quan trọng nhất để chứng minh sàn có khách cho chủ xe).
+C. Thống kê Thị trường & Hành vi (Market Insights)
+Dữ liệu giúp Admin hiểu xu hướng người dùng để điều chỉnh chiến lược kinh doanh.
+Xu hướng dòng xe: Thống kê các mẫu xe điện được đăng tải nhiều nhất và được tìm kiếm nhiều nhất (ví dụ: VinFast VF8 đang dẫn đầu với 40% lượt tìm kiếm).
+Bản đồ nhu cầu (Heatmap): Khu vực địa lý (Tỉnh/Thành phố/Quận) có mật độ tìm kiếm xe cao nhất để tập trung chạy quảng cáo thu hút thêm chủ xe ở đó.
+Từ khóa tìm kiếm: Các bộ lọc (Filter) nào được khách hàng sử dụng nhiều nhất (ví dụ: khách ưu tiên lọc xe theo "Quãng đường di chuyển" hay "Giá rẻ").
+D. Quản lý Chất lượng & Rủi ro (Quality Control)
+Giám sát độ sạch của sàn và uy tín của các bên.
+Báo cáo vi phạm (Reports): Thống kê số lượng tin đăng bị người dùng báo cáo (Xe không đúng thực tế, SĐT ảo, chủ xe lừa đảo).
+Hiệu suất duyệt tin: Thời gian trung bình để một tin đăng được duyệt và đưa lên sàn.
+Danh sách đen (Blacklist): Danh sách các chủ xe có tỷ lệ bị báo cáo cao hoặc vi phạm chính sách sàn nhiều lần.
+
+AI Feature: AI Tư vấn đề xuất xe phù hợp với nhu cầu khách thuê
+Tiếp nhận đầu vào (Input): Khách hàng nhập văn bản hoặc giọng nói.
+Phân tích thực thể (Intent & Entity Recognition): AI bóc tách các thông tin quan trọng: Số lượng người: 4 người -> Gợi ý xe 5 chỗ hoặc 7 chỗ.
+Mục đích: Đi du lịch xa (Vũng Tàu) -> Ưu tiên xe có dung lượng pin lớn (Range > 300km).
+Phong cách: Sang trọng -> Ưu tiên các dòng xe cao cấp (VinFast VF9, Tesla, v.v.).
+Ngân sách: (Nếu có đề cập).
+Truy vấn dữ liệu (Matching): Hệ thống so khớp các tiêu chí đã bóc tách với Database của các xe đang sẵn có.
+Phản hồi & Giải thích (Output): AI trả về danh sách 2-3 xe phù hợp nhất kèm theo lý do tại sao (Reasoning).
+

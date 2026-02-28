@@ -130,6 +130,7 @@ namespace CAR.Infrastructure.Services
             };
 
             await _authRepository.CreateAuthenticationAsync(authentication);
+            await _unitOfWork.SaveChangesAsync(); // Persist auth so user can use "Resend OTP" if email fails
 
             // Send OTP email
             var emailSent = await _emailService.SendOtpEmailAsync(request.Email, otpCode);
@@ -139,16 +140,14 @@ namespace CAR.Infrastructure.Services
                 return new AuthResponseDto
                 {
                     Success = false,
-                    Message = "Registration successful but failed to send OTP email. Please try again."
+                    Message = "Tài khoản đã tạo nhưng không gửi được email OTP. Vui lòng bấm \"Gửi lại OTP\" bên dưới."
                 };
             }
-
-            await _unitOfWork.SaveChangesAsync();
 
             return new AuthResponseDto
             {
                 Success = true,
-                Message = "Registration successful. Please check your email for OTP verification."
+                Message = "Đăng ký thành công. Vui lòng nhập mã OTP đã gửi đến email của bạn."
             };
         }
 

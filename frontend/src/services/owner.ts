@@ -4,7 +4,11 @@ import { getSessionCookie } from "@/lib/authSession";
 function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;
   try {
-    return window.localStorage.getItem("accessToken") ?? getSessionCookie()?.accessToken ?? null;
+    return (
+      window.localStorage.getItem("accessToken") ??
+      getSessionCookie()?.accessToken ??
+      null
+    );
   } catch {
     return getSessionCookie()?.accessToken ?? null;
   }
@@ -31,6 +35,8 @@ export type KycOcrResponse = {
   gender: string;
   cccdNumber: string;
   address?: string | null;
+  frontImageUrl?: string | null;
+  backImageUrl?: string | null;
   errorMessage?: string | null;
 };
 
@@ -42,7 +48,9 @@ export type SubmitKycBecomeOwnerRequest = {
   gender?: string | null;
 };
 
-export async function registerOwner(body: RegisterOwnerRequest): Promise<RegisterOwnerResponse> {
+export async function registerOwner(
+  body: RegisterOwnerRequest,
+): Promise<RegisterOwnerResponse> {
   return apiFetch<RegisterOwnerResponse>("/api/Owner/register-owner", {
     method: "POST",
     body,
@@ -62,29 +70,41 @@ export async function me(): Promise<OwnerMeResponse> {
 }
 
 /** Gọi API OCR CCCD (mặt trước + mặt sau). Requires auth. Uses Next.js proxy /api/*. */
-export async function kycOcr(frontImage: File, backImage: File): Promise<KycOcrResponse> {
+export async function kycOcr(
+  frontImage: File,
+  backImage: File,
+): Promise<KycOcrResponse> {
   const formData = new FormData();
   formData.append("FrontImage", frontImage);
   formData.append("BackImage", backImage);
   const token = getAuthToken();
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
-  const res = await fetch("/api/owner/kyc/ocr", { method: "POST", body: formData, headers });
+  const res = await fetch("/api/owner/kyc/ocr", {
+    method: "POST",
+    body: formData,
+    headers,
+  });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message ?? data.errorMessage ?? `OCR failed: ${res.status}`);
+  if (!res.ok)
+    throw new Error(
+      data.message ?? data.errorMessage ?? `OCR failed: ${res.status}`,
+    );
   return {
     fullName: data.fullName ?? "",
     dob: data.dob ?? "",
     gender: data.gender ?? "",
     cccdNumber: data.cccdNumber ?? "",
     address: data.address ?? null,
+    frontImageUrl: data.frontImageUrl ?? null,
+    backImageUrl: data.backImageUrl ?? null,
     errorMessage: data.errorMessage ?? null,
   };
 }
 
 /** Submit KYC (một endpoint chung: full flow hoặc become-owner). */
 export async function submitKycBecomeOwner(
-  body: SubmitKycBecomeOwnerRequest
+  body: SubmitKycBecomeOwnerRequest,
 ): Promise<{ message: string; role: string }> {
   return apiFetch<{ message: string; role: string }>("/api/owner/kyc/submit-kyc", {
     method: "POST",
@@ -94,5 +114,5 @@ export async function submitKycBecomeOwner(
       dateOfBirth: body.dateOfBirth,
       gender: body.gender ?? undefined,
     },
-  });
+  );
 }

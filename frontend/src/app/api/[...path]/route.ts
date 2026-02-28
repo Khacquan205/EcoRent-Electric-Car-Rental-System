@@ -1,8 +1,8 @@
-const BACKEND_BASE_URL = process.env.BACKEND_BASE_URL ?? "http://localhost:8080";
+// Default 5084 = dotnet run. For Docker (port 8080) set .env: BACKEND_BASE_URL=http://localhost:8080
+const BACKEND_BASE_URL =
+  process.env.BACKEND_BASE_URL ?? "http://localhost:8080";
 
 function buildBackendUrl(pathname: string, search: string) {
-  // Incoming: /api/<...>
-  // Backend:  http://localhost:8080/api/<...>
   return `${BACKEND_BASE_URL}${pathname}${search}`;
 }
 
@@ -11,7 +11,6 @@ async function proxy(request: Request) {
   const target = buildBackendUrl(url.pathname, url.search);
 
   const headers = new Headers(request.headers);
-  // Ensure host-related headers don't confuse the backend
   headers.delete("host");
 
   const method = request.method.toUpperCase();
@@ -24,16 +23,25 @@ async function proxy(request: Request) {
     redirect: "manual",
   };
 
-  // Node.js fetch requires `duplex: "half"` when sending a body (streaming).
-  // Some runtimes require it even if body is present but not yet readable, so set by method.
   if (hasBody) {
     init.duplex = "half";
   }
 
-  const res = await fetch(target, init);
+  let res: Response;
+  try {
+    res = await fetch(target, init);
+  } catch (err) {
+    const message =
+      (err as NodeJS.ErrnoException)?.code === "ECONNREFUSED"
+        ? "Backend is not running. Start it with: cd backend/RentalCar && dotnet run"
+        : "Failed to reach backend API";
+    return new Response(JSON.stringify({ success: false, message }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
   const responseHeaders = new Headers(res.headers);
-  // Avoid leaking backend-specific encoding headers that can cause issues in proxies
   responseHeaders.delete("content-encoding");
   responseHeaders.delete("content-length");
 
@@ -44,4 +52,12 @@ async function proxy(request: Request) {
   });
 }
 
-export { proxy as GET, proxy as POST, proxy as PUT, proxy as PATCH, proxy as DELETE, proxy as OPTIONS, proxy as HEAD };
+export {
+  proxy as GET,
+  proxy as POST,
+  proxy as PUT,
+  proxy as PATCH,
+  proxy as DELETE,
+  proxy as OPTIONS,
+  proxy as HEAD,
+};

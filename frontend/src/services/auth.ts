@@ -42,6 +42,24 @@ export type LoginResponse = ApiResult<{
   user: unknown | null;
 }>;
 
+/** Normalize auth response from backend (handles both camelCase and PascalCase). */
+export function normalizeAuthResponse(res: Record<string, unknown>): {
+  success: boolean;
+  message: string;
+  accessToken: string | null;
+  expiresIn: number | null;
+  user: unknown | null;
+} {
+  const r = res as Record<string, unknown>;
+  return {
+    success: (r.success as boolean) ?? (r.Success as boolean) ?? false,
+    message: String(r.message ?? r.Message ?? ""),
+    accessToken: (r.accessToken as string | null) ?? (r.AccessToken as string | null) ?? null,
+    expiresIn: (r.expiresIn as number | null) ?? (r.ExpiresIn as number | null) ?? null,
+    user: (r.user as unknown) ?? (r.User as unknown) ?? null,
+  };
+}
+
 export type RegisterResponse = ApiResult<Record<string, unknown>>;
 
 export async function register(body: RegisterRequest): Promise<RegisterResponse> {
