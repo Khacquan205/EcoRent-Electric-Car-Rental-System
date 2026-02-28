@@ -12,6 +12,31 @@ export class ApiError extends Error {
     this.status = status;
     this.body = body;
   }
+
+  /** Extract a human-readable error message from any backend response format. */
+  get detail(): string {
+    const b = this.body as Record<string, unknown> | null | undefined;
+    if (!b) return this.message;
+
+    // UserFriendlyException / GlobalExceptionMiddleware: { message: "..." }
+    if (typeof b.message === "string" && b.message) return b.message;
+    if (typeof b.Message === "string" && b.Message) return b.Message;
+
+    // ProblemDetails: { title: "...", errors: { field: ["msg"] } }
+    if (b.errors && typeof b.errors === "object") {
+      const msgs = Object.values(b.errors as Record<string, string[]>)
+        .flat()
+        .filter(Boolean);
+      if (msgs.length > 0) return msgs.join("; ");
+    }
+    if (typeof b.title === "string" && b.title) return b.title;
+
+    // ValidationFilter: { errors: ["msg1", "msg2"] }
+    if (Array.isArray(b.Errors) && b.Errors.length > 0)
+      return b.Errors.join("; ");
+
+    return this.message;
+  }
 }
 
 const DEFAULT_BASE_URL = "http://localhost:5084";
@@ -29,7 +54,8 @@ function getBaseUrl() {
 
 async function parseJsonSafe(response: Response): Promise<unknown> {
   const contentType = response.headers.get("content-type") ?? "";
-  if (!contentType.includes("application/json")) return null;
+  // Handle both application/json and application/problem+json
+  if (!contentType.includes("json")) return null;
   try {
     return await response.json();
   } catch {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Upload, FileCheck, CheckCircle2 } from "lucide-react";
 import * as ownerApi from "@/services/owner";
+import { ApiError } from "@/services/client";
 
 const STEPS = [
   { id: 1, title: "Upload CCCD", desc: "Tải ảnh mặt trước và mặt sau" },
@@ -25,7 +26,12 @@ export default function BecomeOwnerPage() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   useEffect(() => {
-    ownerApi.me().then(() => router.replace("/owner")).catch(() => {});
+    ownerApi
+      .me()
+      .then(() => router.replace("/owner"))
+      .catch(() => {
+        // Expected: user is not yet an owner (403). Stay on this page.
+      });
   }, [router]);
 
   const handleFrontChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,10 +101,17 @@ export default function BecomeOwnerPage() {
         dateOfBirth: ocrData.dob,
         idNumber: ocrData.cccdNumber,
         address: ocrData.address ?? undefined,
+        gender: ocrData.gender || undefined,
+        frontDocumentUrl: ocrData.frontImageUrl || undefined,
+        backDocumentUrl: ocrData.backImageUrl || undefined,
       });
       setSubmitSuccess(true);
     } catch (e) {
-      setOcrError(e instanceof Error ? e.message : "Gửi KYC thất bại.");
+      if (e instanceof ApiError) {
+        setOcrError(e.detail);
+      } else {
+        setOcrError(e instanceof Error ? e.message : "Gửi KYC thất bại.");
+      }
     } finally {
       setLoading(false);
     }
@@ -109,7 +122,9 @@ export default function BecomeOwnerPage() {
       <div className="min-h-[60vh] flex flex-col items-center justify-center px-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm text-center max-w-md">
           <CheckCircle2 className="mx-auto h-16 w-16 text-emerald-500" />
-          <h1 className="mt-4 text-xl font-semibold text-slate-900">KYC đã gửi thành công</h1>
+          <h1 className="mt-4 text-xl font-semibold text-slate-900">
+            KYC đã gửi thành công
+          </h1>
           <p className="mt-2 text-sm text-slate-600">
             Bạn đã trở thành chủ xe. Bạn có thể đăng tin cho thuê xe.
           </p>
@@ -129,7 +144,9 @@ export default function BecomeOwnerPage() {
     <div className="min-h-[calc(100vh-128px)] bg-slate-50">
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-slate-900">Trở thành chủ xe</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Trở thành chủ xe
+          </h1>
           <p className="mt-1 text-sm text-slate-600">
             Xác thực CCCD để đăng ký làm chủ xe trên EcoRent.
           </p>
@@ -141,7 +158,9 @@ export default function BecomeOwnerPage() {
             <div key={s.id} className="flex items-center gap-2">
               <div
                 className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-medium ${
-                  step >= s.id ? "bg-[#1572D3] text-white" : "bg-slate-200 text-slate-500"
+                  step >= s.id
+                    ? "bg-[#1572D3] text-white"
+                    : "bg-slate-200 text-slate-500"
                 }`}
               >
                 {s.id}
@@ -157,13 +176,17 @@ export default function BecomeOwnerPage() {
           {/* STEP 1 – Upload CCCD */}
           {step === 1 && (
             <>
-              <h2 className="text-lg font-semibold text-slate-900">Bước 1: Upload CCCD</h2>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Bước 1: Upload CCCD
+              </h2>
               <p className="mt-1 text-sm text-slate-600">
                 Tải lên ảnh mặt trước và mặt sau CCCD/CMND.
               </p>
               <div className="mt-6 grid gap-6 sm:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Mặt trước CCCD</label>
+                  <label className="block text-sm font-medium text-slate-700">
+                    Mặt trước CCCD
+                  </label>
                   <input
                     type="file"
                     accept="image/*"
@@ -185,7 +208,9 @@ export default function BecomeOwnerPage() {
                             className="h-full w-full object-contain"
                           />
                         </div>
-                        <p className="mt-2 text-xs text-slate-500">Nhấn để chọn lại ảnh</p>
+                        <p className="mt-2 text-xs text-slate-500">
+                          Nhấn để chọn lại ảnh
+                        </p>
                       </>
                     ) : (
                       <>
@@ -196,7 +221,9 @@ export default function BecomeOwnerPage() {
                   </label>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Mặt sau CCCD</label>
+                  <label className="block text-sm font-medium text-slate-700">
+                    Mặt sau CCCD
+                  </label>
                   <input
                     type="file"
                     accept="image/*"
@@ -218,7 +245,9 @@ export default function BecomeOwnerPage() {
                             className="h-full w-full object-contain"
                           />
                         </div>
-                        <p className="mt-2 text-xs text-slate-500">Nhấn để chọn lại ảnh</p>
+                        <p className="mt-2 text-xs text-slate-500">
+                          Nhấn để chọn lại ảnh
+                        </p>
                       </>
                     ) : (
                       <>
@@ -246,7 +275,9 @@ export default function BecomeOwnerPage() {
           {/* STEP 2 – KYC Check */}
           {step === 2 && (
             <>
-              <h2 className="text-lg font-semibold text-slate-900">Bước 2: KYC Check</h2>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Bước 2: KYC Check
+              </h2>
               <p className="mt-1 text-sm text-slate-600">
                 Hệ thống sẽ nhận diện thông tin từ ảnh CCCD của bạn.
               </p>
@@ -288,7 +319,9 @@ export default function BecomeOwnerPage() {
           {/* STEP 3 – Review (read-only) + Submit */}
           {step === 3 && ocrData && (
             <>
-              <h2 className="text-lg font-semibold text-slate-900">Bước 3: Xem lại thông tin</h2>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Bước 3: Xem lại thông tin
+              </h2>
               <p className="mt-1 text-sm text-slate-600">
                 Kiểm tra thông tin đã đọc từ CCCD. Không thể chỉnh sửa.
               </p>
@@ -299,20 +332,46 @@ export default function BecomeOwnerPage() {
               )}
               <dl className="mt-6 space-y-4 border-t border-slate-100 pt-4">
                 <div>
-                  <dt className="text-xs font-medium uppercase text-slate-500">Họ và tên</dt>
-                  <dd className="mt-1 text-slate-900">{ocrData.fullName || "—"}</dd>
+                  <dt className="text-xs font-medium uppercase text-slate-500">
+                    Họ và tên
+                  </dt>
+                  <dd className="mt-1 text-slate-900">
+                    {ocrData.fullName || "—"}
+                  </dd>
                 </div>
                 <div>
-                  <dt className="text-xs font-medium uppercase text-slate-500">Ngày sinh</dt>
+                  <dt className="text-xs font-medium uppercase text-slate-500">
+                    Ngày sinh
+                  </dt>
                   <dd className="mt-1 text-slate-900">{ocrData.dob || "—"}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs font-medium uppercase text-slate-500">Số CCCD</dt>
-                  <dd className="mt-1 text-slate-900">{ocrData.cccdNumber || "—"}</dd>
+                  <dt className="text-xs font-medium uppercase text-slate-500">
+                    Giới tính
+                  </dt>
+                  <dd className="mt-1 text-slate-900">
+                    {ocrData.gender === "Male"
+                      ? "Nam"
+                      : ocrData.gender === "Female"
+                        ? "Nữ"
+                        : ocrData.gender || "—"}
+                  </dd>
                 </div>
                 <div>
-                  <dt className="text-xs font-medium uppercase text-slate-500">Địa chỉ</dt>
-                  <dd className="mt-1 text-slate-900">{ocrData.address || "—"}</dd>
+                  <dt className="text-xs font-medium uppercase text-slate-500">
+                    Số CCCD
+                  </dt>
+                  <dd className="mt-1 text-slate-900">
+                    {ocrData.cccdNumber || "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium uppercase text-slate-500">
+                    Địa chỉ
+                  </dt>
+                  <dd className="mt-1 text-slate-900">
+                    {ocrData.address || "—"}
+                  </dd>
                 </div>
               </dl>
               <div className="mt-6 flex justify-end gap-3">
