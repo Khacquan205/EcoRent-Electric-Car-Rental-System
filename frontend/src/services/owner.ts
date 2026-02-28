@@ -34,13 +34,22 @@ export type KycOcrResponse = {
   dob: string;
   gender: string;
   cccdNumber: string;
+  cccdFaceId?: string | null;
   address?: string | null;
   frontImageUrl?: string | null;
   backImageUrl?: string | null;
   errorMessage?: string | null;
 };
 
-/** Submit KYC "Trở thành chủ xe" (legal identity only; no address) */
+/** KYC Liveness check response */
+export type KycLivenessResponse = {
+  isLive: boolean;
+  isMatch: boolean;
+  confidence: number;
+  errorMessage?: string | null;
+};
+
+/** Submit KYC "Trở thành chủ xe" (no liveness) */
 export type SubmitKycBecomeOwnerRequest = {
   fullName: string;
   dateOfBirth: string;
@@ -96,8 +105,40 @@ export async function kycOcr(
     gender: data.gender ?? "",
     cccdNumber: data.cccdNumber ?? "",
     address: data.address ?? null,
+    cccdFaceId: data.cccdFaceId ?? null,
     frontImageUrl: data.frontImageUrl ?? null,
     backImageUrl: data.backImageUrl ?? null,
+    errorMessage: data.errorMessage ?? null,
+  };
+}
+
+/** Gọi API liveness check (video + cccdFaceId). Requires auth. */
+export async function kycLiveness(
+  video: Blob,
+  cccdFaceId: string,
+): Promise<KycLivenessResponse> {
+  const formData = new FormData();
+  formData.append("Video", video, "liveness.mp4");
+  formData.append("CccdFaceId", cccdFaceId);
+  const token = getAuthToken();
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch("/api/owner/kyc/liveness-check", {
+    method: "POST",
+    body: formData,
+    headers,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok)
+    throw new Error(
+      data.message ??
+        data.errorMessage ??
+        `Liveness check failed: ${res.status}`,
+    );
+  return {
+    isLive: data.isLive ?? false,
+    isMatch: data.isMatch ?? false,
+    confidence: data.confidence ?? 0,
     errorMessage: data.errorMessage ?? null,
   };
 }
