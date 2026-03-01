@@ -149,29 +149,33 @@ namespace CAR.Infrastructure.Services
                     .FirstOrDefaultAsync(s => s.Id == payment.SubscriptionId);
                 if (subscription != null)
                 {
-                    await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-                    try
+                    var strategy = _dbContext.Database.CreateExecutionStrategy();
+                    await strategy.ExecuteAsync(async () =>
                     {
-                        var otherActives = await _subscriptionRepository.Query()
-                            .Where(s => s.OwnerId == subscription.OwnerId && s.Status == SubscriptionStatusActive && s.Id != subscription.Id)
-                            .ToListAsync();
-                        foreach (var s in otherActives)
+                        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+                        try
                         {
-                            s.Status = SubscriptionStatusInactive;
-                            s.UpdatedAt = DateTime.UtcNow;
-                            _subscriptionRepository.Update(s);
+                            var otherActives = await _subscriptionRepository.Query()
+                                .Where(s => s.OwnerId == subscription.OwnerId && s.Status == SubscriptionStatusActive && s.Id != subscription.Id)
+                                .ToListAsync();
+                            foreach (var s in otherActives)
+                            {
+                                s.Status = SubscriptionStatusInactive;
+                                s.UpdatedAt = DateTime.UtcNow;
+                                _subscriptionRepository.Update(s);
+                            }
+                            subscription.Status = SubscriptionStatusActive;
+                            subscription.UpdatedAt = DateTime.UtcNow;
+                            _subscriptionRepository.Update(subscription);
+                            await _unitOfWork.SaveChangesAsync();
+                            await transaction.CommitAsync();
                         }
-                        subscription.Status = SubscriptionStatusActive;
-                        subscription.UpdatedAt = DateTime.UtcNow;
-                        _subscriptionRepository.Update(subscription);
-                        await _unitOfWork.SaveChangesAsync();
-                        await transaction.CommitAsync();
-                    }
-                    catch
-                    {
-                        await transaction.RollbackAsync();
-                        throw;
-                    }
+                        catch
+                        {
+                            await transaction.RollbackAsync();
+                            throw;
+                        }
+                    });
                     return new PaymentResponseDto
                     {
                         Success = true,
