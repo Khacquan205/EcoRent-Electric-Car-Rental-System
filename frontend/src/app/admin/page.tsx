@@ -6,7 +6,15 @@ export default function AdminHomePage() {
         Chọn mục ở sidebar để quản lý.
       </p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <a href="/admin/pending-posts" className="rounded-2xl border border-amber-200 bg-amber-50/50 p-5 hover:bg-amber-50">
+          <p className="text-sm font-medium text-gray-900">Pending Car Posts</p>
+          <p className="mt-1 text-sm text-gray-600">Duyệt hoặc từ chối bài đăng xe.</p>
+        </a>
+        <a href="/admin/categories" className="rounded-2xl border p-5 hover:bg-gray-50">
+          <p className="text-sm font-medium text-gray-900">Categories</p>
+          <p className="mt-1 text-sm text-gray-600">Tạo / sửa / xoá loại xe (danh mục).</p>
+        </a>
         <a href="/admin/packages" className="rounded-2xl border p-5 hover:bg-gray-50">
           <p className="text-sm font-medium text-gray-900">Quản lý Packages</p>
           <p className="mt-1 text-sm text-gray-600">Tạo / sửa / xoá gói admin.</p>

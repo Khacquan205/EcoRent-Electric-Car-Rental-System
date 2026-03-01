@@ -6,7 +6,7 @@ public class OwnerPackageConfiguration : IEntityTypeConfiguration<MOwnerPackage>
 {
     public void Configure(EntityTypeBuilder<MOwnerPackage> builder)
     {
-        builder.ToTable("MOwnerPackage");
+        builder.ToTable("m_owner_package");
 
         builder.HasKey(x => x.Id);
 
@@ -21,11 +21,11 @@ public class OwnerPackageConfiguration : IEntityTypeConfiguration<MOwnerPackage>
 
         builder.Property(x => x.Description)
                .HasColumnName("description")
-               .HasColumnType("nvarchar(max)");
+               .HasColumnType("text");
 
         builder.Property(x => x.Price)
                .HasColumnName("price")
-               .HasColumnType("double")
+               .HasColumnType("numeric(18,2)")
                .IsRequired();
 
         builder.Property(x => x.DurationDays)
@@ -46,11 +46,11 @@ public class OwnerPackageConfiguration : IEntityTypeConfiguration<MOwnerPackage>
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")
-               .HasColumnType("datetime")
+               .HasColumnType("timestamptz")
                .IsRequired();
 
         builder.Property(x => x.UpdatedAt)
                .HasColumnName("updated_at")
-               .HasColumnType("datetime");
+               .HasColumnType("timestamptz");
     }
 }

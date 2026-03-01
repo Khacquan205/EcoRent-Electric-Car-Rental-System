@@ -1,4 +1,4 @@
-﻿using CAR.Domain.Entities;
+using CAR.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,7 +8,7 @@ namespace CAR.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<MPost> builder)
         {
-            builder.ToTable("MPost");
+            builder.ToTable("m_post");
 
             builder.HasKey(x => x.Id);
 
@@ -73,6 +73,15 @@ namespace CAR.Infrastructure.Data.Configurations
             builder.Property(x => x.UpdatedAt)
                 .HasColumnName("updated_at")
                 .HasColumnType("timestamptz");
+            builder.HasOne(x => x.OwnerProfile)
+                .WithMany(x => x.Posts)
+                .HasForeignKey(x => x.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.Location)
+                .WithMany()
+                .HasForeignKey(x => x.LocationId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

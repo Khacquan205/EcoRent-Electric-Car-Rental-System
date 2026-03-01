@@ -16,9 +16,14 @@ namespace CAR.Infrastructure.Repositories
             return await _dbSet.FirstOrDefaultAsync(x => x.Email == email);
         }
 
+        public async Task<MUser?> GetByIdAsync(int id)
+        {
+            return await _dbSet.FirstOrDefaultAsync(x => x.Id == id);
+        }
+
         public async Task CreateUserAsync(MUser user)
         {
-            _dbSet.Add(user);
+            await _dbSet.AddAsync(user);
         }
     }
 }

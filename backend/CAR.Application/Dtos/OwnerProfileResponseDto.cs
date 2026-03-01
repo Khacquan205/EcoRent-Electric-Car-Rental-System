@@ -22,7 +22,7 @@ namespace CAR.Application.Dtos
 
         public string? RejectReason { get; set; }
 
-        public double RatingAvg { get; set; }
+        public decimal RatingAvg { get; set; }
 
         public int TotalPosts { get; set; }
 

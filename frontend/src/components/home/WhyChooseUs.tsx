@@ -1,86 +1,76 @@
-import Image from "next/image";
-import { BadgeDollarSign, UserCheck, Truck, Headphones } from "lucide-react";
-import FeatureItem from "@/components/shared/FeatureItem";
+import {
+  MessageCircle,
+  ShieldCheck,
+  BadgeDollarSign,
+  Users,
+} from "lucide-react";
 
 const features = [
   {
     icon: BadgeDollarSign,
-    title: "Best price guaranteed",
-    description: "Find a lower price? We'll refund you 100% of the difference.",
+    title: "Giá thỏa thuận linh hoạt",
+    description:
+      "Không có mức giá cố định. Người thuê và chủ xe tự thỏa thuận điều khoản phù hợp với cả hai bên.",
   },
   {
-    icon: UserCheck,
-    title: "Experience driver",
+    icon: MessageCircle,
+    title: "Kết nối trực tiếp với chủ xe",
     description:
-      "Don't have driver? Don't worry, we have many experienced driver for you.",
+      "Nhắn tin và hỏi đáp trực tiếp với chủ xe trước khi quyết định — không qua trung gian.",
   },
   {
-    icon: Truck,
-    title: "24 hour car delivery",
+    icon: ShieldCheck,
+    title: "Danh sách xe đã được xác thực",
     description:
-      "Book your car anytime and we will deliver it directly to you.",
+      "Mỗi chủ xe được xác minh thông tin và mỗi tin đăng đều được kiểm duyệt để đảm bảo tính xác thực.",
   },
   {
-    icon: Headphones,
-    title: "24/7 technical support",
+    icon: Users,
+    title: "Cộng đồng thuê xe uy tín",
     description:
-      "Have a question? Contact EcoRent support any time when you have problem.",
+      "Hàng nghìn chủ xe và người thuê đã kết nối thành công. Hệ thống đánh giá minh bạch giúp bạn chọn lựa đúng.",
   },
 ];
 
 const WhyChooseUs = () => {
   return (
-    <section className="relative overflow-hidden bg-white py-16 lg:py-24">
-      {/* Background Triangle Shape */}
-      <div className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2">
-        <Image
-          src="/Vector.png"
-          alt=""
-          width={600}
-          height={600}
-          className="h-[500px] w-auto opacity-100 lg:h-[700px]"
-        />
-      </div>
-
+    <section className="bg-white py-16 lg:py-24">
       <div className="container mx-auto px-6">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
-          {/* Left Content - Car Image */}
-          <div className="relative flex items-center justify-start">
-            <div className="relative z-10 -ml-12 h-[300px] w-full max-w-[600px] md:h-[400px]">
-              <Image
-                src="/Audi 1.png"
-                alt="Silver Audi R8 sports car"
-                fill
-                className="object-contain object-left"
-                sizes="(max-width: 768px) 100vw, 600px"
-              />
-            </div>
-          </div>
 
-          {/* Right Content */}
-          <div>
-            {/* Section Header */}
-            <span className="inline-flex items-center rounded-full border border-[#1572D3] px-4 py-2 text-sm font-medium text-[#1572D3]">
-              WHY CHOOSE US
-            </span>
-            <h2 className="mt-6 text-3xl font-bold text-[#242424] md:text-4xl">
-              We offer the best experience
-              <br />
-              with our rental deals
-            </h2>
+        {/* Header */}
+        <div className="text-center">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#1572D3]">
+            Vì sao chọn EcoRent
+          </p>
+          <h2 className="mt-3 text-3xl font-black text-slate-900 md:text-4xl">
+            Nền tảng kết nối chủ xe &amp; người thuê
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-base text-slate-500">
+            EcoRent không đặt xe thay bạn — chúng tôi tạo không gian để bạn tìm đúng xe, nói chuyện đúng chủ xe, và thỏa thuận theo cách của bạn.
+          </p>
+        </div>
 
-            {/* Features List */}
-            <div className="mt-8 space-y-6">
-              {features.map((feature) => (
-                <FeatureItem
-                  key={feature.title}
-                  icon={feature.icon}
-                  title={feature.title}
-                  description={feature.description}
-                />
-              ))}
-            </div>
-          </div>
+        {/* Features 2×2 grid — reference-style card layout */}
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {features.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <div
+                key={feature.title}
+                className="group rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-[#1572D3]/20 hover:shadow-md"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 transition-colors group-hover:bg-[#1572D3]">
+                  <Icon className="h-6 w-6 text-[#1572D3] transition-colors group-hover:text-white" />
+                </div>
+                <h3 className="mt-4 text-[15px] font-bold text-slate-900">
+                  {feature.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                  {feature.description}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

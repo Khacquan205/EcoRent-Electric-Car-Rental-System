@@ -1,4 +1,4 @@
-﻿namespace CAR.Domain.Entities
+namespace CAR.Domain.Entities
 {
     public class MVehicleVerification
     {

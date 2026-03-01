@@ -1,100 +1,59 @@
-export interface CarData {
-  id: string;
-  name: string;
-  brand: string;
-  image: string;
-  rating: number;
-  reviews: string;
-  passengers: number;
-  transmission: string;
-  airConditioning: boolean;
-  doors: number;
-  price: number;
-}
-
-export interface CarReview {
-  id: number;
-  authorName: string;
-  rating: number;
-  content: string;
-  createdAt: string;
-}
-
-export interface CarOwner {
-  name: string;
-  location: string;
-  phone: string;
-  responseRate: string;
-}
-
-export interface CarDetail {
-  id: string;
-  name: string;
-  images: string[];
-  location: string;
-  seats: number;
-  transmission: string;
-  rangeKm: number;
-  features: string[];
-  pricePerDay: number;
-  ratingAvg: number;
-  reviewCount: number;
-  reviews: CarReview[];
-  owner: CarOwner;
-}
+// Re-export types from centralized location
+export type { CarData, CarReview, CarOwner, CarDetail } from "@/types/car";
+import type { CarData, CarDetail } from "@/types/car";
 
 export const popularCars: CarData[] = [
   {
-    id: "jaguar-xe-l-p250",
-    name: "Jaguar XE L P250",
-    brand: "Jaguar",
+    id: "vinfast-vf8",
+    name: "VinFast VF 8",
+    brand: "VinFast",
     image: "/car item/image 11.png",
     rating: 4.8,
-    reviews: "2,436",
-    passengers: 4,
+    reviews: "128",
+    passengers: 5,
     transmission: "Auto",
     airConditioning: true,
     doors: 4,
-    price: 1800,
+    price: 1500000,
   },
   {
-    id: "audi-r8",
-    name: "Audi R8",
-    brand: "Audi",
+    id: "tesla-model-3",
+    name: "Tesla Model 3",
+    brand: "Tesla",
     image: "/car item/Audi 1 (1).png",
-    rating: 4.6,
-    reviews: "1,936",
-    passengers: 2,
-    transmission: "Auto",
-    airConditioning: true,
-    doors: 2,
-    price: 2100,
-  },
-  {
-    id: "bmw-m3",
-    name: "BMW M3",
-    brand: "BMW",
-    image: "/car item/image 12.png",
-    rating: 4.5,
-    reviews: "2,036",
-    passengers: 4,
+    rating: 4.9,
+    reviews: "214",
+    passengers: 5,
     transmission: "Auto",
     airConditioning: true,
     doors: 4,
-    price: 1600,
+    price: 2000000,
   },
   {
-    id: "lamborghini-huracan",
-    name: "Lamborghini Huracan",
-    brand: "Lamborghini",
-    image: "/car item/image 13.png",
-    rating: 4.3,
-    reviews: "2,236",
-    passengers: 2,
+    id: "hyundai-ioniq5",
+    name: "Hyundai Ioniq 5",
+    brand: "Hyundai",
+    image: "/car item/image 12.png",
+    rating: 4.7,
+    reviews: "96",
+    passengers: 5,
     transmission: "Auto",
     airConditioning: true,
-    doors: 2,
-    price: 2300,
+    doors: 4,
+    price: 1800000,
+  },
+  {
+    id: "kia-ev6",
+    name: "Kia EV6",
+    brand: "Kia",
+    image: "/car item/image 13.png",
+    rating: 4.6,
+    reviews: "74",
+    passengers: 5,
+    transmission: "Auto",
+    airConditioning: true,
+    doors: 4,
+    price: 1700000,
   },
 ];
 

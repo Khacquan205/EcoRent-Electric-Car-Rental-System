@@ -20,13 +20,13 @@ export default async function AdminLayout({
 }) {
   const session = await readSessionFromCookie();
   const role = (session?.role ?? "").toLowerCase();
-  const isAdmin = role === "admin" || session?.roleId === 4;
+  const isAdminOrStaff = role === "admin" || role === "staff" || session?.roleId === 4 || session?.roleId === 3;
 
   if (!session) {
     redirect("/login");
   }
 
-  if (!isAdmin) {
+  if (!isAdminOrStaff) {
     redirect("/");
   }
 

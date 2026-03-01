@@ -1,4 +1,4 @@
-﻿using CAR.Domain.Entities;
+using CAR.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -6,7 +6,7 @@ public class UserConfiguration : IEntityTypeConfiguration<MUser>
 {
     public void Configure(EntityTypeBuilder<MUser> builder)
     {
-        builder.ToTable("MUser");
+        builder.ToTable("m_user");
 
         builder.HasKey(x => x.Id);
 
@@ -28,23 +28,16 @@ public class UserConfiguration : IEntityTypeConfiguration<MUser>
                .HasMaxLength(255)
                .IsRequired();
 
-        builder.Property(x => x.Phone)
-               .HasColumnName("phone")
-               .HasMaxLength(20);
-
-        builder.Property(x => x.Gender)
-               .HasColumnName("gender")
-               .HasColumnType("smallint")
-               .IsRequired();
-
         builder.Property(x => x.Status)
                .HasColumnName("status")
                .HasColumnType("smallint")
                .IsRequired();
 
-        builder.Property(x => x.AvatarImgUrl)
-               .HasColumnName("avatar_img_url")
-               .HasColumnType("nvarchar(max)");
+        builder.Property(x => x.LoginProvider)
+               .HasColumnName("login_provider")
+               .HasMaxLength(50)
+               .IsRequired()
+               .HasDefaultValue("Local");
 
         builder.Property(x => x.CreatedAt)
                .HasColumnName("created_at")

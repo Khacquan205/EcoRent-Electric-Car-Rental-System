@@ -4,55 +4,123 @@ import Link from "next/link";
 import Image from "next/image";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import NavUserMenu from "@/components/NavUserMenu";
+import NavUserMenu from "@/components/layout/NavUserMenu";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useAuthSession } from "@/components/AuthSessionProvider";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { useAuthSession } from "@/components/providers";
 
-const navLinks = [
-  { href: "/become-a-renter", label: "Become a renter" },
-  { href: "/cars", label: "Cars" },
-  { href: "/how-it-works", label: "How it work" },
-  { href: "/about-us", label: "Why choose us" },
+const defaultNavLinks = [
+  { href: "/", label: "Trang chủ" },
+  { href: "/cars", label: "Xe cho thuê" },
+  { href: "/become-owner", label: "Trở thành chủ xe" },
+  { href: "/how-it-works", label: "Dịch vụ của chúng tôi" },
+];
+
+const ownerNavLinks = [
+  { href: "/", label: "Trang chủ" },
+  { href: "/cars", label: "Xe cho thuê" },
+  { href: "/owner/subscription", label: "Gói của tôi" },
+  { href: "/owner/packages", label: "Mua gói" },
+  { href: "/owner/post/new", label: "Đăng xe" },
+  { href: "/owner/posts", label: "Thông báo mới" },
 ];
 
 const Navbar = () => {
   const { session } = useAuthSession();
   const isAuthed = Boolean(session);
+  const isOwner = (session?.role ?? "").toUpperCase() === "OWNER";
+  const isAdminOrStaff =
+    (session?.role ?? "").toUpperCase() === "ADMIN" ||
+    (session?.role ?? "").toUpperCase() === "STAFF" ||
+    session?.roleId === 3 ||
+    session?.roleId === 4;
+  const navLinks = isOwner ? ownerNavLinks : defaultNavLinks;
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur">
-      <div className="flex items-center justify-between px-6 py-4 lg:px-12 xl:px-20">
-        <Link href="/" className="flex items-center gap-2">
-          <Image src="/Logo.png" alt="EcoRent Logo" width={32} height={32} className="h-8 w-8" />
-          <span className="text-xl font-bold text-primary">EcoRent</span>
+    <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 shadow-sm backdrop-blur-md">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-10">
+        <Link
+          href="/"
+          className="flex items-center gap-2 rounded-full pr-2 transition-colors duration-200 hover:text-primary"
+        >
+          <Image
+            src="/favicon.ico"
+            alt="EcoRent Logo"
+            width={32}
+            height={32}
+            className="h-8 w-8"
+          />
+          <span className="text-lg font-semibold text-primary sm:text-xl">
+            EcoRent
+          </span>
         </Link>
 
-        <div className="hidden items-center gap-8 lg:flex">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              {link.label}
-            </Link>
-          ))}
+        <div className="hidden flex-1 items-center justify-center gap-8 lg:flex">
+          {navLinks.map((link) => {
+            const isActive =
+              link.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(link.href);
+
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`group relative inline-flex items-center text-sm font-medium transition-colors duration-200 ${
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-primary"
+                }`}
+              >
+                {link.label}
+                <span
+                  className={`pointer-events-none absolute -bottom-1 left-1/2 h-0.5 -translate-x-1/2 rounded-full bg-primary transition-all duration-200 ${
+                    isActive
+                      ? "w-8 opacity-100"
+                      : "w-0 opacity-0 group-hover:w-6 group-hover:opacity-100"
+                  }`}
+                />
+              </Link>
+            );
+          })}
         </div>
 
         <div className="hidden items-center gap-3 lg:flex">
+          {isAdminOrStaff && (
+            <Link href="/admin">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full border-primary/50 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10"
+              >
+                Quản trị
+              </Button>
+            </Link>
+          )}
           {isAuthed ? (
             <NavUserMenu />
           ) : (
             <>
               <Link href="/login">
-                <Button variant="ghost" className="text-muted-foreground hover:text-primary">
-                  Sign in
+                <Button
+                  variant="ghost"
+                  className="rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-primary hover:shadow-sm hover:-translate-y-[1px]"
+                >
+                  Đăng nhập
                 </Button>
               </Link>
               <Link href="/register">
-                <Button>Sign up</Button>
+                <Button className="rounded-full px-4 py-1.5 text-sm font-semibold shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-lg hover:bg-primary/90">
+                  Đăng ký
+                </Button>
               </Link>
             </>
           )}
@@ -60,37 +128,75 @@ const Navbar = () => {
 
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild className="lg:hidden">
-            <Button variant="ghost" size="icon">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="transition-colors duration-200 hover:bg-accent hover:text-primary"
+            >
               <Menu className="h-6 w-6 text-muted-foreground" />
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-[320px] bg-background">
-            <SheetTitle className="text-left text-xl font-bold text-primary">EcoRent</SheetTitle>
-            <div className="mt-8 flex flex-col gap-4">
-              {navLinks.map((link) => (
+            <SheetTitle className="text-left text-xl font-bold text-primary">
+              EcoRent
+            </SheetTitle>
+            <div className="mt-8 flex flex-col gap-1">
+              {isAdminOrStaff && (
                 <Link
-                  key={link.href}
-                  href={link.href}
+                  href="/admin"
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-md px-3 py-2 text-base font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  className={`rounded-lg px-3 py-2.5 text-base font-medium transition-colors duration-200 ${
+                    pathname.startsWith("/admin")
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  }`}
                 >
-                  {link.label}
+                  Quản trị
                 </Link>
-              ))}
+              )}
+              {navLinks.map((link) => {
+                const isActive =
+                  link.href === "/"
+                    ? pathname === "/"
+                    : pathname.startsWith(link.href);
 
-              <div className="my-2 h-px bg-border" />
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={`rounded-lg px-3 py-2.5 text-base font-medium transition-colors duration-200 ${
+                      isActive
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+
+              <div className="my-3 h-px bg-border" />
 
               {isAuthed ? (
-                <NavUserMenu variant="mobile" onNavigate={() => setMobileOpen(false)} />
+                <NavUserMenu
+                  variant="mobile"
+                  onNavigate={() => setMobileOpen(false)}
+                />
               ) : (
                 <>
                   <Link href="/login" onClick={() => setMobileOpen(false)}>
-                    <Button variant="outline" className="w-full">
-                      Sign in
+                    <Button
+                      variant="outline"
+                      className="w-full transition-all duration-200 hover:-translate-y-[1px] hover:shadow-sm"
+                    >
+                      Đăng nhập
                     </Button>
                   </Link>
                   <Link href="/register" onClick={() => setMobileOpen(false)}>
-                    <Button className="w-full">Sign up</Button>
+                    <Button className="mt-2 w-full transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md">
+                      Đăng ký
+                    </Button>
                   </Link>
                 </>
               )}

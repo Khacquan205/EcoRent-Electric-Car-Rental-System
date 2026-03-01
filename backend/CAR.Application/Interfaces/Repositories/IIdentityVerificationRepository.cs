@@ -6,8 +6,8 @@ namespace CAR.Application.Interfaces.Repositories
 {
     public interface IIdentityVerificationRepository : IRepository<MIdentityVerification>
     {
-        Task<MIdentityVerification?> GetByOwnerIdAsync(long ownerId);
-        Task<MIdentityVerification> CreateForOwnerAsync(long ownerId);
+        Task<MIdentityVerification?> GetByOwnerIdAsync(int ownerId);
+        Task<MIdentityVerification> CreateForOwnerAsync(int ownerId);
         Task<OwnerProfileResponseDto> GetOwnerProfileWithVerificationAsync(int userId);
     }
 }

@@ -15,5 +15,10 @@
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        public MPost Post { get; set; } = null!;
+        public MUser ReporterUser { get; set; } = null!;
+
+
     }
 }

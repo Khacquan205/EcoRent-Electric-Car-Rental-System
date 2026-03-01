@@ -12,7 +12,7 @@ const Footer = () => {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
               <Image
-                src="/Logo.png"
+                src="/favicon.ico"
                 alt="EcoRent Logo"
                 width={32}
                 height={32}
@@ -63,15 +63,14 @@ const Footer = () => {
 
           {/* Resources */}
           <div>
-            <h3 className="font-semibold text-white">Resources</h3>
+            <h3 className="font-semibold text-white">Hỗ trợ</h3>
             <ul className="mt-4 space-y-3">
               {[
-                "Download",
-                "Help Centre",
-                "Guides",
-                "Partner Network",
-                "Cruises",
-                "Developer",
+                "Trung tâm hỗ trợ",
+                "Hướng dẫn sử dụng",
+                "Chính sách thuê xe",
+                "Mạng lưới đối tác",
+                "Nhà phát triển",
               ].map((item) => (
                 <li key={item}>
                   <Link
@@ -85,16 +84,16 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* About Rentcars */}
+          {/* About EcoRent */}
           <div>
-            <h3 className="font-semibold text-white">About Rentcars</h3>
+            <h3 className="font-semibold text-white">Về EcoRent</h3>
             <ul className="mt-4 space-y-3">
               {[
-                "Why choose us",
-                "Our Story",
-                "Investor Relations",
-                "Press Center",
-                "Advertise",
+                "Tại sao chọn chúng tôi",
+                "Câu chuyện của EcoRent",
+                "Quan hệ nhà đầu tư",
+                "Trung tâm báo chí",
+                "Quảng cáo",
               ].map((item) => (
                 <li key={item}>
                   <Link
@@ -160,7 +159,7 @@ const Footer = () => {
 
         {/* Copyright */}
         <p className="text-sm text-[#747474]">
-          Copyright {new Date().getFullYear()} • Rentcars, All Rights Reserved
+          Copyright {new Date().getFullYear()} • EcoRent, All Rights Reserved
         </p>
       </div>
     </footer>

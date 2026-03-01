@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import * as ownerApi from "@/lib/ownerApi";
+import * as ownerApi from "@/services/owner";
 
 export default function OwnerPage() {
   const [name, setName] = useState("");
@@ -70,7 +70,9 @@ export default function OwnerPage() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">Số điện thoại</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Số điện thoại
+                </label>
                 <input
                   className="mt-1 w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   value={phone}
@@ -99,8 +101,12 @@ export default function OwnerPage() {
               </div>
 
               <div className="mt-2 rounded-xl border p-4">
-                <p className="text-sm font-medium text-gray-900">Verify identity</p>
-                <p className="mt-1 text-xs text-gray-600">Nhập code (OTP) bạn nhận được.</p>
+                <p className="text-sm font-medium text-gray-900">
+                  Verify identity
+                </p>
+                <p className="mt-1 text-xs text-gray-600">
+                  Nhập code (OTP) bạn nhận được.
+                </p>
                 <input
                   className="mt-3 w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   value={code}
