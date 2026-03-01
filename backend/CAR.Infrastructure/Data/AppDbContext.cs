@@ -28,7 +28,8 @@ namespace CAR.Infrastructure.Data
         public DbSet<MSearchHistory> SearchHistories { get; set; }
         public DbSet<MVehicleVerification> VehicleVerifications { get; set; }
         public DbSet<MOwnerSubscription> OwnerSubscriptions { get; set; }
-        public DbSet<MKyc> Ky { get; set; }
+        public DbSet<MKyc> Kyc { get; set; }
+        public DbSet<MIdentityVerification> IdentityVerifications { get; set; }
         public DbSet<MPhone> Phones { get; set; }
         public DbSet<MNotification> Notifications { get; set; }
 
