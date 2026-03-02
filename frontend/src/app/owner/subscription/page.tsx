@@ -2,8 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getMySubscriptions, type SubscriptionListItem } from "@/services/subscription";
-import { Calendar, CheckCircle2, Clock, CreditCard, Package } from "lucide-react";
+import {
+  getMySubscriptions,
+  type SubscriptionListItem,
+} from "@/services/subscription";
+import {
+  Calendar,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  Package,
+} from "lucide-react";
 
 export default function OwnerSubscriptionPage() {
   const [list, setList] = useState<SubscriptionListItem[]>([]);
@@ -17,7 +26,9 @@ export default function OwnerSubscriptionPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const active = list.find((s) => s.status === 1 && new Date(s.endDate) > new Date());
+  const active = list.find(
+    (s) => s.status === 1 && new Date(s.endDate) > new Date(),
+  );
 
   if (loading) {
     return (
@@ -33,11 +44,12 @@ export default function OwnerSubscriptionPage() {
   return (
     <div className="min-h-screen bg-slate-50/50">
       <div className="mx-auto max-w-7xl px-6 py-8">
-
         {/* Page Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Gói của tôi</h1>
+            <h1 className="text-2xl font-semibold text-slate-900">
+              Gói của tôi
+            </h1>
             <p className="mt-1 text-sm text-slate-500">
               Xem trạng thái gói và số lượt đăng còn lại.
             </p>
@@ -65,9 +77,13 @@ export default function OwnerSubscriptionPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-emerald-100" />
-                  <span className="text-sm font-medium text-emerald-100">Gói đang hoạt động</span>
+                  <span className="text-sm font-medium text-emerald-100">
+                    Gói đang hoạt động
+                  </span>
                 </div>
-                <h2 className="mt-2 text-2xl font-bold text-white">{active.packageName}</h2>
+                <h2 className="mt-2 text-2xl font-bold text-white">
+                  {active.packageName}
+                </h2>
               </div>
               <span className="shrink-0 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
                 Active
@@ -79,7 +95,8 @@ export default function OwnerSubscriptionPage() {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-emerald-100">Lượt đăng đã sử dụng</span>
                 <span className="font-bold text-white">
-                  {active.totalPosts - active.remainingPosts} / {active.totalPosts}
+                  {active.totalPosts - active.remainingPosts} /{" "}
+                  {active.totalPosts}
                 </span>
               </div>
               <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-white/20">
@@ -88,7 +105,9 @@ export default function OwnerSubscriptionPage() {
                   style={{
                     width: `${
                       active.totalPosts > 0
-                        ? ((active.totalPosts - active.remainingPosts) / active.totalPosts) * 100
+                        ? ((active.totalPosts - active.remainingPosts) /
+                            active.totalPosts) *
+                          100
                         : 0
                     }%`,
                   }}
@@ -96,7 +115,8 @@ export default function OwnerSubscriptionPage() {
               </div>
               <p className="mt-1.5 text-xs text-emerald-100">
                 Còn lại{" "}
-                <strong className="text-white">{active.remainingPosts}</strong> lượt đăng
+                <strong className="text-white">{active.remainingPosts}</strong>{" "}
+                lượt đăng
               </p>
             </div>
 
@@ -124,7 +144,9 @@ export default function OwnerSubscriptionPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
               <Package className="h-8 w-8 text-slate-400" />
             </div>
-            <h3 className="mt-5 text-base font-semibold text-slate-700">Chưa có gói nào</h3>
+            <h3 className="mt-5 text-base font-semibold text-slate-700">
+              Chưa có gói nào
+            </h3>
             <p className="mt-2 text-sm text-slate-500">
               Mua gói để có thể đăng tin cho thuê xe.
             </p>
@@ -141,12 +163,17 @@ export default function OwnerSubscriptionPage() {
         {/* Subscription History */}
         {list.length > 0 && (
           <div className="mt-8">
-            <h2 className="text-xl font-semibold text-slate-900">Lịch sử gói</h2>
-            <p className="mt-1 text-sm text-slate-500">Tất cả gói bạn đã mua.</p>
+            <h2 className="text-xl font-semibold text-slate-900">
+              Lịch sử gói
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Tất cả gói bạn đã mua.
+            </p>
 
             <div className="mt-4 space-y-3">
               {list.map((s) => {
-                const isActive = s.status === 1 && new Date(s.endDate) > new Date();
+                const isActive =
+                  s.status === 1 && new Date(s.endDate) > new Date();
 
                 return (
                   <div
@@ -167,11 +194,15 @@ export default function OwnerSubscriptionPage() {
                           )}
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-900">{s.packageName}</p>
+                          <p className="font-semibold text-slate-900">
+                            {s.packageName}
+                          </p>
                           <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500">
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
-                              {new Date(s.startDate).toLocaleDateString("vi-VN")}
+                              {new Date(s.startDate).toLocaleDateString(
+                                "vi-VN",
+                              )}
                               {" – "}
                               {new Date(s.endDate).toLocaleDateString("vi-VN")}
                             </span>

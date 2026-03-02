@@ -66,7 +66,10 @@ export default function OwnerPostsPage() {
   const addToast = useCallback((item: Omit<ToastItem, "id">) => {
     setToasts((prev) => [
       ...prev,
-      { ...item, id: `toast-${Date.now()}-${Math.random().toString(36).slice(2)}` },
+      {
+        ...item,
+        id: `toast-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      },
     ]);
   }, []);
 
@@ -80,7 +83,9 @@ export default function OwnerPostsPage() {
         addToast({
           title: payload.title,
           message: payload.message,
-          type: payload.title.toLowerCase().includes("reject") ? "error" : "success",
+          type: payload.title.toLowerCase().includes("reject")
+            ? "error"
+            : "success",
           postId: payload.postId,
         });
         if (payload.postId != null) {
@@ -92,15 +97,19 @@ export default function OwnerPostsPage() {
                 ? {
                     ...p,
                     status: approved ? 1 : rejected ? 2 : p.status,
-                    statusName: approved ? "Approved" : rejected ? "Rejected" : p.statusName,
+                    statusName: approved
+                      ? "Approved"
+                      : rejected
+                        ? "Rejected"
+                        : p.statusName,
                   }
-                : p
-            )
+                : p,
+            ),
           );
         }
       },
-      [addToast]
-    )
+      [addToast],
+    ),
   );
 
   const openDetail = useCallback((postId: number) => {
@@ -136,13 +145,15 @@ export default function OwnerPostsPage() {
   return (
     <div className="min-h-screen bg-slate-50/50">
       <div className="mx-auto max-w-7xl px-6 py-8">
-
         {/* Page Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Tin đăng của tôi</h1>
+            <h1 className="text-2xl font-semibold text-slate-900">
+              Tin đăng của tôi
+            </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Quản lý tin đăng cho thuê xe. Cập nhật trạng thái theo thời gian thực.
+              Quản lý tin đăng cho thuê xe. Cập nhật trạng thái theo thời gian
+              thực.
             </p>
           </div>
           <Link
@@ -158,16 +169,28 @@ export default function OwnerPostsPage() {
         {posts.length > 0 && (
           <div className="mt-6 grid grid-cols-3 gap-4">
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Đã duyệt</p>
-              <p className="mt-2 text-3xl font-bold text-emerald-500">{approvedCount}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Đã duyệt
+              </p>
+              <p className="mt-2 text-3xl font-bold text-emerald-500">
+                {approvedCount}
+              </p>
             </div>
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Chờ duyệt</p>
-              <p className="mt-2 text-3xl font-bold text-amber-500">{pendingCount}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Chờ duyệt
+              </p>
+              <p className="mt-2 text-3xl font-bold text-amber-500">
+                {pendingCount}
+              </p>
             </div>
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Từ chối</p>
-              <p className="mt-2 text-3xl font-bold text-red-500">{rejectedCount}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Từ chối
+              </p>
+              <p className="mt-2 text-3xl font-bold text-red-500">
+                {rejectedCount}
+              </p>
             </div>
           </div>
         )}
@@ -185,7 +208,9 @@ export default function OwnerPostsPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
               <Car className="h-8 w-8 text-slate-400" />
             </div>
-            <h3 className="mt-5 text-base font-semibold text-slate-700">Chưa có tin đăng nào</h3>
+            <h3 className="mt-5 text-base font-semibold text-slate-700">
+              Chưa có tin đăng nào
+            </h3>
             <p className="mt-2 text-sm text-slate-500">
               Bắt đầu bằng cách đăng chiếc xe điện đầu tiên của bạn.
             </p>
@@ -218,7 +243,8 @@ export default function OwnerPostsPage() {
                   </div>
                   <span
                     className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                      STATUS_STYLES[p.status] ?? "bg-slate-100 text-slate-600 border border-slate-200"
+                      STATUS_STYLES[p.status] ??
+                      "bg-slate-100 text-slate-600 border border-slate-200"
                     }`}
                   >
                     {STATUS_MAP[p.status] ?? p.statusName ?? p.status}
@@ -232,7 +258,9 @@ export default function OwnerPostsPage() {
                   </p>
                   <p className="mt-1.5 text-lg font-bold text-primary">
                     {Number(p.price).toLocaleString("vi-VN")}
-                    <span className="ml-1 text-xs font-normal text-slate-400">₫ / ngày</span>
+                    <span className="ml-1 text-xs font-normal text-slate-400">
+                      ₫ / ngày
+                    </span>
                   </p>
                 </div>
 
@@ -262,23 +290,33 @@ export default function OwnerPostsPage() {
 
         <ToastList toasts={toasts} remove={removeToast} />
 
-        <Dialog open={detailPostId !== null} onOpenChange={(open) => !open && closeDetail()}>
+        <Dialog
+          open={detailPostId !== null}
+          onOpenChange={(open) => !open && closeDetail()}
+        >
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Chi tiết tin đăng</DialogTitle>
-              <DialogDescription>Thông tin xe và trạng thái duyệt</DialogDescription>
+              <DialogDescription>
+                Thông tin xe và trạng thái duyệt
+              </DialogDescription>
             </DialogHeader>
             {detailLoading && (
-              <p className="py-8 text-center text-sm text-slate-500">Đang tải...</p>
+              <p className="py-8 text-center text-sm text-slate-500">
+                Đang tải...
+              </p>
             )}
             {detailPost && !detailLoading && (
               <div className="space-y-4 text-sm">
                 <div>
-                  <p className="font-medium text-slate-900">{detailPost.title}</p>
+                  <p className="font-medium text-slate-900">
+                    {detailPost.title}
+                  </p>
                   <p className="mt-1 text-slate-600">
-                    {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
-                      detailPost.price
-                    )}{" "}
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(detailPost.price)}{" "}
                     / ngày
                   </p>
                 </div>
@@ -328,7 +366,6 @@ export default function OwnerPostsPage() {
             )}
           </DialogContent>
         </Dialog>
-
       </div>
     </div>
   );

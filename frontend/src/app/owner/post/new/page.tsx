@@ -8,12 +8,20 @@ import { getCategories } from "@/services/categories";
 import { createPost } from "@/services/posts";
 import type { VehicleCategory } from "@/services/categories";
 import type { SubscriptionListItem } from "@/services/subscription";
-import { AlertCircle, ArrowLeft, Car, CheckCircle2, Loader2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Car,
+  CheckCircle2,
+  Loader2,
+} from "lucide-react";
 
 export default function NewPostPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<VehicleCategory[]>([]);
-  const [subscriptions, setSubscriptions] = useState<SubscriptionListItem[]>([]);
+  const [subscriptions, setSubscriptions] = useState<SubscriptionListItem[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,12 +39,14 @@ export default function NewPostPage() {
         setSubscriptions(subs);
         if (cats.length > 0 && categoryId === 0) setCategoryId(cats[0].id);
       })
-      .catch((e) => setError(e instanceof Error ? e.message : "Lỗi tải dữ liệu"))
+      .catch((e) =>
+        setError(e instanceof Error ? e.message : "Lỗi tải dữ liệu"),
+      )
       .finally(() => setLoading(false));
   }, []);
 
   const activeSub = subscriptions.find(
-    (s) => s.status === 1 && new Date(s.endDate) > new Date()
+    (s) => s.status === 1 && new Date(s.endDate) > new Date(),
   );
   const canPost = activeSub && activeSub.remainingPosts > 0;
 
@@ -75,7 +85,6 @@ export default function NewPostPage() {
   return (
     <div className="min-h-screen bg-slate-50/50">
       <div className="mx-auto max-w-7xl px-6 py-8">
-
         {/* Back navigation */}
         <Link
           href="/owner/posts"
@@ -86,20 +95,21 @@ export default function NewPostPage() {
         </Link>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
-
           {/* Main Form */}
           <div className="lg:col-span-2">
             <div className="rounded-2xl bg-white p-8 shadow-sm">
-
               {/* Card Header */}
               <div className="flex items-center gap-3 border-b border-slate-100 pb-6">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
                   <Car className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-semibold text-slate-900">Đăng tin cho thuê xe</h1>
+                  <h1 className="text-xl font-semibold text-slate-900">
+                    Đăng tin cho thuê xe
+                  </h1>
                   <p className="mt-0.5 text-sm text-slate-500">
-                    Tin sẽ chờ duyệt trước khi hiển thị. Slot chỉ trừ khi được duyệt.
+                    Tin sẽ chờ duyệt trước khi hiển thị. Slot chỉ trừ khi được
+                    duyệt.
                   </p>
                 </div>
               </div>
@@ -134,7 +144,6 @@ export default function NewPostPage() {
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-
                 {/* Section: Thông tin xe */}
                 <div className="space-y-5">
                   <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">
@@ -175,7 +184,9 @@ export default function NewPostPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700">Mô tả</label>
+                    <label className="block text-sm font-medium text-slate-700">
+                      Mô tả
+                    </label>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
@@ -196,7 +207,8 @@ export default function NewPostPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700">
-                      Giá thuê (₫ / ngày) <span className="text-red-500">*</span>
+                      Giá thuê (₫ / ngày){" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <div className="relative mt-1.5">
                       <input
@@ -232,7 +244,11 @@ export default function NewPostPage() {
                 <div className="flex gap-3 border-t border-slate-100 pt-6">
                   <button
                     type="submit"
-                    disabled={!canPost || submitting || (activeSub?.remainingPosts ?? 0) === 0}
+                    disabled={
+                      !canPost ||
+                      submitting ||
+                      (activeSub?.remainingPosts ?? 0) === 0
+                    }
                     className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {submitting ? (
@@ -255,15 +271,18 @@ export default function NewPostPage() {
 
           {/* Sidebar */}
           <div className="space-y-4">
-
             {/* Subscription status */}
             {activeSub ? (
               <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5 shadow-sm">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <p className="text-sm font-semibold text-emerald-800">Gói đang dùng</p>
+                  <p className="text-sm font-semibold text-emerald-800">
+                    Gói đang dùng
+                  </p>
                 </div>
-                <p className="mt-2 font-semibold text-emerald-900">{activeSub.packageName}</p>
+                <p className="mt-2 font-semibold text-emerald-900">
+                  {activeSub.packageName}
+                </p>
                 <div className="mt-3">
                   <div className="flex items-center justify-between text-xs text-emerald-700">
                     <span>Lượt đăng còn lại</span>
@@ -277,7 +296,9 @@ export default function NewPostPage() {
                       style={{
                         width: `${
                           activeSub.totalPosts > 0
-                            ? (activeSub.remainingPosts / activeSub.totalPosts) * 100
+                            ? (activeSub.remainingPosts /
+                                activeSub.totalPosts) *
+                              100
                             : 0
                         }%`,
                       }}
@@ -285,12 +306,15 @@ export default function NewPostPage() {
                   </div>
                 </div>
                 <p className="mt-3 text-xs text-emerald-600">
-                  Hết hạn: {new Date(activeSub.endDate).toLocaleDateString("vi-VN")}
+                  Hết hạn:{" "}
+                  {new Date(activeSub.endDate).toLocaleDateString("vi-VN")}
                 </p>
               </div>
             ) : (
               <div className="rounded-2xl border border-amber-100 bg-amber-50 p-5 shadow-sm">
-                <p className="text-sm font-semibold text-amber-800">Chưa có gói</p>
+                <p className="text-sm font-semibold text-amber-800">
+                  Chưa có gói
+                </p>
                 <p className="mt-1 text-xs text-amber-700">
                   Bạn cần mua gói trước khi đăng tin.
                 </p>
@@ -305,7 +329,9 @@ export default function NewPostPage() {
 
             {/* Tips card */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <p className="text-sm font-semibold text-slate-700">Lưu ý khi đăng tin</p>
+              <p className="text-sm font-semibold text-slate-700">
+                Lưu ý khi đăng tin
+              </p>
               <ul className="mt-3 space-y-2.5 text-xs text-slate-500">
                 <li className="flex items-start gap-2">
                   <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
