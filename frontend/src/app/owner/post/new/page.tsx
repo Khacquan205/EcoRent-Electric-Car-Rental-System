@@ -133,7 +133,7 @@ export default function NewPostPage() {
                         : "Bạn đã hết lượt đăng trong gói hiện tại."}
                     </p>
                     <Link
-                      href="/owner/packages"
+                      href="/owner/owner-packages"
                       className="mt-1.5 inline-flex items-center gap-1 text-sm font-semibold text-amber-900 hover:underline"
                     >
                       Mua gói ngay →
@@ -319,7 +319,7 @@ export default function NewPostPage() {
                   Bạn cần mua gói trước khi đăng tin.
                 </p>
                 <Link
-                  href="/owner/packages"
+                  href="/owner/owner-packages"
                   className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-amber-700"
                 >
                   Mua gói ngay

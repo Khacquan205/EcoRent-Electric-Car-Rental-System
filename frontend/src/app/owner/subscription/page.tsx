@@ -55,7 +55,7 @@ export default function OwnerSubscriptionPage() {
             </p>
           </div>
           <Link
-            href="/owner/packages"
+            href="/owner/owner-packages"
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-md"
           >
             <CreditCard className="h-4 w-4" />
@@ -151,7 +151,7 @@ export default function OwnerSubscriptionPage() {
               Mua gói để có thể đăng tin cho thuê xe.
             </p>
             <Link
-              href="/owner/packages"
+              href="/owner/owner-packages"
               className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-md"
             >
               <CreditCard className="h-4 w-4" />
