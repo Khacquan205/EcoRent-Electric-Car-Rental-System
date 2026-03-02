@@ -26,7 +26,7 @@ const ownerNavLinks = [
   { href: "/", label: "Trang chủ" },
   { href: "/cars", label: "Xe cho thuê" },
   { href: "/owner/subscription", label: "Gói của tôi" },
-  { href: "/owner/packages", label: "Mua gói" },
+  { href: "/owner/owner-packages", label: "Mua gói" },
   { href: "/owner/post/new", label: "Đăng xe" },
   { href: "/owner/posts", label: "Thông báo mới" },
 ];

@@ -122,7 +122,7 @@ export async function kycOcr(
 /** Face verification via live camera (video). Requires OCR passed first. */
 export async function kycLivenessCheck(
   video: File,
-  cccdFaceId: string
+  cccdFaceId: string,
 ): Promise<KycFaceVerificationResult> {
   const formData = new FormData();
   formData.append("Video", video);
@@ -137,7 +137,11 @@ export async function kycLivenessCheck(
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.message ?? data.errorMessage ?? `Liveness check failed: ${res.status}`);
+    throw new Error(
+      data.message ??
+        data.errorMessage ??
+        `Liveness check failed: ${res.status}`,
+    );
   }
   return {
     isLive: data.isLive,
@@ -150,7 +154,7 @@ export async function kycLivenessCheck(
 /** Face verification via selfie upload (fallback when camera fails). Requires OCR passed first. */
 export async function kycVerifyFaceUpload(
   selfieImage: File,
-  cccdFaceId: string
+  cccdFaceId: string,
 ): Promise<KycVerifyFaceUploadResult> {
   const formData = new FormData();
   formData.append("SelfieImage", selfieImage);
@@ -165,7 +169,11 @@ export async function kycVerifyFaceUpload(
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.message ?? data.errorMessage ?? `Face verification failed: ${res.status}`);
+    throw new Error(
+      data.message ??
+        data.errorMessage ??
+        `Face verification failed: ${res.status}`,
+    );
   }
   return {
     matchScore: typeof data.matchScore === "number" ? data.matchScore : 0,
