@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace CAR.Application.Dtos
 {
@@ -15,5 +16,11 @@ namespace CAR.Application.Dtos
         public decimal Price { get; set; }
 
         public string? ContactPhone { get; set; }
+
+        /// <summary>Optional list of image URLs for the post.</summary>
+        public List<string>? ImageUrls { get; set; }
+
+        /// <summary>Optional list of video URLs for the post.</summary>
+        public List<string>? VideoUrls { get; set; }
     }
 }

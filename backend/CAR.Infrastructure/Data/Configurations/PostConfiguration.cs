@@ -82,6 +82,16 @@ namespace CAR.Infrastructure.Data.Configurations
                 .WithMany()
                 .HasForeignKey(x => x.LocationId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasMany(p => p.Images)
+                .WithOne()
+                .HasForeignKey(i => i.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(p => p.Videos)
+                .WithOne()
+                .HasForeignKey(v => v.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

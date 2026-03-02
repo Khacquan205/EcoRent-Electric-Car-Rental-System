@@ -202,9 +202,28 @@ export default function CarsPage() {
             {items.length > 0 ? (
               <>
                 <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {items.map((post) => (
-                    <CarPostCard key={post.id} post={post} />
-                  ))}
+                  {items.map((post) => {
+                    const anyPost = post as any;
+                    const imageUrl =
+                      anyPost.thumbnailUrl ??
+                      anyPost.imageUrl ??
+                      (Array.isArray(anyPost.images) && anyPost.images.length > 0
+                        ? anyPost.images[0]
+                        : null);
+                    const locationText =
+                      anyPost.locationName ??
+                      anyPost.location ??
+                      null;
+
+                    return (
+                      <CarPostCard
+                        key={post.id}
+                        post={post}
+                        imageUrl={imageUrl}
+                        location={locationText}
+                      />
+                    );
+                  })}
                 </div>
 
                 {totalPages > 1 && (

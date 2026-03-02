@@ -113,7 +113,6 @@ export async function kycOcr(
     cccdNumber: data.cccdNumber ?? "",
     cccdFaceId: data.cccdFaceId ?? null,
     address: data.address ?? null,
-    cccdFaceId: data.cccdFaceId ?? null,
     frontImageUrl: data.frontImageUrl ?? null,
     backImageUrl: data.backImageUrl ?? null,
     errorMessage: data.errorMessage ?? null,
