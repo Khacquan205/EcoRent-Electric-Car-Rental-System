@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CAR.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260228133615_RemovePackageIdClean")]
-    partial class RemovePackageIdClean
+    [Migration("20260301175621_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -213,47 +213,63 @@ namespace CAR.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BackDocumentUrl")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("back_document_url");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("FrontDocumentUrl")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("front_document_url");
 
                     b.Property<int>("OwnerProfileId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("owner_profile_id");
 
                     b.Property<string>("RejectReason")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("reject_reason");
 
                     b.Property<decimal>("Score")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("score");
 
                     b.Property<string>("SelfieUrl")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("selfie_url");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("status");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp")
+                        .HasColumnName("updated_at");
 
                     b.Property<DateTime?>("VerifiedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp")
+                        .HasColumnName("verified_at");
 
                     b.HasKey("Id");
 
                     b.HasIndex("OwnerProfileId")
                         .IsUnique();
 
-                    b.ToTable("MIdentityVerification");
+                    b.ToTable("m_identity_verification", (string)null);
                 });
 
             modelBuilder.Entity("CAR.Domain.Entities.MKyc", b =>
