@@ -45,7 +45,6 @@ namespace CAR.Controllers
         /// Get a specific post by ID
         /// </summary>
         [HttpGet("{postId}")]
-        [Authorize(Roles = "OWNER")]
         public async Task<IActionResult> GetPostDetail(int postId)
         {
             var userId = GetUserId();
