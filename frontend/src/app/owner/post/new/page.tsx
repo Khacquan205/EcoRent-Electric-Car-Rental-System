@@ -290,7 +290,7 @@ export default function NewPostPage() {
             ? "Bạn cần có gói đang hoạt động. Mua gói trước khi đăng tin."
             : "Bạn đã hết lượt đăng trong gói hiện tại."}
           <Link
-            href="/owner/packages"
+            href="/owner/owner-packages"
             className="mt-2 block font-medium text-amber-900 underline"
           >
             Mua gói →

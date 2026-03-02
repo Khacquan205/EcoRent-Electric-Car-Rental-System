@@ -16,6 +16,31 @@ export interface PostListItemDto {
   createdAt: string;
   expiredAt?: string | null;
   categoryName?: string | null;
+  images?: string[] | null;
+  videos?: string[] | null;
+}
+
+/** Full post detail from GET /api/Post/:id */
+export interface PostDetailDto {
+  id: number;
+  categoryId: number;
+  categoryName: string;
+  locationId?: number | null;
+  locationName?: string | null;
+  title: string;
+  description?: string | null;
+  price: number;
+  contactPhone?: string | null;
+  status: number;
+  statusName: string;
+  rejectReason?: string | null;
+  priorityLevel: number;
+  createdAt: string;
+  updatedAt?: string | null;
+  expiredAt?: string | null;
+  images?: string[] | null;
+  videos?: string[] | null;
+  ownerName?: string | null;
 }
 
 /** Paginated result from GET /api/posts */
@@ -25,3 +50,4 @@ export interface PagedResultDto<T> {
   totalPages: number;
   currentPage: number;
 }
+

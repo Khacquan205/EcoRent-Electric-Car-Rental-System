@@ -33,12 +33,15 @@ export default function OwnerPackagesPage() {
   );
   const lockedPackageIds = activeSub ? [activeSub.packageId] : [];
   const hasActiveSubscription = !!activeSub;
+  // If all post slots are used up, unlock the package grid so the owner can buy a new plan
+  const postsExhausted =
+    hasActiveSubscription && activeSub!.remainingPosts === 0;
 
   async function handleBuy(pkg: OwnerPackage) {
     if (lockedPackageIds.includes(pkg.id)) return;
-    if (hasActiveSubscription) {
+    if (hasActiveSubscription && !postsExhausted) {
       setError(
-        "Bạn đang có gói active. Chỉ có thể mua gói khác khi gói hiện tại hết hạn.",
+        "Bạn vẫn còn tin đăng. Chỉ có thể mua gói mới khi dùng hết số tin hiện tại.",
       );
       return;
     }
@@ -88,7 +91,7 @@ export default function OwnerPackagesPage() {
         </div>
 
         {/* Active subscription banner */}
-        {hasActiveSubscription && (
+        {hasActiveSubscription && !postsExhausted && (
           <div className="mx-auto mt-8 max-w-2xl rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
             <div className="flex items-center gap-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
@@ -120,6 +123,38 @@ export default function OwnerPackagesPage() {
           </div>
         )}
 
+        {/* Posts-exhausted banner — prompt to buy a new plan */}
+        {postsExhausted && (
+          <div className="mx-auto mt-8 max-w-2xl rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                <Zap className="h-4 w-4 text-amber-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-amber-800">
+                  Bạn đã dùng hết{" "}
+                  <span className="text-amber-900">
+                    {activeSub?.totalPosts} tin đăng
+                  </span>{" "}
+                  của gói{" "}
+                  <span className="text-amber-900">
+                    {activeSub?.packageName}
+                  </span>
+                </p>
+                <p className="text-xs text-amber-600">
+                  Chọn một gói bên dưới để tiếp tục đăng tin mới.
+                </p>
+              </div>
+              <Link
+                href="/owner/subscription"
+                className="shrink-0 rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-800 transition-colors duration-200 hover:bg-amber-200"
+              >
+                Xem lịch sử
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Error */}
         {error && (
           <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -132,7 +167,9 @@ export default function OwnerPackagesPage() {
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {packages.map((pkg) => {
               const isCurrentPackage = lockedPackageIds.includes(pkg.id);
-              const isLocked = isCurrentPackage || hasActiveSubscription;
+              // Lock the current package card; only lock others when sub still has remaining posts
+              const isLocked =
+                isCurrentPackage || (hasActiveSubscription && !postsExhausted);
               const isRecommended = pkg.id === recommendedId;
 
               return (
@@ -166,10 +203,10 @@ export default function OwnerPackagesPage() {
                     </div>
                   )}
 
-                  {/* Locked by another active sub */}
+                  {/* Locked: active sub still has remaining posts */}
                   {isLocked && !isCurrentPackage && (
                     <div className="mb-4 text-xs text-slate-400">
-                      Có thể mua khi gói hiện tại hết hạn
+                      Có thể mua khi dùng hết tin hoặc gói hết hạn
                     </div>
                   )}
 
@@ -249,8 +286,8 @@ export default function OwnerPackagesPage() {
                       ? "Đang chuyển VNPay..."
                       : isCurrentPackage
                         ? "Gói hiện tại"
-                        : hasActiveSubscription
-                          ? "Hết hạn mới mua"
+                        : hasActiveSubscription && !postsExhausted
+                          ? "Hết tin mới mua được"
                           : "Thanh toán VNPay"}
                   </button>
                 </div>
