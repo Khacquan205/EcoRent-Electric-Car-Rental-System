@@ -7,7 +7,6 @@ const RentalDeals = () => {
   return (
     <section className="bg-white py-16 lg:py-24">
       <div className="container mx-auto px-6">
-
         {/* Section header — reference-style: eyebrow + bold title inline */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -19,7 +18,7 @@ const RentalDeals = () => {
             </h2>
           </div>
           <Link
-            href="/cars"
+            href="/posts"
             className="flex shrink-0 items-center gap-1.5 text-sm font-semibold text-[#1572D3] transition-colors hover:text-[#1260B0]"
           >
             Xem tất cả

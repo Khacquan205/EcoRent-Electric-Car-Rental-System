@@ -25,10 +25,8 @@ const HeroSection = () => {
 
       <div className="container mx-auto px-6 py-14 lg:px-12 lg:py-20 xl:px-20">
         <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-10">
-
           {/* ── Left column ── */}
           <div className="max-w-xl">
-
             {/* Eyebrow */}
             <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-[#1572D3]">
               <Zap className="h-4 w-4" />
@@ -46,13 +44,13 @@ const HeroSection = () => {
 
             {/* Subtitle */}
             <p className="mt-5 max-w-md text-base leading-relaxed text-slate-500">
-              Cộng đồng cho thuê xe điện P2P đầu tiên tại Việt Nam — không trung gian, không định giá cứng, chỉ có kết nối thực.
+              Cộng đồng cho thuê xe điện P2P đầu tiên tại Việt Nam — không trung
+              gian, không định giá cứng, chỉ có kết nối thực.
             </p>
 
             {/* Search bar */}
             <div className="mt-8 overflow-hidden rounded-2xl bg-white shadow-[0_2px_20px_rgba(21,114,211,0.10)] ring-1 ring-slate-100">
               <div className="flex flex-col divide-y divide-slate-100 sm:flex-row sm:divide-x sm:divide-y-0">
-
                 <div className="flex flex-1 items-center gap-3 px-5 py-4">
                   <MapPin className="h-4 w-4 shrink-0 text-[#1572D3]" />
                   <div className="min-w-0 flex-1">
@@ -82,7 +80,7 @@ const HeroSection = () => {
                 </div>
 
                 <div className="p-2">
-                  <Link href="/cars" className="block h-full">
+                  <Link href="/posts" className="block h-full">
                     <button className="flex h-full w-full items-center justify-center gap-2 rounded-xl bg-[#1572D3] px-7 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#1260B0] hover:shadow-md active:scale-[0.98] sm:w-auto">
                       <Search className="h-4 w-4" />
                       Tìm xe
@@ -126,7 +124,6 @@ const HeroSection = () => {
 
           {/* ── Right column — prominent EV visual ── */}
           <div className="relative flex items-center justify-center lg:justify-end">
-
             {/* Soft backdrop glow */}
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="h-[400px] w-[400px] rounded-full bg-sky-100/60 blur-3xl" />
@@ -155,7 +152,6 @@ const HeroSection = () => {
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </section>

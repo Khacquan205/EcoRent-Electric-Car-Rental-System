@@ -21,7 +21,8 @@ function formatPrice(price: number): string {
     : `$${price.toLocaleString("en-US")}`;
 }
 
-const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=250&fit=crop";
+const PLACEHOLDER_IMAGE =
+  "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=250&fit=crop";
 
 export default function CarPostCard({
   post,
@@ -38,7 +39,7 @@ export default function CarPostCard({
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:border-primary/20 hover:shadow-xl">
-      <Link href={`/cars/${post.id}`} className="block flex-1">
+      <Link href={`/posts/${post.id}`} className="block flex-1">
         <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-50">
           <Image
             src={imgSrc}

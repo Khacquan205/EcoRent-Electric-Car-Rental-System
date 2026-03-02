@@ -1,5 +1,5 @@
 import { apiFetch } from "./client";
-import type { PostListItemDto } from "@/types/api";
+import type { PagedResultDto, PostListItemDto } from "@/types/api";
 
 export interface CreatePostRequest {
   categoryId: number;
@@ -41,7 +41,7 @@ export interface PostDetail {
 }
 
 export async function createPost(
-  body: CreatePostRequest
+  body: CreatePostRequest,
 ): Promise<CreatePostResponse> {
   return apiFetch<CreatePostResponse>("/api/Post/create-post", {
     method: "POST",
@@ -50,14 +50,28 @@ export async function createPost(
 }
 
 export async function getMyPosts(): Promise<PostListItemDto[]> {
-  const result = await apiFetch<PostListItemDto[] | { items?: PostListItemDto[] }>(
-    "/api/Post/my-posts",
-    { method: "GET" }
-  );
+  const result = await apiFetch<
+    PostListItemDto[] | { items?: PostListItemDto[] }
+  >("/api/Post/my-posts", { method: "GET" });
   if (Array.isArray(result)) return result;
   return (result as { items?: PostListItemDto[] }).items ?? [];
 }
 
 export async function getPostDetail(postId: number): Promise<PostDetail> {
   return apiFetch<PostDetail>(`/api/Post/${postId}`, { method: "GET" });
+}
+
+export async function getPublicPosts(
+  params: {
+    page?: number;
+    pageSize?: number;
+  } = {},
+): Promise<PagedResultDto<PostListItemDto>> {
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 12));
+  const search = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+  });
+  return apiFetch<PagedResultDto<PostListItemDto>>(`/api/posts?${search}`);
 }

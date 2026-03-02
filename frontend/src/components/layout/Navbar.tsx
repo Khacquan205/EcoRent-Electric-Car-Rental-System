@@ -17,14 +17,14 @@ import { useAuthSession } from "@/components/providers";
 
 const defaultNavLinks = [
   { href: "/", label: "Trang chủ" },
-  { href: "/cars", label: "Xe cho thuê" },
+  { href: "/posts", label: "Xe cho thuê" },
   { href: "/become-owner", label: "Trở thành chủ xe" },
   { href: "/how-it-works", label: "Dịch vụ của chúng tôi" },
 ];
 
 const ownerNavLinks = [
   { href: "/", label: "Trang chủ" },
-  { href: "/cars", label: "Xe cho thuê" },
+  { href: "/posts", label: "Xe cho thuê" },
   { href: "/owner/subscription", label: "Gói của tôi" },
   { href: "/owner/owner-packages", label: "Mua gói" },
   { href: "/owner/post/new", label: "Đăng xe" },

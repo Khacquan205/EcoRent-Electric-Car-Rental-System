@@ -75,7 +75,7 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
       <div className="container mx-auto px-6 py-8">
         {/* Back Button */}
         <Link
-          href="/cars"
+          href="/posts"
           className="inline-flex items-center gap-2 text-sm font-medium text-[#747474] transition-colors hover:text-[#1572D3]"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -451,7 +451,7 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
               .map((similarCar) => (
                 <Link
                   key={similarCar.id}
-                  href={`/cars/${similarCar.id}`}
+                  href={`/posts/${similarCar.id}`}
                   className="group overflow-hidden rounded-xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
                 >
                   <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg bg-[#F5F5F5]">

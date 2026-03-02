@@ -244,10 +244,10 @@ export default function NewPostPage() {
             hypothesisId: "H5",
             location: "owner/post/new/page.tsx:handleSubmit",
             message: "Calling createPost",
-          data: {
-            hasImageUrlInPayload: !!payload.imageUrl,
-            videoUrlCount: uploadedVideoUrls.length,
-          },
+            data: {
+              hasImageUrlInPayload: !!payload.imageUrl,
+              videoUrlCount: uploadedVideoUrls.length,
+            },
             timestamp: Date.now(),
           }),
         },
@@ -488,7 +488,7 @@ export default function NewPostPage() {
             Hủy
           </Link>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

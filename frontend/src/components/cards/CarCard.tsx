@@ -15,9 +15,8 @@ const CarCard = ({ car }: CarCardProps) => {
 
   return (
     <div className="group flex flex-col rounded-2xl border border-slate-100 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-[#1572D3]/25 hover:shadow-xl">
-
       {/* Image area — reference-style top image */}
-      <Link href={`/cars/${car.id}`} className="block">
+      <Link href={`/posts/${car.id}`} className="block">
         <div className="relative aspect-[16/10] w-full overflow-hidden rounded-t-2xl bg-slate-50">
           <Image
             src={car.image}
@@ -31,7 +30,6 @@ const CarCard = ({ car }: CarCardProps) => {
 
       {/* Content */}
       <div className="flex flex-1 flex-col p-4">
-
         {/* Brand + rating row */}
         <div className="flex items-center justify-between">
           <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-[#1572D3]">
@@ -42,14 +40,12 @@ const CarCard = ({ car }: CarCardProps) => {
             <span className="text-xs font-semibold text-slate-700">
               {car.rating}
             </span>
-            <span className="text-[11px] text-slate-400">
-              ({car.reviews})
-            </span>
+            <span className="text-[11px] text-slate-400">({car.reviews})</span>
           </div>
         </div>
 
         {/* Model name */}
-        <Link href={`/cars/${car.id}`}>
+        <Link href={`/posts/${car.id}`}>
           <h3 className="mt-2 text-[15px] font-bold text-slate-900 transition-colors hover:text-[#1572D3]">
             {car.name}
           </h3>
@@ -79,7 +75,7 @@ const CarCard = ({ car }: CarCardProps) => {
             </p>
           </div>
 
-          <Link href={`/cars/${car.id}`}>
+          <Link href={`/posts/${car.id}`}>
             <button className="rounded-full bg-[#1572D3] px-5 py-2 text-xs font-bold text-white transition-all duration-200 hover:bg-[#1260B0] hover:shadow-md group-hover:shadow-[0_0_0_3px_rgba(21,114,211,0.15)]">
               Xem tin
             </button>
