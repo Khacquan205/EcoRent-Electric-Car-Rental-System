@@ -78,33 +78,36 @@ export default function OwnerPackagesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
-      <div className="mx-auto max-w-7xl px-6 py-8">
-        {/* Page Header */}
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold text-slate-900">
-            Mua gói đăng tin
-          </h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Chọn gói phù hợp với nhu cầu của bạn. Thanh toán an toàn qua VNPay.
-          </p>
+    <div className="min-h-screen bg-linear-to-b from-slate-50 to-white">
+      {/* ── Page header ─────────────────────────────────────────── */}
+      <div className="border-b border-slate-100 bg-white px-6 py-12 text-center shadow-sm">
+        <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-sm">
+          <Crown className="h-7 w-7 text-primary" />
         </div>
+        <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900">
+          Mua gói đăng tin
+        </h1>
+        <p className="mt-2 text-base text-slate-500">
+          Chọn gói phù hợp với nhu cầu của bạn. Thanh toán an toàn qua VNPay.
+        </p>
+      </div>
 
+      <div className="mx-auto max-w-5xl px-6 py-10">
         {/* Active subscription banner */}
         {hasActiveSubscription && !postsExhausted && (
-          <div className="mx-auto mt-8 max-w-2xl rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
-                <Check className="h-4 w-4 text-emerald-600" />
+          <div className="mb-8 rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100">
+                <Check className="h-5 w-5 text-emerald-600" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-emerald-800">
+                <p className="font-semibold text-emerald-800">
                   Đang sử dụng:{" "}
                   <span className="text-emerald-900">
                     {activeSub?.packageName}
                   </span>
                 </p>
-                <p className="text-xs text-emerald-600">
+                <p className="mt-0.5 text-sm text-emerald-600">
                   Hết hạn:{" "}
                   {activeSub &&
                     new Date(activeSub.endDate).toLocaleDateString("vi-VN")}
@@ -115,7 +118,7 @@ export default function OwnerPackagesPage() {
               </div>
               <Link
                 href="/owner/subscription"
-                className="shrink-0 rounded-lg bg-emerald-100 px-3 py-1.5 text-xs font-medium text-emerald-800 transition-colors duration-200 hover:bg-emerald-200"
+                className="shrink-0 rounded-xl bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-200"
               >
                 Xem chi tiết
               </Link>
@@ -123,15 +126,15 @@ export default function OwnerPackagesPage() {
           </div>
         )}
 
-        {/* Posts-exhausted banner — prompt to buy a new plan */}
+        {/* Posts-exhausted banner */}
         {postsExhausted && (
-          <div className="mx-auto mt-8 max-w-2xl rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100">
-                <Zap className="h-4 w-4 text-amber-600" />
+          <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-6 py-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+                <Zap className="h-5 w-5 text-amber-600" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-amber-800">
+                <p className="font-semibold text-amber-800">
                   Bạn đã dùng hết{" "}
                   <span className="text-amber-900">
                     {activeSub?.totalPosts} tin đăng
@@ -141,13 +144,13 @@ export default function OwnerPackagesPage() {
                     {activeSub?.packageName}
                   </span>
                 </p>
-                <p className="text-xs text-amber-600">
+                <p className="mt-0.5 text-sm text-amber-600">
                   Chọn một gói bên dưới để tiếp tục đăng tin mới.
                 </p>
               </div>
               <Link
                 href="/owner/subscription"
-                className="shrink-0 rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-800 transition-colors duration-200 hover:bg-amber-200"
+                className="shrink-0 rounded-xl bg-amber-100 px-4 py-2 text-sm font-medium text-amber-800 transition-colors hover:bg-amber-200"
               >
                 Xem lịch sử
               </Link>
@@ -157,17 +160,16 @@ export default function OwnerPackagesPage() {
 
         {/* Error */}
         {error && (
-          <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="mb-8 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
             {error}
           </div>
         )}
 
         {/* Packages Grid */}
         {packages.length > 0 ? (
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-8 sm:grid-cols-2">
             {packages.map((pkg) => {
               const isCurrentPackage = lockedPackageIds.includes(pkg.id);
-              // Lock the current package card; only lock others when sub still has remaining posts
               const isLocked =
                 isCurrentPackage || (hasActiveSubscription && !postsExhausted);
               const isRecommended = pkg.id === recommendedId;
@@ -175,90 +177,101 @@ export default function OwnerPackagesPage() {
               return (
                 <div
                   key={pkg.id}
-                  className={`relative flex flex-col rounded-2xl border p-6 shadow-sm transition-all duration-200 ${
+                  className={`relative flex flex-col rounded-3xl border p-8 shadow-md transition-all duration-200 ${
                     isRecommended && !isLocked
-                      ? "border-primary/40 bg-white ring-2 ring-primary/20 hover:shadow-lg"
+                      ? "border-primary/40 bg-white ring-2 ring-primary/25 hover:shadow-xl"
                       : isLocked
-                        ? "border-slate-200 bg-slate-50 opacity-85"
-                        : "border-slate-200 bg-white hover:border-primary/30 hover:shadow-md"
+                        ? "border-slate-200 bg-slate-50/80 opacity-85"
+                        : "border-slate-200 bg-white hover:border-primary/30 hover:shadow-xl"
                   }`}
                 >
                   {/* Recommended badge */}
                   {isRecommended && !isLocked && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
-                        <Zap className="h-3 w-3" />
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-white shadow">
+                        <Zap className="h-3.5 w-3.5" />
                         Phổ biến nhất
                       </span>
                     </div>
                   )}
 
-                  {/* Current package badge */}
-                  {isCurrentPackage && (
-                    <div className="mb-4 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2">
-                      <Check className="h-3.5 w-3.5 text-emerald-600" />
-                      <span className="text-xs font-semibold text-emerald-700">
-                        Gói hiện tại
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Locked: active sub still has remaining posts */}
-                  {isLocked && !isCurrentPackage && (
-                    <div className="mb-4 text-xs text-slate-400">
-                      Có thể mua khi dùng hết tin hoặc gói hết hạn
-                    </div>
-                  )}
-
-                  {/* Icon */}
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                      isRecommended && !isLocked
-                        ? "bg-primary/10"
-                        : "bg-slate-100"
-                    }`}
-                  >
-                    <Crown
-                      className={`h-5 w-5 ${
+                  {/* Icon + Name row */}
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
                         isRecommended && !isLocked
-                          ? "text-primary"
-                          : "text-slate-400"
+                          ? "bg-primary/10"
+                          : "bg-slate-100"
                       }`}
-                    />
+                    >
+                      <Crown
+                        className={`h-7 w-7 ${
+                          isRecommended && !isLocked
+                            ? "text-primary"
+                            : "text-slate-400"
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900">
+                        {pkg.name}
+                      </h2>
+                      {isCurrentPackage && (
+                        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                          <Check className="h-3 w-3" />
+                          Gói hiện tại
+                        </span>
+                      )}
+                      {isLocked && !isCurrentPackage && (
+                        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-400">
+                          <Lock className="h-3 w-3" />
+                          Hết tin mới mua được
+                        </span>
+                      )}
+                    </div>
                   </div>
-
-                  {/* Name */}
-                  <h2 className="mt-4 text-xl font-semibold text-slate-900">
-                    {pkg.name}
-                  </h2>
 
                   {/* Price */}
-                  <div className="mt-2">
-                    <span className="text-3xl font-bold text-slate-900">
+                  <div className="mt-6 flex items-end gap-1.5">
+                    <span className="text-5xl font-extrabold tracking-tight text-slate-900">
                       {Number(pkg.price).toLocaleString("vi-VN")}
                     </span>
-                    <span className="ml-1 text-sm text-slate-400">₫</span>
+                    <span className="mb-1.5 text-lg font-medium text-slate-400">
+                      ₫
+                    </span>
                   </div>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Một lần thanh toán · {pkg.durationDays} ngày hiệu lực
+                  </p>
+
+                  {/* Divider */}
+                  <div className="my-6 h-px bg-slate-100" />
 
                   {/* Features */}
-                  <ul className="mt-6 flex-1 space-y-3">
-                    <li className="flex items-center gap-2.5 text-sm text-slate-600">
-                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-                        <Check className="h-3 w-3 text-emerald-600" />
+                  <ul className="flex-1 space-y-4">
+                    <li className="flex items-center gap-3 text-slate-700">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                        <Check className="h-3.5 w-3.5 text-emerald-600" />
                       </div>
-                      <span>{pkg.durationDays} ngày sử dụng</span>
+                      <span className="text-sm font-medium">
+                        {pkg.durationDays} ngày sử dụng
+                      </span>
                     </li>
-                    <li className="flex items-center gap-2.5 text-sm text-slate-600">
-                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-                        <Check className="h-3 w-3 text-emerald-600" />
+                    <li className="flex items-center gap-3 text-slate-700">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                        <Check className="h-3.5 w-3.5 text-emerald-600" />
                       </div>
-                      <span>Tối đa {pkg.maxPosts} tin đăng</span>
+                      <span className="text-sm font-medium">
+                        Tối đa {pkg.maxPosts} tin đăng
+                      </span>
                     </li>
-                    <li className="flex items-center gap-2.5 text-sm text-slate-600">
-                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-                        <Check className="h-3 w-3 text-emerald-600" />
+                    <li className="flex items-center gap-3 text-slate-700">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                        <Check className="h-3.5 w-3.5 text-emerald-600" />
                       </div>
-                      <span>Ưu tiên hiển thị cấp {pkg.priorityLevel}</span>
+                      <span className="text-sm font-medium">
+                        Ưu tiên hiển thị cấp {pkg.priorityLevel}
+                      </span>
                     </li>
                   </ul>
 
@@ -267,20 +280,20 @@ export default function OwnerPackagesPage() {
                     type="button"
                     disabled={!!payingId || isLocked}
                     onClick={() => handleBuy(pkg)}
-                    className={`mt-6 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold shadow-sm transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+                    className={`mt-8 flex w-full items-center justify-center gap-2.5 rounded-2xl py-4 text-base font-bold shadow-sm transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
                       isRecommended && !isLocked
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-md"
+                        ? "bg-primary text-white hover:bg-primary/90 hover:shadow-lg"
                         : isLocked
                           ? "bg-slate-100 text-slate-400"
-                          : "bg-slate-900 text-white hover:bg-slate-800 hover:shadow-md"
+                          : "bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg"
                     }`}
                   >
                     {payingId === pkg.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-5 w-5 animate-spin" />
                     ) : isLocked ? (
-                      <Lock className="h-4 w-4" />
+                      <Lock className="h-5 w-5" />
                     ) : (
-                      <CreditCard className="h-4 w-4" />
+                      <CreditCard className="h-5 w-5" />
                     )}
                     {payingId === pkg.id
                       ? "Đang chuyển VNPay..."
@@ -296,11 +309,11 @@ export default function OwnerPackagesPage() {
           </div>
         ) : (
           !error && (
-            <div className="mt-12 rounded-2xl border border-dashed border-slate-300 bg-white p-16 text-center shadow-sm">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
-                <Crown className="h-8 w-8 text-slate-300" />
+            <div className="mt-12 rounded-3xl border border-dashed border-slate-300 bg-white p-20 text-center shadow-sm">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-100">
+                <Crown className="h-10 w-10 text-slate-300" />
               </div>
-              <p className="mt-4 font-semibold text-slate-600">
+              <p className="mt-5 text-lg font-semibold text-slate-600">
                 Chưa có gói nào
               </p>
               <p className="mt-1 text-sm text-slate-400">
@@ -313,7 +326,7 @@ export default function OwnerPackagesPage() {
         <div className="mt-10 text-center">
           <Link
             href="/owner/subscription"
-            className="text-sm font-medium text-primary transition-colors duration-200 hover:text-primary/80 hover:underline"
+            className="text-sm font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
           >
             ← Xem gói đang dùng
           </Link>

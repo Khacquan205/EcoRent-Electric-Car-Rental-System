@@ -288,232 +288,288 @@ export default function NewPostPage() {
   }
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-10">
-      <h1 className="text-2xl font-semibold text-slate-900">
-        Đăng tin cho thuê xe
-      </h1>
-      <p className="mt-1 text-sm text-slate-600">
-        Điền thông tin xe. Tin sẽ ở trạng thái chờ duyệt; slot chỉ trừ khi được
-        duyệt.
-      </p>
-
-      {!canPost && (
-        <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          {!activeSub
-            ? "Bạn cần có gói đang hoạt động. Mua gói trước khi đăng tin."
-            : "Bạn đã hết lượt đăng trong gói hiện tại."}
-          <Link
-            href="/owner/owner-packages"
-            className="mt-2 block font-medium text-amber-900 underline"
-          >
-            Mua gói →
-          </Link>
+    <div className="min-h-screen bg-linear-to-b from-slate-50 to-white">
+      {/* Page Header */}
+      <div className="border-b border-slate-100 bg-white px-6 py-10 text-center shadow-sm">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+          <Car className="h-8 w-8 text-primary" />
         </div>
-      )}
+        <h1 className="text-3xl font-bold text-slate-900">Đăng tin cho thuê xe</h1>
+        <p className="mt-2 text-base text-slate-500">
+          Điền thông tin xe. Tin sẽ ở trạng thái chờ duyệt; slot chỉ trừ khi được duyệt.
+        </p>
+      </div>
 
-      {activeSub && (
-        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <p className="text-sm text-slate-600">
-            Số tin còn có thể đăng:{" "}
-            <strong className="text-lg text-primary">
-              {activeSub.remainingPosts}
-            </strong>
-            {" / "}
-            {activeSub.totalPosts}
-          </p>
-          {activeSub.remainingPosts === 0 && (
-            <p className="mt-1 text-xs text-amber-700">
-              Hết slot. Chỉ trừ slot khi tin được duyệt.
-            </p>
-          )}
-        </div>
-      )}
-
-      {error && (
-        <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <div className="flex items-center justify-between text-xs font-medium text-slate-600">
-            <span>Mức độ hoàn thành tin đăng</span>
-            <span>{progressPercent}%</span>
+      {/* Content */}
+      <div className="mx-auto max-w-3xl px-6 py-10 space-y-6">
+        {/* No subscription warning */}
+        {!canPost && (
+          <div className="flex gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+              <span className="text-xl">⚡</span>
+            </div>
+            <div>
+              <p className="font-semibold text-amber-900">
+                {!activeSub ? "Bạn chưa có gói hoạt động" : "Bạn đã hết lượt đăng"}
+              </p>
+              <p className="mt-0.5 text-sm text-amber-700">
+                {!activeSub
+                  ? "Mua gói trước để có thể đăng tin cho thuê xe."
+                  : "Vui lòng nâng cấp gói để tiếp tục đăng tin."}
+              </p>
+              <Link
+                href="/owner/owner-packages"
+                className="mt-2 inline-flex items-center gap-1 rounded-lg bg-amber-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-amber-600"
+              >
+                Xem gói ngay →
+              </Link>
+            </div>
           </div>
-          <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-slate-200">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
-              style={{ width: `${progressPercent}%` }}
-            />
+        )}
+
+        {/* Active subscription info */}
+        {activeSub && (
+          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
+            <div>
+              <p className="text-sm text-slate-500">Lượt đăng còn lại</p>
+              <p className="text-2xl font-bold text-primary">
+                {activeSub.remainingPosts}
+                <span className="text-base font-normal text-slate-400"> / {activeSub.totalPosts}</span>
+              </p>
+            </div>
+            {activeSub.remainingPosts === 0 && (
+              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
+                Hết slot
+              </span>
+            )}
           </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Loại xe (danh mục) *
-          </label>
-          <select
-            value={categoryId}
-            onChange={(e) => setCategoryId(Number(e.target.value))}
-            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-            required
-          >
-            <option value={0}>-- Chọn danh mục --</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        )}
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Tiêu đề *
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="VD: VinFast VF 8 cho thuê"
-            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-            required
-          />
-        </div>
+        {/* Error */}
+        {error && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Mô tả
-          </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Ảnh minh họa
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="mt-1 w-full text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
-          />
-          {uploadingImage && (
-            <p className="mt-1 text-xs text-slate-500">
-              Đang tải ảnh lên...
-            </p>
-          )}
-          {imageError && (
-            <p className="mt-1 text-xs text-red-600">{imageError}</p>
-          )}
-          {imagePreview && (
-            <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-              <img
-                src={imagePreview}
-                alt="Xem trước ảnh"
-                className="h-48 w-full object-cover"
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Progress */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between text-sm font-medium text-slate-600">
+              <span>Mức độ hoàn thành tin đăng</span>
+              <span className="font-bold text-primary">{progressPercent}%</span>
+            </div>
+            <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
+                style={{ width: `${progressPercent}%` }}
               />
             </div>
-          )}
-        </div>
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Video minh họa (có thể bỏ trống nếu không có)
-          </label>
-          <input
-            type="file"
-            accept="video/*"
-            multiple
-            onChange={handleVideoChange}
-            className="mt-1 w-full text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
-          />
-          {uploadingVideos && (
-            <p className="mt-1 text-xs text-slate-500">
-              Đang tải video lên...
-            </p>
-          )}
-          {videoError && (
-            <p className="mt-1 text-xs text-red-600">{videoError}</p>
-          )}
-          {videoPreviews.length > 0 && (
-            <ul className="mt-3 space-y-2">
-              {videoPreviews.map((src, index) => (
-                <li
-                  key={index}
-                  className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-2"
+          {/* Section 1: Basic Info */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
+            <h2 className="mb-6 text-lg font-bold text-slate-800">
+              📋 Thông tin cơ bản
+            </h2>
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">
+                  Loại xe (danh mục) *
+                </label>
+                <select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(Number(e.target.value))}
+                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  required
                 >
-                  <video
-                    src={src}
-                    className="h-20 w-32 rounded-md object-cover"
-                    controls
+                  <option value={0}>-- Chọn danh mục --</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">
+                  Tiêu đề *
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="VD: VinFast VF 8 cho thuê tại Hà Nội"
+                  className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">
+                  Mô tả
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={4}
+                  placeholder="Mô tả chi tiết về xe của bạn..."
+                  className="mt-2 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Media */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
+            <h2 className="mb-6 text-lg font-bold text-slate-800">
+              🖼️ Hình ảnh &amp; Video
+            </h2>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">
+                  Ảnh minh họa
+                </label>
+                <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
+                  <span className="text-2xl">📷</span>
+                  <span className="text-sm text-slate-600">Chọn ảnh từ thiết bị</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
                   />
-                  <span className="flex-1 truncate text-xs text-slate-700">
-                    {videoFiles[index]?.name}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+                </label>
+                {uploadingImage && (
+                  <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Đang tải ảnh lên...
+                  </p>
+                )}
+                {imageError && (
+                  <p className="mt-2 text-xs text-red-600">{imageError}</p>
+                )}
+                {imagePreview && (
+                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
+                    <img
+                      src={imagePreview}
+                      alt="Xem trước ảnh"
+                      className="h-56 w-full object-cover"
+                    />
+                  </div>
+                )}
+              </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Giá thuê (₫/ngày) *
-          </label>
-          <input
-            type="number"
-            min={0}
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-            required
-          />
-        </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">
+                  Video minh họa{" "}
+                  <span className="font-normal text-slate-400">(tùy chọn)</span>
+                </label>
+                <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
+                  <span className="text-2xl">🎥</span>
+                  <span className="text-sm text-slate-600">Chọn video từ thiết bị (nhiều file)</span>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    multiple
+                    onChange={handleVideoChange}
+                    className="hidden"
+                  />
+                </label>
+                {uploadingVideos && (
+                  <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Đang tải video lên...
+                  </p>
+                )}
+                {videoError && (
+                  <p className="mt-2 text-xs text-red-600">{videoError}</p>
+                )}
+                {videoPreviews.length > 0 && (
+                  <ul className="mt-4 space-y-3">
+                    {videoPreviews.map((src, index) => (
+                      <li
+                        key={index}
+                        className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-3"
+                      >
+                        <video
+                          src={src}
+                          className="h-20 w-36 rounded-xl object-cover"
+                          controls
+                        />
+                        <span className="flex-1 truncate text-sm text-slate-700">
+                          {videoFiles[index]?.name}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700">
-            Số điện thoại liên hệ
-          </label>
-          <input
-            type="tel"
-            value={contactPhone}
-            onChange={(e) => setContactPhone(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
+          {/* Section 3: Pricing & Contact */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
+            <h2 className="mb-6 text-lg font-bold text-slate-800">
+              💰 Giá &amp; Liên hệ
+            </h2>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">
+                  Giá thuê (₫/ngày) *
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="VD: 800000"
+                  className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">
+                  Số điện thoại liên hệ
+                </label>
+                <input
+                  type="tel"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  placeholder="VD: 0901234567"
+                  className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+          </div>
 
-        <div className="flex gap-3 pt-4">
-          <button
-            type="submit"
-            disabled={
-              !canPost ||
-              submitting ||
-              uploadingImage ||
-              (activeSub?.remainingPosts ?? 0) === 0
-            }
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {submitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Car className="h-4 w-4" />
-            )}
-            {submitting ? "Đang đăng..." : "Đăng tin"}
-          </button>
-          <Link
-            href="/owner/posts"
-            className="rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
-            Hủy
-          </Link>
-        </div>
-      </form>
+          {/* Submit */}
+          <div className="flex gap-4 pb-10">
+            <button
+              type="submit"
+              disabled={
+                !canPost ||
+                submitting ||
+                uploadingImage ||
+                (activeSub?.remainingPosts ?? 0) === 0
+              }
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-bold text-white shadow-md transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {submitting ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Car className="h-5 w-5" />
+              )}
+              {submitting ? "Đang đăng tin..." : "Đăng tin ngay"}
+            </button>
+            <Link
+              href="/owner/posts"
+              className="rounded-2xl border border-slate-200 bg-white px-8 py-4 text-base font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Hủy
+            </Link>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

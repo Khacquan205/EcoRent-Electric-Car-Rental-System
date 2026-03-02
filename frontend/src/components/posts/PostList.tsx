@@ -30,7 +30,7 @@ export default function PostList({
 
   if (loading) {
     return (
-      <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: pageSize > 8 ? 8 : pageSize }).map((_, i) => (
           <PostCardSkeleton key={i} />
         ))}
@@ -69,10 +69,19 @@ export default function PostList({
         bài đăng
       </p>
 
-      {/* Grid — PostCard handles its own stagger via the `index` prop */}
-      <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {/* Grid */}
+      <div className="mt-4 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
         {items.map((post, index) => (
-          <PostCard key={post.id} post={post} index={index} />
+          <div
+            key={post.id}
+            className="animate-in fade-in slide-in-from-bottom-3"
+            style={{
+              animationDelay: `${index * 40}ms`,
+              animationFillMode: "both",
+            }}
+          >
+            <PostCard post={post} />
+          </div>
         ))}
       </div>
 
