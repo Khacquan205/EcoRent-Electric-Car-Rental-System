@@ -294,9 +294,12 @@ export default function NewPostPage() {
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
           <Car className="h-8 w-8 text-primary" />
         </div>
-        <h1 className="text-3xl font-bold text-slate-900">Đăng tin cho thuê xe</h1>
+        <h1 className="text-3xl font-bold text-slate-900">
+          Đăng tin cho thuê xe
+        </h1>
         <p className="mt-2 text-base text-slate-500">
-          Điền thông tin xe. Tin sẽ ở trạng thái chờ duyệt; slot chỉ trừ khi được duyệt.
+          Điền thông tin xe. Tin sẽ ở trạng thái chờ duyệt; slot chỉ trừ khi
+          được duyệt.
         </p>
       </div>
 
@@ -310,7 +313,9 @@ export default function NewPostPage() {
             </div>
             <div>
               <p className="font-semibold text-amber-900">
-                {!activeSub ? "Bạn chưa có gói hoạt động" : "Bạn đã hết lượt đăng"}
+                {!activeSub
+                  ? "Bạn chưa có gói hoạt động"
+                  : "Bạn đã hết lượt đăng"}
               </p>
               <p className="mt-0.5 text-sm text-amber-700">
                 {!activeSub
@@ -334,7 +339,10 @@ export default function NewPostPage() {
               <p className="text-sm text-slate-500">Lượt đăng còn lại</p>
               <p className="text-2xl font-bold text-primary">
                 {activeSub.remainingPosts}
-                <span className="text-base font-normal text-slate-400"> / {activeSub.totalPosts}</span>
+                <span className="text-base font-normal text-slate-400">
+                  {" "}
+                  / {activeSub.totalPosts}
+                </span>
               </p>
             </div>
             {activeSub.remainingPosts === 0 && (
@@ -433,7 +441,9 @@ export default function NewPostPage() {
                 </label>
                 <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
                   <span className="text-2xl">📷</span>
-                  <span className="text-sm text-slate-600">Chọn ảnh từ thiết bị</span>
+                  <span className="text-sm text-slate-600">
+                    Chọn ảnh từ thiết bị
+                  </span>
                   <input
                     type="file"
                     accept="image/*"
@@ -443,7 +453,8 @@ export default function NewPostPage() {
                 </label>
                 {uploadingImage && (
                   <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Đang tải ảnh lên...
+                    <Loader2 className="h-3 w-3 animate-spin" /> Đang tải ảnh
+                    lên...
                   </p>
                 )}
                 {imageError && (
@@ -467,7 +478,9 @@ export default function NewPostPage() {
                 </label>
                 <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
                   <span className="text-2xl">🎥</span>
-                  <span className="text-sm text-slate-600">Chọn video từ thiết bị (nhiều file)</span>
+                  <span className="text-sm text-slate-600">
+                    Chọn video từ thiết bị (nhiều file)
+                  </span>
                   <input
                     type="file"
                     accept="video/*"
@@ -478,7 +491,8 @@ export default function NewPostPage() {
                 </label>
                 {uploadingVideos && (
                   <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Đang tải video lên...
+                    <Loader2 className="h-3 w-3 animate-spin" /> Đang tải video
+                    lên...
                   </p>
                 )}
                 {videoError && (
