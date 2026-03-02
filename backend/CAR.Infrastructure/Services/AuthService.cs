@@ -195,12 +195,11 @@ namespace CAR.Infrastructure.Services
                 };
 
                 await _customerProfileRepository.CreateCustomerProfileAsync(customerProfile);
-                await _unitOfWork.SaveChangesAsync();
 
                 // Update authentication - mark as active and OTP used
                 await _authRepository.UpdateOtpStatusAsync(auth.Id, true, false);
 
-                // Commit transaction
+                // Commit transaction (SaveChanges runs inside retry strategy)
                 await _unitOfWork.CommitAsync();
 
                 var accessToken = _jwtService.GenerateAccessToken(user);

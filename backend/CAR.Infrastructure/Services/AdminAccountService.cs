@@ -90,7 +90,6 @@ namespace CAR.Infrastructure.Services
                     _staffProfileRepository.Update(staffProfile);
                 }
 
-                await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitAsync();
 
                 return new StaffResponseDto
