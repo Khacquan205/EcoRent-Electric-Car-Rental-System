@@ -13,6 +13,8 @@ namespace CAR.Application.Dtos
         public DateTime CreatedAt { get; set; }
         public DateTime? ExpiredAt { get; set; }
         public string? CategoryName { get; set; }
+        public List<string> Images { get; set; } = new List<string>();
+        public List<string> Videos { get; set; } = new List<string>();
     }
 
     public class PostDetailDto

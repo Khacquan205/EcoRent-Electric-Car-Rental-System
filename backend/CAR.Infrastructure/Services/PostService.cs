@@ -91,13 +91,24 @@ namespace CAR.Infrastructure.Services
                 currentTime,
                 activeSubscription.EndDate);
 
+            // Collect image URLs from both ImageUrls (list) and ImageUrl (single)
+            var imageUrls = new List<string>();
             if (request.ImageUrls != null && request.ImageUrls.Count > 0)
             {
-                for (var i = 0; i < request.ImageUrls.Count; i++)
+                imageUrls.AddRange(request.ImageUrls.Where(u => !string.IsNullOrWhiteSpace(u)));
+            }
+            if (!string.IsNullOrWhiteSpace(request.ImageUrl))
+            {
+                imageUrls.Add(request.ImageUrl);
+            }
+
+            if (imageUrls.Count > 0)
+            {
+                for (var i = 0; i < imageUrls.Count; i++)
                 {
                     post.Images.Add(new TPostImage
                     {
-                        ImageUrl = request.ImageUrls[i],
+                        ImageUrl = imageUrls[i],
                         SortOrder = i,
                         CreatedAt = currentTime
                     });
@@ -159,17 +170,14 @@ namespace CAR.Infrastructure.Services
             }).ToList();
         }
 
-        public async Task<PostDetailDto> GetPostByIdAsync(int postId, int userId)
+        public async Task<PostDetailDto> GetPostByIdAsync(int postId)
         {
-            var owner = await _ownerProfileRepository.GetByUserIdAsync(userId);
-            if (owner == null) throw new UserFriendlyException(403, "NOT_OWNER", "User is not an owner");
-
             var post = await _postRepository.Query()
                 .Include(p => p.Category)
                 .Include(p => p.Location)
                 .Include(p => p.Images.OrderBy(i => i.SortOrder))
                 .Include(p => p.Videos)
-                .FirstOrDefaultAsync(p => p.Id == postId && p.OwnerId == owner.Id);
+                .FirstOrDefaultAsync(p => p.Id == postId);
 
             if (post == null) throw new UserFriendlyException(404, "POST_NOT_FOUND", "Post not found or access denied");
 
@@ -260,6 +268,8 @@ namespace CAR.Infrastructure.Services
 
             var query = _postRepository.Query()
                 .Include(p => p.Category)
+                .Include(p => p.Images.OrderBy(i => i.SortOrder))
+                .Include(p => p.Videos)
                 .Where(p => p.Status == (short)PostStatus.Approved)
                 .OrderByDescending(p => p.CreatedAt);
 
@@ -277,7 +287,14 @@ namespace CAR.Infrastructure.Services
                     p.Status,
                     p.CreatedAt,
                     p.ExpiredAt,
-                    CategoryName = p.Category.Name
+                    CategoryName = p.Category.Name,
+                    Images = p.Images
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => i.ImageUrl)
+                        .ToList(),
+                    Videos = p.Videos
+                        .Select(v => v.VideoUrl)
+                        .ToList()
                 })
                 .ToListAsync();
 
@@ -290,7 +307,9 @@ namespace CAR.Infrastructure.Services
                 StatusName = Enum.GetName(typeof(PostStatus), p.Status) ?? p.Status.ToString(),
                 CreatedAt = p.CreatedAt,
                 ExpiredAt = p.ExpiredAt,
-                CategoryName = p.CategoryName
+                CategoryName = p.CategoryName,
+                Images = p.Images,
+                Videos = p.Videos
             }).ToList();
 
             return new PagedResultDto<PostListItemDto>

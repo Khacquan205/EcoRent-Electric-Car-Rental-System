@@ -56,6 +56,19 @@ export default function NewPostPage() {
   );
   const canPost = activeSub && activeSub.remainingPosts > 0;
 
+  const totalRequiredFields = 6;
+  const completedRequiredFields = [
+    categoryId > 0,
+    title.trim().length > 0,
+    description.trim().length > 0,
+    !!imageUrl || !!imagePreview,
+    price.trim().length > 0,
+    contactPhone.trim().length > 0,
+  ].filter(Boolean).length;
+  const progressPercent = Math.round(
+    (completedRequiredFields / totalRequiredFields) * 100,
+  );
+
   async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     setImageError(null);
@@ -323,6 +336,18 @@ export default function NewPostPage() {
       )}
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <div className="flex items-center justify-between text-xs font-medium text-slate-600">
+            <span>Mức độ hoàn thành tin đăng</span>
+            <span>{progressPercent}%</span>
+          </div>
+          <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-slate-200">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
         <div>
           <label className="block text-sm font-medium text-slate-700">
             Loại xe (danh mục) *
@@ -380,7 +405,7 @@ export default function NewPostPage() {
           />
           {uploadingImage && (
             <p className="mt-1 text-xs text-slate-500">
-              Đang tải ảnh lên Cloudinary...
+              Đang tải ảnh lên...
             </p>
           )}
           {imageError && (
@@ -399,7 +424,7 @@ export default function NewPostPage() {
 
         <div>
           <label className="block text-sm font-medium text-slate-700">
-            Video minh họa
+            Video minh họa (có thể bỏ trống nếu không có)
           </label>
           <input
             type="file"
@@ -410,7 +435,7 @@ export default function NewPostPage() {
           />
           {uploadingVideos && (
             <p className="mt-1 text-xs text-slate-500">
-              Đang tải video lên Cloudinary...
+              Đang tải video lên...
             </p>
           )}
           {videoError && (

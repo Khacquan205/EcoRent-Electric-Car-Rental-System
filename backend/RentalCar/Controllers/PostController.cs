@@ -45,10 +45,10 @@ namespace CAR.Controllers
         /// Get a specific post by ID
         /// </summary>
         [HttpGet("{postId}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetPostDetail(int postId)
         {
-            var userId = GetUserId();
-            var result = await _postService.GetPostByIdAsync(postId, userId);
+            var result = await _postService.GetPostByIdAsync(postId);
             return Ok(result);
         }
 
