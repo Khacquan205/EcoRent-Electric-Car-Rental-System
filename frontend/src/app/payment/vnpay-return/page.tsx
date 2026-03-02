@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { verifyVnPayReturn, type PaymentReturnResult } from "@/services/payment";
 import { CheckCircle2, XCircle } from "lucide-react";
 
-export default function VnPayReturnPage() {
+function VnPayReturnContent() {
   const searchParams = useSearchParams();
   const [result, setResult] = useState<PaymentReturnResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -100,5 +100,19 @@ export default function VnPayReturnPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VnPayReturnPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <p className="text-muted-foreground">Đang xác thực thanh toán...</p>
+        </div>
+      }
+    >
+      <VnPayReturnContent />
+    </Suspense>
   );
 }
