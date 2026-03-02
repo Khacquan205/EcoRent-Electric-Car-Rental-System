@@ -91,6 +91,31 @@ namespace CAR.Infrastructure.Services
                 currentTime,
                 activeSubscription.EndDate);
 
+            if (request.ImageUrls != null && request.ImageUrls.Count > 0)
+            {
+                for (var i = 0; i < request.ImageUrls.Count; i++)
+                {
+                    post.Images.Add(new TPostImage
+                    {
+                        ImageUrl = request.ImageUrls[i],
+                        SortOrder = i,
+                        CreatedAt = currentTime
+                    });
+                }
+            }
+
+            if (request.VideoUrls != null && request.VideoUrls.Count > 0)
+            {
+                foreach (var url in request.VideoUrls)
+                {
+                    post.Videos.Add(new TPostVideo
+                    {
+                        VideoUrl = url,
+                        CreatedAt = currentTime
+                    });
+                }
+            }
+
             // Do NOT deduct slot here – deduct only when admin approves (see PostModerationService.ApprovePostAsync)
             await _unitOfWork.SaveChangesAsync();
 
@@ -142,6 +167,8 @@ namespace CAR.Infrastructure.Services
             var post = await _postRepository.Query()
                 .Include(p => p.Category)
                 .Include(p => p.Location)
+                .Include(p => p.Images.OrderBy(i => i.SortOrder))
+                .Include(p => p.Videos)
                 .FirstOrDefaultAsync(p => p.Id == postId && p.OwnerId == owner.Id);
 
             if (post == null) throw new UserFriendlyException(404, "POST_NOT_FOUND", "Post not found or access denied");
@@ -165,7 +192,9 @@ namespace CAR.Infrastructure.Services
                 PriorityLevel = post.PriorityLevel,
                 CreatedAt = post.CreatedAt,
                 UpdatedAt = post.UpdatedAt,
-                ExpiredAt = post.ExpiredAt
+                ExpiredAt = post.ExpiredAt,
+                Images = post.Images.Select(i => i.ImageUrl).ToList(),
+                Videos = post.Videos.Select(v => v.VideoUrl).ToList()
             };
         }
 

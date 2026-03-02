@@ -32,6 +32,12 @@ export interface PostDetail {
   createdAt: string;
   updatedAt?: string | null;
   expiredAt?: string | null;
+  /** Optional images returned by backend for the post detail. */
+  images?: string[] | null;
+  /** Optional videos returned by backend for the post detail. */
+  videos?: string[] | null;
+  /** Optional owner display name if backend provides it. */
+  ownerName?: string | null;
 }
 
 export async function createPost(

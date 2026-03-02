@@ -29,7 +29,8 @@ function VnPayReturnContent() {
       .catch((e) =>
         setResult({
           success: false,
-          message: e instanceof Error ? e.message : "Xác thực thất bại",
+          message:
+            e instanceof Error ? e.message : "Xác thực thất bại",
         }),
       )
       .finally(() => setLoading(false));
@@ -38,7 +39,9 @@ function VnPayReturnContent() {
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-muted-foreground">Đang xác thực thanh toán...</p>
+        <p className="text-muted-foreground">
+          Đang xác thực thanh toán...
+        </p>
       </div>
     );
   }
@@ -47,7 +50,7 @@ function VnPayReturnContent() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-16">
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm text-center">
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
         {success ? (
           <CheckCircle2 className="mx-auto h-16 w-16 text-emerald-500" />
         ) : (
@@ -56,7 +59,9 @@ function VnPayReturnContent() {
         <h1 className="mt-4 text-xl font-semibold text-slate-900">
           {success ? "Thanh toán thành công" : "Thanh toán thất bại"}
         </h1>
-        <p className="mt-2 text-sm text-slate-600">{result?.message}</p>
+        <p className="mt-2 text-sm text-slate-600">
+          {result?.message}
+        </p>
 
         {success &&
           (result?.transactionId ||
@@ -68,19 +73,25 @@ function VnPayReturnContent() {
               </p>
               {result?.orderId && (
                 <p className="text-sm text-slate-700">
-                  <span className="text-slate-500">Mã đơn:</span>{" "}
+                  <span className="text-slate-500">
+                    Mã đơn:
+                  </span>{" "}
                   {result.orderId}
                 </p>
               )}
               {result?.transactionId && (
                 <p className="mt-1 text-sm text-slate-700">
-                  <span className="text-slate-500">Mã GD:</span>{" "}
+                  <span className="text-slate-500">
+                    Mã GD:
+                  </span>{" "}
                   {result.transactionId}
                 </p>
               )}
               {result?.amount != null && (
                 <p className="mt-1 text-sm text-slate-700">
-                  <span className="text-slate-500">Số tiền:</span>{" "}
+                  <span className="text-slate-500">
+                    Số tiền:
+                  </span>{" "}
                   {new Intl.NumberFormat("vi-VN", {
                     style: "currency",
                     currency: "VND",
@@ -89,7 +100,9 @@ function VnPayReturnContent() {
               )}
               {result?.payDate && (
                 <p className="mt-1 text-sm text-slate-700">
-                  <span className="text-slate-500">Ngày thanh toán:</span>{" "}
+                  <span className="text-slate-500">
+                    Ngày thanh toán:
+                  </span>{" "}
                   {new Date(result.payDate).toLocaleString("vi-VN")}
                 </p>
               )}
@@ -120,7 +133,9 @@ export default function VnPayReturnPage() {
     <Suspense
       fallback={
         <div className="flex min-h-[50vh] items-center justify-center">
-          <p className="text-muted-foreground">Đang xác thực thanh toán...</p>
+          <p className="text-muted-foreground">
+            Đang tải trang thanh toán...
+          </p>
         </div>
       }
     >

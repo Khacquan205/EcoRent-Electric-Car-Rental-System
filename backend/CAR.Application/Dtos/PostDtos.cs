@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace CAR.Application.Dtos
 {
@@ -32,6 +33,8 @@ namespace CAR.Application.Dtos
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? ExpiredAt { get; set; }
+        public List<string> Images { get; set; } = new List<string>();
+        public List<string> Videos { get; set; } = new List<string>();
     }
 
     public class UpdatePostRequestDto
