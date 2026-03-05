@@ -79,7 +79,9 @@ export default function NewPostPage() {
 
     const totalAfterAdd = imagePreviews.length + files.length;
     if (totalAfterAdd > MAX_IMAGES) {
-      setImageError(`Tối đa ${MAX_IMAGES} ảnh. Bạn đã chọn ${imagePreviews.length}, không thể thêm ${files.length} ảnh nữa.`);
+      setImageError(
+        `Tối đa ${MAX_IMAGES} ảnh. Bạn đã chọn ${imagePreviews.length}, không thể thêm ${files.length} ảnh nữa.`,
+      );
       return;
     }
 
@@ -174,7 +176,8 @@ export default function NewPostPage() {
       };
 
       payload.imageUrls = imageUrls.length > 0 ? imageUrls : undefined;
-      payload.videoUrls = uploadedVideoUrls.length > 0 ? uploadedVideoUrls : undefined;
+      payload.videoUrls =
+        uploadedVideoUrls.length > 0 ? uploadedVideoUrls : undefined;
 
       await createPost(payload);
       router.push("/owner/posts");
@@ -275,7 +278,9 @@ export default function NewPostPage() {
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:hidden">
               <div className="flex items-center justify-between text-sm font-medium text-slate-600">
                 <span>Mức độ hoàn thành tin đăng</span>
-                <span className="font-bold text-primary">{progressPercent}%</span>
+                <span className="font-bold text-primary">
+                  {progressPercent}%
+                </span>
               </div>
               <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-slate-100">
                 <div
@@ -286,252 +291,256 @@ export default function NewPostPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-
-          {/* Section 1: Basic Info */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
-            <h2 className="mb-6 text-lg font-bold text-slate-800">
-              📋 Thông tin cơ bản
-            </h2>
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700">
-                  Loại xe (danh mục) *
-                </label>
-                <select
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(Number(e.target.value))}
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  required
-                >
-                  <option value={0}>-- Chọn danh mục --</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-700">
-                  Tiêu đề *
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="VD: VinFast VF 8 cho thuê tại Hà Nội"
-                  className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-700">
-                  Mô tả
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={4}
-                  placeholder="Mô tả chi tiết về xe của bạn..."
-                  className="mt-2 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 2: Media */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
-            <h2 className="mb-6 text-lg font-bold text-slate-800">
-              🖼️ Hình ảnh &amp; Video
-            </h2>
-            <div className="space-y-6">
-              <div>
-                <div className="flex items-center justify-between">
-                  <label className="block text-sm font-semibold text-slate-700">
-                    Ảnh minh họa
-                  </label>
-                  <span className="text-xs text-slate-400">
-                    {imagePreviews.length}/{MAX_IMAGES} ảnh
-                  </span>
-                </div>
-                <label className={`mt-2 flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed px-4 py-4 transition-colors ${
-                  imagePreviews.length >= MAX_IMAGES
-                    ? "border-slate-100 bg-slate-50 cursor-not-allowed opacity-50"
-                    : "border-slate-200 bg-slate-50 hover:border-primary hover:bg-primary/5"
-                }`}>
-                  <ImagePlus className="h-6 w-6 text-slate-400" />
-                  <span className="text-sm text-slate-600">
-                    {imagePreviews.length >= MAX_IMAGES
-                      ? `Đã đạt giới hạn ${MAX_IMAGES} ảnh`
-                      : "Chọn ảnh từ thiết bị (có thể chọn nhiều ảnh)"}
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageChange}
-                    disabled={imagePreviews.length >= MAX_IMAGES}
-                    className="hidden"
-                  />
-                </label>
-                {uploadingImages && (
-                  <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Đang tải ảnh lên Cloudinary...
-                  </p>
-                )}
-                {imageError && (
-                  <p className="mt-2 text-xs text-red-600">{imageError}</p>
-                )}
-                {imagePreviews.length > 0 && (
-                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {imagePreviews.map((src, index) => (
-                      <div
-                        key={index}
-                        className="group relative overflow-hidden rounded-xl border border-slate-200"
-                      >
-                        <img
-                          src={src}
-                          alt={`Ảnh ${index + 1}`}
-                          className="h-36 w-full object-cover"
-                        />
-                        {/* Upload status indicator */}
-                        {index >= imageUrls.length && uploadingImages && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                            <Loader2 className="h-6 w-6 animate-spin text-white" />
-                          </div>
-                        )}
-                        {/* Index badge */}
-                        <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white">
-                          {index + 1}
-                        </span>
-                        {/* Delete button */}
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500/90 text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 hover:bg-red-600"
-                          title="Xóa ảnh"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
+              {/* Section 1: Basic Info */}
+              <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
+                <h2 className="mb-6 text-lg font-bold text-slate-800">
+                  📋 Thông tin cơ bản
+                </h2>
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Loại xe (danh mục) *
+                    </label>
+                    <select
+                      value={categoryId}
+                      onChange={(e) => setCategoryId(Number(e.target.value))}
+                      className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      required
+                    >
+                      <option value={0}>-- Chọn danh mục --</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                )}
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Tiêu đề *
+                    </label>
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="VD: VinFast VF 8 cho thuê tại Hà Nội"
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Mô tả
+                    </label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      rows={4}
+                      placeholder="Mô tả chi tiết về xe của bạn..."
+                      className="mt-2 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-slate-700">
-                  Video minh họa{" "}
-                  <span className="font-normal text-slate-400">(tùy chọn)</span>
-                </label>
-                <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
-                  <span className="text-2xl">🎥</span>
-                  <span className="text-sm text-slate-600">
-                    Chọn video từ thiết bị (nhiều file)
-                  </span>
-                  <input
-                    type="file"
-                    accept="video/*"
-                    multiple
-                    onChange={handleVideoChange}
-                    className="hidden"
-                  />
-                </label>
-                {uploadingVideos && (
-                  <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Đang tải video
-                    lên...
-                  </p>
-                )}
-                {videoError && (
-                  <p className="mt-2 text-xs text-red-600">{videoError}</p>
-                )}
-                {videoPreviews.length > 0 && (
-                  <ul className="mt-4 space-y-3">
-                    {videoPreviews.map((src, index) => (
-                      <li
-                        key={index}
-                        className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-3"
-                      >
-                        <video
-                          src={src}
-                          className="h-20 w-36 rounded-xl object-cover"
-                          controls
-                        />
-                        <span className="flex-1 truncate text-sm text-slate-700">
-                          {videoFiles[index]?.name}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          </div>
+              {/* Section 2: Media */}
+              <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
+                <h2 className="mb-6 text-lg font-bold text-slate-800">
+                  🖼️ Hình ảnh &amp; Video
+                </h2>
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm font-semibold text-slate-700">
+                        Ảnh minh họa
+                      </label>
+                      <span className="text-xs text-slate-400">
+                        {imagePreviews.length}/{MAX_IMAGES} ảnh
+                      </span>
+                    </div>
+                    <label
+                      className={`mt-2 flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed px-4 py-4 transition-colors ${
+                        imagePreviews.length >= MAX_IMAGES
+                          ? "border-slate-100 bg-slate-50 cursor-not-allowed opacity-50"
+                          : "border-slate-200 bg-slate-50 hover:border-primary hover:bg-primary/5"
+                      }`}
+                    >
+                      <ImagePlus className="h-6 w-6 text-slate-400" />
+                      <span className="text-sm text-slate-600">
+                        {imagePreviews.length >= MAX_IMAGES
+                          ? `Đã đạt giới hạn ${MAX_IMAGES} ảnh`
+                          : "Chọn ảnh từ thiết bị (có thể chọn nhiều ảnh)"}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageChange}
+                        disabled={imagePreviews.length >= MAX_IMAGES}
+                        className="hidden"
+                      />
+                    </label>
+                    {uploadingImages && (
+                      <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Đang tải
+                        ảnh lên Cloudinary...
+                      </p>
+                    )}
+                    {imageError && (
+                      <p className="mt-2 text-xs text-red-600">{imageError}</p>
+                    )}
+                    {imagePreviews.length > 0 && (
+                      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        {imagePreviews.map((src, index) => (
+                          <div
+                            key={index}
+                            className="group relative overflow-hidden rounded-xl border border-slate-200"
+                          >
+                            <img
+                              src={src}
+                              alt={`Ảnh ${index + 1}`}
+                              className="h-36 w-full object-cover"
+                            />
+                            {/* Upload status indicator */}
+                            {index >= imageUrls.length && uploadingImages && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                <Loader2 className="h-6 w-6 animate-spin text-white" />
+                              </div>
+                            )}
+                            {/* Index badge */}
+                            <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white">
+                              {index + 1}
+                            </span>
+                            {/* Delete button */}
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500/90 text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 hover:bg-red-600"
+                              title="Xóa ảnh"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-          {/* Section 3: Pricing & Contact */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
-            <h2 className="mb-6 text-lg font-bold text-slate-800">
-              💰 Giá &amp; Liên hệ
-            </h2>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700">
-                  Giá thuê (₫/ngày) *
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="VD: 800000"
-                  className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  required
-                />
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Video minh họa{" "}
+                      <span className="font-normal text-slate-400">
+                        (tùy chọn)
+                      </span>
+                    </label>
+                    <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
+                      <span className="text-2xl">🎥</span>
+                      <span className="text-sm text-slate-600">
+                        Chọn video từ thiết bị (nhiều file)
+                      </span>
+                      <input
+                        type="file"
+                        accept="video/*"
+                        multiple
+                        onChange={handleVideoChange}
+                        className="hidden"
+                      />
+                    </label>
+                    {uploadingVideos && (
+                      <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Đang tải
+                        video lên...
+                      </p>
+                    )}
+                    {videoError && (
+                      <p className="mt-2 text-xs text-red-600">{videoError}</p>
+                    )}
+                    {videoPreviews.length > 0 && (
+                      <ul className="mt-4 space-y-3">
+                        {videoPreviews.map((src, index) => (
+                          <li
+                            key={index}
+                            className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-3"
+                          >
+                            <video
+                              src={src}
+                              className="h-20 w-36 rounded-xl object-cover"
+                              controls
+                            />
+                            <span className="flex-1 truncate text-sm text-slate-700">
+                              {videoFiles[index]?.name}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700">
-                  Số điện thoại liên hệ
-                </label>
-                <input
-                  type="tel"
-                  value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
-                  placeholder="VD: 0901234567"
-                  className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-            </div>
-          </div>
 
-          {/* Submit */}
-          <div className="flex gap-4 pb-10">
-            <button
-              type="submit"
-              disabled={
-                !canPost ||
-                submitting ||
-                uploadingImages ||
-                (activeSub?.remainingPosts ?? 0) === 0
-              }
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-bold text-white shadow-md transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {submitting ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <Car className="h-5 w-5" />
-              )}
-              {submitting ? "Đang đăng tin..." : "Đăng tin ngay"}
-            </button>
-            <Link
-              href="/owner/posts"
-              className="rounded-2xl border border-slate-200 bg-white px-8 py-4 text-base font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-            >
-              Hủy
-            </Link>
-          </div>
+              {/* Section 3: Pricing & Contact */}
+              <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
+                <h2 className="mb-6 text-lg font-bold text-slate-800">
+                  💰 Giá &amp; Liên hệ
+                </h2>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Giá thuê (₫/ngày) *
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder="VD: 800000"
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Số điện thoại liên hệ
+                    </label>
+                    <input
+                      type="tel"
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value)}
+                      placeholder="VD: 0901234567"
+                      className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit */}
+              <div className="flex gap-4 pb-10">
+                <button
+                  type="submit"
+                  disabled={
+                    !canPost ||
+                    submitting ||
+                    uploadingImages ||
+                    (activeSub?.remainingPosts ?? 0) === 0
+                  }
+                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-bold text-white shadow-md transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {submitting ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Car className="h-5 w-5" />
+                  )}
+                  {submitting ? "Đang đăng tin..." : "Đăng tin ngay"}
+                </button>
+                <Link
+                  href="/owner/posts"
+                  className="rounded-2xl border border-slate-200 bg-white px-8 py-4 text-base font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  Hủy
+                </Link>
+              </div>
             </form>
           </div>
 
