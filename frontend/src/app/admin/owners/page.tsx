@@ -41,9 +41,9 @@ function formatDate(iso: string) {
 }
 
 function statusLabel(status: number) {
-  if (status === 1) return "Active";
-  if (status === 0) return "Inactive";
-  return `Status ${status}`;
+  if (status === 1) return "Hoạt động";
+  if (status === 0) return "Không hoạt động";
+  return `Trạng thái ${status}`;
 }
 
 function isPromotableUser(user: AdminUser) {
@@ -67,7 +67,7 @@ export default function AdminOwnersPage() {
     text: string;
   } | null>(null);
 
-  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [roleFilter, setRoleFilter] = useState<string>("tat-ca");
   const [promoteModalUser, setPromoteModalUser] = useState<AdminUser | null>(
     null,
   );
@@ -89,7 +89,7 @@ export default function AdminOwnersPage() {
         text:
           error instanceof Error
             ? error.message
-            : "Không thể tải danh sách users.",
+            : "Không thể tải danh sách người dùng.",
       });
       setUsers([]);
     } finally {
@@ -108,11 +108,11 @@ export default function AdminOwnersPage() {
         unique.add(user.roleName.trim());
       }
     });
-    return ["all", ...Array.from(unique).sort((a, b) => a.localeCompare(b))];
+    return ["tat-ca", ...Array.from(unique).sort((a, b) => a.localeCompare(b))];
   }, [users]);
 
   const filteredUsers = useMemo(() => {
-    if (roleFilter === "all") return users;
+    if (roleFilter === "tat-ca") return users;
     return users.filter(
       (user) =>
         (user.roleName ?? "").trim().toLowerCase() === roleFilter.toLowerCase(),
@@ -136,7 +136,7 @@ export default function AdminOwnersPage() {
     if (!promoteForm.name.trim()) {
       setMessage({
         type: "error",
-        text: "Tên nhân sự là bắt buộc để promote.",
+        text: "Tên nhân sự là bắt buộc để thăng cấp.",
       });
       return;
     }
@@ -154,14 +154,14 @@ export default function AdminOwnersPage() {
       await promoteToStaff(payload);
       setMessage({
         type: "success",
-        text: `Đã promote user #${promoteModalUser.id} lên Staff.`,
+        text: `Đã thăng cấp người dùng #${promoteModalUser.id} lên Nhân viên.`,
       });
       closePromoteModal();
       await fetchUsers();
     } catch (error) {
       setMessage({
         type: "error",
-        text: error instanceof Error ? error.message : "Promote thất bại.",
+        text: error instanceof Error ? error.message : "Thăng cấp thất bại.",
       });
     } finally {
       setSubmitting(false);
@@ -172,18 +172,18 @@ export default function AdminOwnersPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-slate-900">
-          Owners / Users
+          Chủ xe / Người dùng
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          API trả về tất cả users, bạn có thể lọc theo role và promote lên
-          Staff.
+          API trả về tất cả người dùng, bạn có thể lọc theo vai trò và thăng cấp
+          lên Nhân viên.
         </p>
       </div>
 
       <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">
-            Role filter
+            Lọc theo vai trò
           </label>
           <select
             value={roleFilter}
@@ -192,7 +192,7 @@ export default function AdminOwnersPage() {
           >
             {roleOptions.map((role) => (
               <option key={role} value={role}>
-                {role === "all" ? "All roles" : role}
+                {role === "tat-ca" ? "Tất cả vai trò" : role}
               </option>
             ))}
           </select>
@@ -203,7 +203,7 @@ export default function AdminOwnersPage() {
           onClick={fetchUsers}
           className="h-9"
         >
-          Refresh
+          Làm mới
         </Button>
       </div>
 
@@ -226,7 +226,7 @@ export default function AdminOwnersPage() {
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="py-16 text-center text-sm text-slate-500">
-            Không có users theo bộ lọc hiện tại.
+            Không có người dùng theo bộ lọc hiện tại.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -234,22 +234,22 @@ export default function AdminOwnersPage() {
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
                   <th className="px-4 py-3 font-semibold text-slate-700">
-                    User ID
+                    Mã người dùng
                   </th>
                   <th className="px-4 py-3 font-semibold text-slate-700">
                     Email
                   </th>
                   <th className="px-4 py-3 font-semibold text-slate-700">
-                    Role
+                    Vai trò
                   </th>
                   <th className="px-4 py-3 font-semibold text-slate-700">
-                    Status
+                    Trạng thái
                   </th>
                   <th className="px-4 py-3 font-semibold text-slate-700">
-                    Created at
+                    Ngày tạo
                   </th>
                   <th className="px-4 py-3 text-right font-semibold text-slate-700">
-                    Action
+                    Thao tác
                   </th>
                 </tr>
               </thead>
@@ -265,7 +265,7 @@ export default function AdminOwnersPage() {
                         {user.email}
                       </td>
                       <td className="px-4 py-3 text-slate-700">
-                        {user.roleName ?? `Role ${user.roleId}`}
+                        {user.roleName ?? `Vai trò ${user.roleId}`}
                       </td>
                       <td className="px-4 py-3">
                         <span
@@ -291,7 +291,7 @@ export default function AdminOwnersPage() {
                           disabled={!promotable}
                         >
                           <ShieldPlus className="h-4 w-4" />
-                          Promote Staff
+                          Thăng cấp nhân viên
                         </Button>
                       </td>
                     </tr>
@@ -309,18 +309,18 @@ export default function AdminOwnersPage() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Promote to Staff</DialogTitle>
+            <DialogTitle>Thăng cấp lên Nhân viên</DialogTitle>
             <DialogDescription>
               {promoteModalUser
-                ? `Thăng cấp user #${promoteModalUser.id} (${promoteModalUser.email}) lên Staff.`
-                : "Thăng cấp user lên Staff."}
+                ? `Thăng cấp người dùng #${promoteModalUser.id} (${promoteModalUser.email}) lên Nhân viên.`
+                : "Thăng cấp người dùng lên Nhân viên."}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-700">
-                Name *
+                Họ và tên *
               </label>
               <Input
                 value={promoteForm.name}
@@ -332,19 +332,19 @@ export default function AdminOwnersPage() {
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-700">
-                Phone
+                Số điện thoại
               </label>
               <Input
                 value={promoteForm.phone}
                 onChange={(e) =>
                   setPromoteForm((prev) => ({ ...prev, phone: e.target.value }))
                 }
-                placeholder="Số điện thoại (optional)"
+                placeholder="Số điện thoại (tùy chọn)"
               />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-700">
-                Staff code
+                Mã nhân viên
               </label>
               <Input
                 value={promoteForm.staffCode}
@@ -354,7 +354,7 @@ export default function AdminOwnersPage() {
                     staffCode: e.target.value,
                   }))
                 }
-                placeholder="Mã nhân viên (optional)"
+                placeholder="Mã nhân viên (tùy chọn)"
               />
             </div>
           </div>
@@ -372,7 +372,7 @@ export default function AdminOwnersPage() {
               disabled={submitting || !promoteForm.name.trim()}
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Promote
+              Xác nhận thăng cấp
             </Button>
           </DialogFooter>
         </DialogContent>

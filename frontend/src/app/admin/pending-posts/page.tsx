@@ -39,9 +39,9 @@ const STATUS_APPROVED = 1;
 const STATUS_REJECTED = 2;
 
 const STATUS_LABELS: Record<number, string> = {
-  [STATUS_PENDING]: "Pending",
-  [STATUS_APPROVED]: "Approved",
-  [STATUS_REJECTED]: "Rejected",
+  [STATUS_PENDING]: "Chờ duyệt",
+  [STATUS_APPROVED]: "Đã duyệt",
+  [STATUS_REJECTED]: "Đã từ chối",
 };
 
 function formatDate(iso: string) {
@@ -88,7 +88,7 @@ function AdminDetailGallery({
       <div className="flex h-40 items-center justify-center rounded-xl bg-slate-100">
         <div className="flex flex-col items-center gap-2 text-slate-400">
           <ImageIcon className="h-8 w-8" />
-          <span className="text-xs">No images / videos</span>
+          <span className="text-xs">Không có ảnh / video</span>
         </div>
       </div>
     );
@@ -163,7 +163,7 @@ function AdminDetailGallery({
               {item.kind === "image" ? (
                 <img
                   src={item.src}
-                  alt={`Thumb ${idx + 1}`}
+                  alt={`Ảnh thu nhỏ ${idx + 1}`}
                   className="h-full w-full object-cover"
                 />
               ) : (
@@ -191,7 +191,10 @@ function AdminDetailGallery({
 export default function PendingCarPostsPage() {
   const [posts, setPosts] = useState<ModerationPostItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
   const [actionPostId, setActionPostId] = useState<number | null>(null);
 
   // Filters
@@ -201,7 +204,8 @@ export default function PendingCarPostsPage() {
   const [filterToDate, setFilterToDate] = useState("");
 
   // Reject modal
-  const [rejectModalPost, setRejectModalPost] = useState<ModerationPostItem | null>(null);
+  const [rejectModalPost, setRejectModalPost] =
+    useState<ModerationPostItem | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
 
@@ -220,7 +224,8 @@ export default function PendingCarPostsPage() {
     } catch (e) {
       setMessage({
         type: "error",
-        text: e instanceof Error ? e.message : "Failed to load posts",
+        text:
+          e instanceof Error ? e.message : "Không thể tải danh sách bài đăng",
       });
       setPosts([]);
     } finally {
@@ -234,9 +239,10 @@ export default function PendingCarPostsPage() {
 
   // Client-side filter by owner name (backend doesn't have ownerName search; we filter in UI)
   const filteredPosts = filterOwnerName.trim()
-    ? posts.filter(
-        (p) =>
-          p.ownerName?.toLowerCase().includes(filterOwnerName.trim().toLowerCase())
+    ? posts.filter((p) =>
+        p.ownerName
+          ?.toLowerCase()
+          .includes(filterOwnerName.trim().toLowerCase()),
       )
     : posts;
 
@@ -246,12 +252,15 @@ export default function PendingCarPostsPage() {
     setMessage(null);
     try {
       await approvePost(post.id);
-      setMessage({ type: "success", text: "Post approved. Owner notified." });
+      setMessage({
+        type: "success",
+        text: "Đã duyệt bài đăng. Chủ xe đã được thông báo.",
+      });
       await fetchPosts();
     } catch (e) {
       setMessage({
         type: "error",
-        text: e instanceof Error ? e.message : "Approve failed",
+        text: e instanceof Error ? e.message : "Duyệt bài thất bại",
       });
     } finally {
       setActionPostId(null);
@@ -270,14 +279,17 @@ export default function PendingCarPostsPage() {
     setMessage(null);
     try {
       await rejectPost(rejectModalPost.id, rejectReason.trim());
-      setMessage({ type: "success", text: "Post rejected. Owner notified." });
+      setMessage({
+        type: "success",
+        text: "Đã từ chối bài đăng. Chủ xe đã được thông báo.",
+      });
       setRejectModalPost(null);
       setRejectReason("");
       await fetchPosts();
     } catch (e) {
       setMessage({
         type: "error",
-        text: e instanceof Error ? e.message : "Reject failed",
+        text: e instanceof Error ? e.message : "Từ chối bài thất bại",
       });
     } finally {
       setRejectSubmitting(false);
@@ -294,9 +306,12 @@ export default function PendingCarPostsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Pending Car Posts</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">
+          Bài đăng xe chờ duyệt
+        </h1>
         <p className="mt-1 text-sm text-slate-600">
-          Approve or reject car listings. Only approved posts are visible to customers.
+          Duyệt hoặc từ chối bài đăng xe. Chỉ bài đã duyệt mới hiển thị cho
+          khách hàng.
         </p>
       </div>
 
@@ -316,33 +331,39 @@ export default function PendingCarPostsPage() {
       <div className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
         <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
           <Filter className="h-4 w-4" />
-          Filters
+          Bộ lọc
         </div>
         <div className="flex flex-wrap gap-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Status</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Trạng thái
+            </label>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
             >
-              <option value="">All</option>
-              <option value={STATUS_PENDING}>Pending</option>
-              <option value={STATUS_APPROVED}>Approved</option>
-              <option value={STATUS_REJECTED}>Rejected</option>
+              <option value="">Tất cả</option>
+              <option value={STATUS_PENDING}>Chờ duyệt</option>
+              <option value={STATUS_APPROVED}>Đã duyệt</option>
+              <option value={STATUS_REJECTED}>Đã từ chối</option>
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Owner name</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Tên chủ xe
+            </label>
             <Input
-              placeholder="Search owner..."
+              placeholder="Tìm chủ xe..."
               value={filterOwnerName}
               onChange={(e) => setFilterOwnerName(e.target.value)}
               className="h-9 w-40 border-slate-200"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">From date</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Từ ngày
+            </label>
             <Input
               type="date"
               value={filterFromDate}
@@ -351,7 +372,9 @@ export default function PendingCarPostsPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">To date</label>
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              Đến ngày
+            </label>
             <Input
               type="date"
               value={filterToDate}
@@ -366,7 +389,7 @@ export default function PendingCarPostsPage() {
             onClick={() => fetchPosts()}
             className="h-9"
           >
-            Apply
+            Áp dụng
           </Button>
         </div>
       </div>
@@ -379,19 +402,31 @@ export default function PendingCarPostsPage() {
           </div>
         ) : filteredPosts.length === 0 ? (
           <div className="py-16 text-center text-sm text-slate-500">
-            No posts match the filters.
+            Không có bài đăng phù hợp bộ lọc.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[800px] text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="px-4 py-3 font-semibold text-slate-700">Post ID</th>
-                  <th className="px-4 py-3 font-semibold text-slate-700">Car / Category</th>
-                  <th className="px-4 py-3 font-semibold text-slate-700">Owner</th>
-                  <th className="px-4 py-3 font-semibold text-slate-700">Date</th>
-                  <th className="px-4 py-3 font-semibold text-slate-700">Status</th>
-                  <th className="px-4 py-3 font-semibold text-slate-700 text-right">Actions</th>
+                  <th className="px-4 py-3 font-semibold text-slate-700">
+                    Mã bài đăng
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-700">
+                    Xe / Danh mục
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-700">
+                    Chủ xe
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-700">
+                    Ngày tạo
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-700">
+                    Trạng thái
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-700 text-right">
+                    Thao tác
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -402,15 +437,25 @@ export default function PendingCarPostsPage() {
                       post.status === STATUS_PENDING ? "bg-amber-50/50" : ""
                     }`}
                   >
-                    <td className="px-4 py-3 font-mono text-slate-600">{post.id}</td>
+                    <td className="px-4 py-3 font-mono text-slate-600">
+                      {post.id}
+                    </td>
                     <td className="px-4 py-3">
-                      <span className="font-medium text-slate-900">{post.title}</span>
+                      <span className="font-medium text-slate-900">
+                        {post.title}
+                      </span>
                       {post.categoryName && (
-                        <span className="ml-1 text-slate-500">({post.categoryName})</span>
+                        <span className="ml-1 text-slate-500">
+                          ({post.categoryName})
+                        </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">{post.ownerName ?? "—"}</td>
-                    <td className="px-4 py-3 text-slate-600">{formatDate(post.createdAt)}</td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {post.ownerName ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {formatDate(post.createdAt)}
+                    </td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -432,7 +477,7 @@ export default function PendingCarPostsPage() {
                           size="sm"
                           className="h-8 text-slate-600"
                           onClick={() => setDetailPost(post)}
-                          title="View details"
+                          title="Xem chi tiết"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -450,7 +495,7 @@ export default function PendingCarPostsPage() {
                               ) : (
                                 <CheckCircle2 className="h-4 w-4" />
                               )}
-                              <span className="ml-1">Approve</span>
+                              <span className="ml-1">Duyệt</span>
                             </Button>
                             <Button
                               type="button"
@@ -460,7 +505,7 @@ export default function PendingCarPostsPage() {
                               onClick={() => openRejectModal(post)}
                             >
                               <XCircle className="h-4 w-4" />
-                              <span className="ml-1">Reject</span>
+                              <span className="ml-1">Từ chối</span>
                             </Button>
                           </>
                         )}
@@ -476,57 +521,75 @@ export default function PendingCarPostsPage() {
 
       {filteredPosts.length > 0 && (
         <p className="text-xs text-slate-500">
-          Showing {filteredPosts.length} post(s). Pending rows are highlighted.
+          Hiển thị {filteredPosts.length} bài đăng. Các dòng chờ duyệt được làm
+          nổi bật.
         </p>
       )}
 
       {/* Reject modal */}
-      <Dialog open={!!rejectModalPost} onOpenChange={(open) => !open && closeRejectModal()}>
+      <Dialog
+        open={!!rejectModalPost}
+        onOpenChange={(open) => !open && closeRejectModal()}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Reject post</DialogTitle>
+            <DialogTitle>Từ chối bài đăng</DialogTitle>
             <DialogDescription>
-              Provide a reason for rejection. The owner will be notified and the post will remain
-              hidden. Post slot will not be deducted.
+              Vui lòng nhập lý do từ chối. Chủ xe sẽ được thông báo và bài đăng
+              sẽ tiếp tục bị ẩn. Lượt đăng tin sẽ không bị trừ.
             </DialogDescription>
           </DialogHeader>
           {rejectModalPost && (
             <div className="space-y-2">
               <p className="text-sm text-slate-600">
-                Post: <strong>{rejectModalPost.title}</strong> (ID {rejectModalPost.id})
+                Bài đăng: <strong>{rejectModalPost.title}</strong> (ID{" "}
+                {rejectModalPost.id})
               </p>
-              <label className="block text-xs font-medium text-slate-700">Reason (required)</label>
+              <label className="block text-xs font-medium text-slate-700">
+                Lý do (bắt buộc)
+              </label>
               <Textarea
                 className="min-h-[80px] rounded-lg border-slate-200"
                 rows={3}
-                placeholder="E.g. Image quality too low, missing required documents..."
+                placeholder="Ví dụ: Ảnh mờ, thiếu giấy tờ bắt buộc..."
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
               />
             </div>
           )}
           <DialogFooter showCloseButton={false}>
-            <Button variant="outline" onClick={closeRejectModal} disabled={rejectSubmitting}>
-              Cancel
+            <Button
+              variant="outline"
+              onClick={closeRejectModal}
+              disabled={rejectSubmitting}
+            >
+              Hủy
             </Button>
             <Button
               variant="destructive"
               onClick={handleRejectSubmit}
               disabled={!rejectReason.trim() || rejectSubmitting}
             >
-              {rejectSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Reject post
+              {rejectSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : null}
+              Từ chối bài đăng
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* View details modal */}
-      <Dialog open={!!detailPost} onOpenChange={(open) => !open && setDetailPost(null)}>
+      <Dialog
+        open={!!detailPost}
+        onOpenChange={(open) => !open && setDetailPost(null)}
+      >
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Post details</DialogTitle>
-            <DialogDescription>Car info and submission details</DialogDescription>
+            <DialogTitle>Chi tiết bài đăng</DialogTitle>
+            <DialogDescription>
+              Thông tin xe và chi tiết gửi duyệt
+            </DialogDescription>
           </DialogHeader>
           {detailPost && (
             <div className="space-y-4 text-sm">
@@ -540,29 +603,31 @@ export default function PendingCarPostsPage() {
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex items-center gap-2 text-slate-600">
                   <Car className="h-4 w-4" />
-                  <span>Title</span>
+                  <span>Tiêu đề</span>
                 </div>
-                <div className="font-medium text-slate-900">{detailPost.title}</div>
+                <div className="font-medium text-slate-900">
+                  {detailPost.title}
+                </div>
                 <div className="flex items-center gap-2 text-slate-600">
                   <User className="h-4 w-4" />
-                  <span>Owner</span>
+                  <span>Chủ xe</span>
                 </div>
                 <div>{detailPost.ownerName ?? "—"}</div>
                 <div className="flex items-center gap-2 text-slate-600">
                   <Calendar className="h-4 w-4" />
-                  <span>Submitted</span>
+                  <span>Ngày gửi</span>
                 </div>
                 <div>{formatDate(detailPost.createdAt)}</div>
-                <div className="text-slate-600">Category</div>
+                <div className="text-slate-600">Danh mục</div>
                 <div>{detailPost.categoryName ?? "—"}</div>
-                <div className="text-slate-600">Price</div>
+                <div className="text-slate-600">Giá</div>
                 <div>
                   {new Intl.NumberFormat("vi-VN", {
                     style: "currency",
                     currency: "VND",
                   }).format(detailPost.price)}
                 </div>
-                <div className="text-slate-600">Status</div>
+                <div className="text-slate-600">Trạng thái</div>
                 <div>
                   <span
                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -579,18 +644,23 @@ export default function PendingCarPostsPage() {
               </div>
               {detailPost.description && (
                 <div>
-                  <div className="mb-1 font-medium text-slate-700">Description</div>
+                  <div className="mb-1 font-medium text-slate-700">Mô tả</div>
                   <p className="rounded-lg bg-slate-50 p-3 text-slate-600">
                     {detailPost.description}
                   </p>
                 </div>
               )}
-              {detailPost.status === STATUS_REJECTED && detailPost.rejectReason && (
-                <div>
-                  <div className="mb-1 font-medium text-slate-700">Reject reason</div>
-                  <p className="rounded-lg bg-red-50 p-3 text-red-800">{detailPost.rejectReason}</p>
-                </div>
-              )}
+              {detailPost.status === STATUS_REJECTED &&
+                detailPost.rejectReason && (
+                  <div>
+                    <div className="mb-1 font-medium text-slate-700">
+                      Lý do từ chối
+                    </div>
+                    <p className="rounded-lg bg-red-50 p-3 text-red-800">
+                      {detailPost.rejectReason}
+                    </p>
+                  </div>
+                )}
             </div>
           )}
         </DialogContent>
