@@ -459,7 +459,13 @@ const MOCK_FEEDBACKS: Feedback[] = [
   },
 ];
 
-function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "md" }) {
+function StarRating({
+  rating,
+  size = "sm",
+}: {
+  rating: number;
+  size?: "sm" | "md";
+}) {
   const starSize = size === "md" ? "h-5 w-5" : "h-4 w-4";
   return (
     <div className="flex items-center gap-0.5">
@@ -520,7 +526,10 @@ function FeedbackSection() {
                 <div
                   className="h-full rounded-full bg-yellow-400 transition-all"
                   style={{
-                    width: totalReviews > 0 ? `${(count / totalReviews) * 100}%` : "0%",
+                    width:
+                      totalReviews > 0
+                        ? `${(count / totalReviews) * 100}%`
+                        : "0%",
                   }}
                 />
               </div>
