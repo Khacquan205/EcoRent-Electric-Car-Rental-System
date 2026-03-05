@@ -18,6 +18,9 @@ import {
   Share2,
   X,
   ZoomIn,
+  Star,
+  ThumbsUp,
+  MessageSquare,
 } from "lucide-react";
 import type { PostDetailDto } from "@/types/api";
 import StatusBadge from "./StatusBadge";
@@ -183,7 +186,9 @@ function Gallery({
   // Auto-scroll active thumbnail into view
   useEffect(() => {
     if (!thumbContainerRef.current) return;
-    const activeThumb = thumbContainerRef.current.children[active] as HTMLElement;
+    const activeThumb = thumbContainerRef.current.children[
+      active
+    ] as HTMLElement;
     if (activeThumb) {
       activeThumb.scrollIntoView({
         behavior: "smooth",
@@ -239,7 +244,8 @@ function Gallery({
 
           {/* Zoom hint for images */}
           {current.kind === "image" && total > 0 && (
-            <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-xs text-white/80 opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-100"
+            <div
+              className="absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-xs text-white/80 opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-100"
               style={{ opacity: 0.7 }}
             >
               <ZoomIn className="h-3.5 w-3.5" />
@@ -251,14 +257,20 @@ function Gallery({
           {total > 1 && (
             <>
               <button
-                onClick={(e) => { e.stopPropagation(); go(-1); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  go(-1);
+                }}
                 aria-label="Ảnh trước"
                 className="absolute left-3 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-lg transition-all hover:bg-white hover:scale-105 active:scale-95"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); go(1); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  go(1);
+                }}
                 aria-label="Ảnh sau"
                 className="absolute right-3 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-lg transition-all hover:bg-white hover:scale-105 active:scale-95"
               >
@@ -283,7 +295,10 @@ function Gallery({
             <button
               onClick={() => {
                 if (thumbContainerRef.current) {
-                  thumbContainerRef.current.scrollBy({ left: -200, behavior: "smooth" });
+                  thumbContainerRef.current.scrollBy({
+                    left: -200,
+                    behavior: "smooth",
+                  });
                 }
               }}
               className="absolute left-0 top-0 z-10 flex h-full w-8 items-center justify-center bg-gradient-to-r from-gray-100 to-transparent dark:from-gray-900 hover:from-gray-200 dark:hover:from-gray-800 transition"
@@ -337,7 +352,10 @@ function Gallery({
             <button
               onClick={() => {
                 if (thumbContainerRef.current) {
-                  thumbContainerRef.current.scrollBy({ left: 200, behavior: "smooth" });
+                  thumbContainerRef.current.scrollBy({
+                    left: 200,
+                    behavior: "smooth",
+                  });
                 }
               }}
               className="absolute right-0 top-0 z-10 flex h-full w-8 items-center justify-center bg-gradient-to-l from-gray-100 to-transparent dark:from-gray-900 hover:from-gray-200 dark:hover:from-gray-800 transition"
@@ -383,6 +401,201 @@ function MetaRow({
         {value}
       </span>
     </div>
+  );
+}
+
+/* ─── Mock Feedback Data ──────────────────────────────────────── */
+
+interface Feedback {
+  id: number;
+  userName: string;
+  avatarUrl: string | null;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  helpful: number;
+}
+
+const MOCK_FEEDBACKS: Feedback[] = [
+  {
+    id: 1,
+    userName: "Nguyễn Văn An",
+    avatarUrl: null,
+    rating: 5,
+    comment:
+      "Xe rất mới, sạch sẽ và chạy êm. Chủ xe nhiệt tình hỗ trợ, giao xe đúng giờ. Sẽ thuê lại lần sau!",
+    createdAt: "2026-02-28T10:30:00",
+    helpful: 12,
+  },
+  {
+    id: 2,
+    userName: "Trần Thị Mai",
+    avatarUrl: null,
+    rating: 4,
+    comment:
+      "Xe ổn, pin đầy khi nhận. Chỉ hơi khó tìm trạm sạc gần điểm trả xe. Nhìn chung hài lòng.",
+    createdAt: "2026-02-20T14:15:00",
+    helpful: 5,
+  },
+  {
+    id: 3,
+    userName: "Lê Hoàng Phúc",
+    avatarUrl: null,
+    rating: 5,
+    comment:
+      "Trải nghiệm tuyệt vời! Xe chạy mượt, nội thất sang trọng. Rất phù hợp cho chuyến đi gia đình cuối tuần.",
+    createdAt: "2026-02-15T09:00:00",
+    helpful: 8,
+  },
+  {
+    id: 4,
+    userName: "Phạm Quốc Bảo",
+    avatarUrl: null,
+    rating: 3,
+    comment:
+      "Xe tạm ổn, nhưng có vài vết xước nhỏ mà không được thông báo trước. Giao nhận xe khá thuận tiện.",
+    createdAt: "2026-02-10T16:45:00",
+    helpful: 2,
+  },
+];
+
+function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "md" }) {
+  const starSize = size === "md" ? "h-5 w-5" : "h-4 w-4";
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`${starSize} ${
+            star <= rating
+              ? "fill-yellow-400 text-yellow-400"
+              : "fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700"
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function FeedbackSection() {
+  const feedbacks = MOCK_FEEDBACKS;
+  const avgRating =
+    feedbacks.reduce((sum, f) => sum + f.rating, 0) / feedbacks.length;
+  const totalReviews = feedbacks.length;
+
+  const ratingDistribution = [5, 4, 3, 2, 1].map((star) => ({
+    star,
+    count: feedbacks.filter((f) => f.rating === star).length,
+  }));
+
+  return (
+    <section className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-900">
+      <h2 className="flex items-center gap-2 text-base font-bold text-gray-800 dark:text-gray-200">
+        <MessageSquare className="h-4 w-4 text-[#1572D3]" />
+        Đánh giá từ khách thuê
+      </h2>
+
+      {/* Rating summary */}
+      <div className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-start">
+        {/* Average */}
+        <div className="flex flex-col items-center gap-1.5 sm:min-w-[120px]">
+          <span className="text-4xl font-extrabold text-gray-900 dark:text-gray-100">
+            {avgRating.toFixed(1)}
+          </span>
+          <StarRating rating={Math.round(avgRating)} size="md" />
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {totalReviews} đánh giá
+          </span>
+        </div>
+
+        {/* Distribution bars */}
+        <div className="flex-1 space-y-1.5">
+          {ratingDistribution.map(({ star, count }) => (
+            <div key={star} className="flex items-center gap-2 text-sm">
+              <span className="w-3 shrink-0 text-right text-gray-600 dark:text-gray-400">
+                {star}
+              </span>
+              <Star className="h-3.5 w-3.5 shrink-0 fill-yellow-400 text-yellow-400" />
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                <div
+                  className="h-full rounded-full bg-yellow-400 transition-all"
+                  style={{
+                    width: totalReviews > 0 ? `${(count / totalReviews) * 100}%` : "0%",
+                  }}
+                />
+              </div>
+              <span className="w-5 shrink-0 text-xs text-gray-500 dark:text-gray-400">
+                {count}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Feedback list */}
+      <div className="mt-6 divide-y divide-gray-100 dark:divide-gray-800">
+        {feedbacks.map((fb) => {
+          const initials = fb.userName
+            .split(" ")
+            .map((w) => w[0])
+            .join("")
+            .slice(-2)
+            .toUpperCase();
+
+          return (
+            <div key={fb.id} className="py-4 first:pt-0 last:pb-0">
+              <div className="flex items-start gap-3">
+                {/* Avatar */}
+                {fb.avatarUrl ? (
+                  <Image
+                    src={fb.avatarUrl}
+                    alt={fb.userName}
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 shrink-0 rounded-full object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1572D3]/10 text-sm font-bold text-[#1572D3]">
+                    {initials}
+                  </div>
+                )}
+
+                <div className="flex-1 min-w-0">
+                  {/* Name + rating */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                      {fb.userName}
+                    </span>
+                    <StarRating rating={fb.rating} />
+                  </div>
+
+                  {/* Date */}
+                  <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                    {new Date(fb.createdAt).toLocaleDateString("vi-VN", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })}
+                  </p>
+
+                  {/* Comment */}
+                  <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                    {fb.comment}
+                  </p>
+
+                  {/* Helpful */}
+                  <button className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300">
+                    <ThumbsUp className="h-3.5 w-3.5" />
+                    Hữu ích ({fb.helpful})
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -449,6 +662,9 @@ export default function PostDetail({ post }: PostDetailProps) {
                 </p>
               </section>
             )}
+
+            {/* Feedback / Reviews */}
+            <FeedbackSection />
           </div>
 
           {/* ── Right: sticky info + contact ── */}
