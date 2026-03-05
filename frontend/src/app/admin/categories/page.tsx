@@ -26,7 +26,10 @@ import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -44,7 +47,7 @@ export default function AdminCategoriesPage() {
     } catch (e) {
       setMessage({
         type: "error",
-        text: e instanceof Error ? e.message : "Failed to load categories",
+        text: e instanceof Error ? e.message : "Không thể tải danh mục",
       });
       setCategories([]);
     } finally {
@@ -129,7 +132,7 @@ export default function AdminCategoriesPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Categories</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">Danh mục</h1>
           <p className="mt-1 text-sm text-slate-600">
             Quản lý loại xe (danh mục) hiển thị khi đăng tin và tìm kiếm.
           </p>
@@ -167,24 +170,38 @@ export default function AdminCategoriesPage() {
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
                   <th className="px-4 py-3 font-semibold text-slate-700">ID</th>
-                  <th className="px-4 py-3 font-semibold text-slate-700">Tên</th>
-                  <th className="px-4 py-3 font-semibold text-slate-700">Mô tả</th>
-                  <th className="px-4 py-3 font-semibold text-slate-700">Trạng thái</th>
-                  <th className="px-4 py-3 font-semibold text-slate-700 text-right">Thao tác</th>
+                  <th className="px-4 py-3 font-semibold text-slate-700">
+                    Tên
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-700">
+                    Mô tả
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-700">
+                    Trạng thái
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-700 text-right">
+                    Thao tác
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {categories.map((c) => (
                   <tr key={c.id} className="border-b border-slate-100">
-                    <td className="px-4 py-3 font-mono text-slate-600">{c.id}</td>
-                    <td className="px-4 py-3 font-medium text-slate-900">{c.name}</td>
+                    <td className="px-4 py-3 font-mono text-slate-600">
+                      {c.id}
+                    </td>
+                    <td className="px-4 py-3 font-medium text-slate-900">
+                      {c.name}
+                    </td>
                     <td className="max-w-[200px] truncate px-4 py-3 text-slate-600">
                       {c.description ?? "—"}
                     </td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          c.status === 1 ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"
+                          c.status === 1
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-slate-100 text-slate-600"
                         }`}
                       >
                         {c.status === 1 ? "Hoạt động" : "Ẩn"}
@@ -224,14 +241,19 @@ export default function AdminCategoriesPage() {
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingId !== null ? "Sửa danh mục" : "Thêm danh mục"}</DialogTitle>
+            <DialogTitle>
+              {editingId !== null ? "Sửa danh mục" : "Thêm danh mục"}
+            </DialogTitle>
             <DialogDescription>
-              Tên danh mục hiển thị cho chủ xe khi đăng tin và cho khách khi tìm kiếm.
+              Tên danh mục hiển thị cho chủ xe khi đăng tin và cho khách khi tìm
+              kiếm.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-700">Tên *</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700">
+                Tên *
+              </label>
               <Input
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
@@ -240,7 +262,9 @@ export default function AdminCategoriesPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-700">Mô tả</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700">
+                Mô tả
+              </label>
               <Textarea
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
@@ -249,7 +273,9 @@ export default function AdminCategoriesPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-700">Trạng thái</label>
+              <label className="mb-1 block text-xs font-medium text-slate-700">
+                Trạng thái
+              </label>
               <select
                 value={formStatus}
                 onChange={(e) => setFormStatus(Number(e.target.value))}
@@ -261,10 +287,17 @@ export default function AdminCategoriesPage() {
             </div>
           </div>
           <DialogFooter showCloseButton={false}>
-            <Button variant="outline" onClick={() => setModalOpen(false)} disabled={submitting}>
+            <Button
+              variant="outline"
+              onClick={() => setModalOpen(false)}
+              disabled={submitting}
+            >
               Hủy
             </Button>
-            <Button onClick={handleSubmit} disabled={submitting || !formName.trim()}>
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting || !formName.trim()}
+            >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {editingId !== null ? "Cập nhật" : "Tạo"}
             </Button>
@@ -279,7 +312,8 @@ export default function AdminCategoriesPage() {
             <DialogHeader>
               <DialogTitle>Xóa danh mục?</DialogTitle>
               <DialogDescription>
-                Hành động này không thể hoàn tác. Các bài đăng đang dùng danh mục này có thể bị ảnh hưởng.
+                Hành động này không thể hoàn tác. Các bài đăng đang dùng danh
+                mục này có thể bị ảnh hưởng.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter showCloseButton={false}>

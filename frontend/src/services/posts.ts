@@ -8,6 +8,9 @@ export interface CreatePostRequest {
   description?: string | null;
   price: number;
   contactPhone?: string | null;
+  imageUrls?: string[];
+  imageUrl?: string;
+  videoUrls?: string[];
 }
 
 export interface CreatePostResponse {

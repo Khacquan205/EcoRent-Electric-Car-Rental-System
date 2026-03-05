@@ -14,7 +14,17 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Car, PlusCircle, Eye, Calendar, Tag } from "lucide-react";
+import {
+  Car,
+  PlusCircle,
+  Eye,
+  Calendar,
+  Tag,
+  ChevronLeft,
+  ChevronRight,
+  PlayCircle,
+  ImageIcon,
+} from "lucide-react";
 
 const STATUS_MAP: Record<number, string> = {
   0: "Chờ duyệt",
@@ -40,6 +50,135 @@ function formatDate(iso: string) {
   } catch {
     return iso;
   }
+}
+
+/* ─── Mini Gallery for Dialog ──────────────────────────────────── */
+
+type DetailMediaItem =
+  | { kind: "image"; src: string }
+  | { kind: "video"; src: string };
+
+function DetailGallery({
+  images,
+  videos,
+  title,
+}: {
+  images: string[];
+  videos: string[];
+  title: string;
+}) {
+  const items: DetailMediaItem[] = [
+    ...images.map((src) => ({ kind: "image" as const, src })),
+    ...videos.map((src) => ({ kind: "video" as const, src })),
+  ];
+
+  const [active, setActive] = useState(0);
+  const total = items.length;
+  const current = items[active];
+
+  if (total === 0) {
+    return (
+      <div className="flex h-40 items-center justify-center rounded-xl bg-slate-100">
+        <div className="flex flex-col items-center gap-2 text-slate-400">
+          <ImageIcon className="h-8 w-8" />
+          <span className="text-xs">Không có ảnh / video</span>
+        </div>
+      </div>
+    );
+  }
+
+  const go = (dir: 1 | -1) => setActive((i) => (i + dir + total) % total);
+
+  return (
+    <div className="overflow-hidden rounded-xl bg-gray-950">
+      {/* Main viewer */}
+      <div className="relative aspect-[16/10] w-full overflow-hidden">
+        {current.kind === "image" ? (
+          <img
+            key={current.src}
+            src={current.src}
+            alt={`${title} – ${active + 1}`}
+            className="h-full w-full object-contain"
+          />
+        ) : (
+          <video
+            key={current.src}
+            src={current.src}
+            controls
+            playsInline
+            className="h-full w-full object-contain"
+          />
+        )}
+
+        {/* Nav arrows */}
+        {total > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => go(-1)}
+              className="absolute left-2 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow transition-all hover:bg-white hover:scale-105"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => go(1)}
+              className="absolute right-2 top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow transition-all hover:bg-white hover:scale-105"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+
+            {/* Counter */}
+            <div className="absolute bottom-2 right-2 z-10 rounded-md bg-black/70 px-2.5 py-1 text-xs font-bold text-white">
+              {current.kind === "video" && (
+                <PlayCircle className="mr-1 inline h-3 w-3" />
+              )}
+              {active + 1} / {total}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Thumbnail strip */}
+      {total > 1 && (
+        <div className="flex gap-1.5 overflow-x-auto bg-gray-100 px-2 py-2 scrollbar-hide dark:bg-gray-900">
+          {items.map((item, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setActive(idx)}
+              className={`relative h-14 w-20 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
+                idx === active
+                  ? "border-[#1572D3] shadow-md shadow-blue-500/30 scale-105"
+                  : "border-transparent opacity-60 hover:opacity-100"
+              }`}
+            >
+              {item.kind === "image" ? (
+                <img
+                  src={item.src}
+                  alt={`Thumb ${idx + 1}`}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="relative h-full w-full bg-gray-900">
+                  <video
+                    src={item.src}
+                    className="h-full w-full object-cover opacity-70"
+                    muted
+                    playsInline
+                    preload="metadata"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                    <PlayCircle className="h-4 w-4 text-white" />
+                  </div>
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function OwnerPostsPage() {
@@ -294,7 +433,7 @@ export default function OwnerPostsPage() {
           open={detailPostId !== null}
           onOpenChange={(open) => !open && closeDetail()}
         >
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Chi tiết tin đăng</DialogTitle>
               <DialogDescription>
@@ -308,6 +447,13 @@ export default function OwnerPostsPage() {
             )}
             {detailPost && !detailLoading && (
               <div className="space-y-4 text-sm">
+                {/* ── Mini Gallery ── */}
+                <DetailGallery
+                  images={detailPost.images ?? []}
+                  videos={detailPost.videos ?? []}
+                  title={detailPost.title}
+                />
+
                 <div>
                   <p className="font-medium text-slate-900">
                     {detailPost.title}

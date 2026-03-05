@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { getPublicPosts } from "@/services/posts";
 import { getCategories } from "@/services/categories";
 import type { PostListItemDto } from "@/types/api";
 import type { VehicleCategory } from "@/services/categories";
 import { PostList } from "@/components/posts";
+import { Sparkles } from "lucide-react";
 
 const PAGE_SIZE = 12;
 
@@ -21,6 +22,7 @@ export default function PostsPage() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   // Fetch categories once
   useEffect(() => {
@@ -70,6 +72,25 @@ export default function PostsPage() {
   const totalPages = data?.totalPages ?? 0;
   const currentPage = data?.currentPage ?? 1;
   const totalCount = data?.totalCount ?? 0;
+  const normalizedKeyword = searchKeyword.trim().toLowerCase();
+  const isSearching = normalizedKeyword.length > 0;
+
+  const filteredItems = useMemo(() => {
+    if (!isSearching) return items;
+
+    return items.filter((post) => {
+      const title = post.title?.toLowerCase() ?? "";
+      const categoryName = post.categoryName?.toLowerCase() ?? "";
+      return (
+        title.includes(normalizedKeyword) ||
+        categoryName.includes(normalizedKeyword)
+      );
+    });
+  }, [items, isSearching, normalizedKeyword]);
+
+  const displayTotalCount = isSearching ? filteredItems.length : totalCount;
+  const displayTotalPages = isSearching ? 1 : totalPages;
+  const displayCurrentPage = isSearching ? 1 : currentPage;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -85,6 +106,20 @@ export default function PostsPage() {
           <p className="mt-1 text-sm text-gray-500">
             Khám phá xe điện phù hợp cho chuyến đi của bạn
           </p>
+        </div>
+
+        {/* ── AI search ───────────────────────────────────────── */}
+        <div className="mt-6 max-w-xl">
+          <div className="relative">
+            <Sparkles className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-blue-500" />
+            <input
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="Tìm kiếm xe bằng AI: tên xe hoặc danh mục..."
+              className="h-11 w-full rounded-xl border border-blue-100 bg-white pr-4 pl-10 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
         </div>
 
         {/* ── Category filter tabs ────────────────────────────── */}
@@ -124,11 +159,11 @@ export default function PostsPage() {
         {/* ── Grid ────────────────────────────────────────────── */}
         {!error && (
           <PostList
-            items={items}
+            items={filteredItems}
             loading={loading}
-            totalCount={totalCount}
-            totalPages={totalPages}
-            currentPage={currentPage}
+            totalCount={displayTotalCount}
+            totalPages={displayTotalPages}
+            currentPage={displayCurrentPage}
             pageSize={PAGE_SIZE}
             onPageChange={setPage}
           />

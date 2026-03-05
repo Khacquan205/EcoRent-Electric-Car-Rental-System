@@ -92,7 +92,7 @@ export default function OwnerPackagesPage() {
         </p>
       </div>
 
-      <div className="mx-auto max-w-5xl px-6 py-10">
+      <div className="mx-auto max-w-7xl px-6 py-10">
         {/* Active subscription banner */}
         {hasActiveSubscription && !postsExhausted && (
           <div className="mb-8 rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4">
@@ -167,7 +167,7 @@ export default function OwnerPackagesPage() {
 
         {/* Packages Grid */}
         {packages.length > 0 ? (
-          <div className="grid gap-8 sm:grid-cols-2">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {packages.map((pkg) => {
               const isCurrentPackage = lockedPackageIds.includes(pkg.id);
               const isLocked =

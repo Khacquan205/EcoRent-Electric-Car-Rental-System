@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -16,6 +16,8 @@ import {
   AlertTriangle,
   FileText,
   Share2,
+  X,
+  ZoomIn,
 } from "lucide-react";
 import type { PostDetailDto } from "@/types/api";
 import StatusBadge from "./StatusBadge";
@@ -36,7 +38,107 @@ type MediaItem =
   | { kind: "image"; src: string }
   | { kind: "video"; src: string };
 
-/* ─── Mixed-media Gallery ─────────────────────────────────────── */
+/* ─── Fullscreen Lightbox ────────────────────────────────────── */
+
+function Lightbox({
+  items,
+  active,
+  onClose,
+  onChangeActive,
+}: {
+  items: MediaItem[];
+  active: number;
+  onClose: () => void;
+  onChangeActive: (idx: number) => void;
+}) {
+  const total = items.length;
+  const current = items[active];
+
+  const go = useCallback(
+    (dir: 1 | -1) => {
+      onChangeActive((active + dir + total) % total);
+    },
+    [active, total, onChangeActive],
+  );
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") go(-1);
+      if (e.key === "ArrowRight") go(1);
+    };
+    window.addEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [go, onClose]);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm">
+      {/* Close */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 z-20 rounded-full bg-white/10 p-2.5 text-white transition hover:bg-white/20"
+        aria-label="Đóng"
+      >
+        <X className="h-6 w-6" />
+      </button>
+
+      {/* Counter */}
+      <div className="absolute top-4 left-4 z-20 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+        {active + 1} / {total}
+      </div>
+
+      {/* Nav arrows */}
+      {total > 1 && (
+        <>
+          <button
+            onClick={() => go(-1)}
+            className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/25"
+            aria-label="Trước"
+          >
+            <ChevronLeft className="h-7 w-7" />
+          </button>
+          <button
+            onClick={() => go(1)}
+            className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/25"
+            aria-label="Sau"
+          >
+            <ChevronRight className="h-7 w-7" />
+          </button>
+        </>
+      )}
+
+      {/* Main content */}
+      <div className="relative h-[85vh] w-[90vw] max-w-5xl">
+        {current.kind === "image" ? (
+          <Image
+            key={current.src}
+            src={current.src}
+            alt={`Ảnh ${active + 1}`}
+            fill
+            className="object-contain"
+            sizes="90vw"
+            unoptimized
+          />
+        ) : (
+          <video
+            key={current.src}
+            src={current.src}
+            controls
+            autoPlay
+            className="h-full w-full object-contain"
+            playsInline
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Mixed-media Gallery (Chợ Tốt style) ────────────────────── */
 
 function Gallery({
   images,
@@ -47,118 +149,216 @@ function Gallery({
   videos: string[];
   title: string;
 }) {
-  // Merge images first, then videos into a unified media array
   const items: MediaItem[] = [
     ...images.map((src) => ({ kind: "image" as const, src })),
     ...videos.map((src) => ({ kind: "video" as const, src })),
   ];
 
   const [active, setActive] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const thumbContainerRef = useRef<HTMLDivElement>(null);
+
   const current = items[active] ?? {
     kind: "image" as const,
     src: PLACEHOLDER_IMAGE,
   };
   const total = items.length;
 
-  const go = (dir: 1 | -1) => setActive((i) => (i + dir + total) % total);
+  const go = useCallback(
+    (dir: 1 | -1) => setActive((i) => (i + dir + total) % total),
+    [total],
+  );
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (lightboxOpen) return; // lightbox handles its own keys
+      if (e.key === "ArrowLeft") go(-1);
+      if (e.key === "ArrowRight") go(1);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [go, lightboxOpen]);
+
+  // Auto-scroll active thumbnail into view
+  useEffect(() => {
+    if (!thumbContainerRef.current) return;
+    const activeThumb = thumbContainerRef.current.children[active] as HTMLElement;
+    if (activeThumb) {
+      activeThumb.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+    }
+  }, [active]);
+
+  // Touch/swipe support
+  const touchStartX = useRef(0);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      go(diff > 0 ? 1 : -1);
+    }
+  };
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-white shadow-sm dark:bg-gray-900">
-      {/* ── Main viewer ── */}
-      <div className="relative aspect-video w-full overflow-hidden bg-gray-950">
-        {current.kind === "image" ? (
-          <Image
-            key={current.src}
-            src={current.src}
-            alt={`${title} – ${active + 1}`}
-            fill
-            className="object-cover transition-opacity duration-300"
-            priority={active === 0}
-            sizes="(max-width: 1024px) 100vw, 66vw"
-            unoptimized
-          />
-        ) : (
-          <video
-            key={current.src}
-            src={current.src}
-            controls
-            className="h-full w-full object-contain"
-            playsInline
-          />
-        )}
+    <>
+      <div className="overflow-hidden rounded-2xl bg-gray-950 shadow-lg">
+        {/* ── Main viewer ── */}
+        <div
+          className="relative aspect-[16/10] w-full cursor-pointer overflow-hidden bg-gray-950"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onClick={() => current.kind === "image" && setLightboxOpen(true)}
+        >
+          {current.kind === "image" ? (
+            <Image
+              key={current.src}
+              src={current.src}
+              alt={`${title} – ${active + 1}`}
+              fill
+              className="object-contain transition-all duration-300"
+              priority={active === 0}
+              sizes="(max-width: 1024px) 100vw, 66vw"
+              unoptimized
+            />
+          ) : (
+            <video
+              key={current.src}
+              src={current.src}
+              controls
+              className="h-full w-full object-contain"
+              playsInline
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
 
-        {/* Nav arrows — only when multiple items */}
-        {total > 1 && (
-          <>
-            <button
-              onClick={() => go(-1)}
-              aria-label="Trước"
-              className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/40 p-2.5 text-white backdrop-blur-sm transition hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          {/* Zoom hint for images */}
+          {current.kind === "image" && total > 0 && (
+            <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 text-xs text-white/80 opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-100"
+              style={{ opacity: 0.7 }}
             >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => go(1)}
-              aria-label="Sau"
-              className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/40 p-2.5 text-white backdrop-blur-sm transition hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-
-            {/* Counter + type indicator */}
-            <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
-              {current.kind === "video" && (
-                <PlayCircle className="h-3.5 w-3.5" />
-              )}
-              {active + 1} / {total}
+              <ZoomIn className="h-3.5 w-3.5" />
+              Phóng to
             </div>
-          </>
+          )}
+
+          {/* Nav arrows */}
+          {total > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); go(-1); }}
+                aria-label="Ảnh trước"
+                className="absolute left-3 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-lg transition-all hover:bg-white hover:scale-105 active:scale-95"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); go(1); }}
+                aria-label="Ảnh sau"
+                className="absolute right-3 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-lg transition-all hover:bg-white hover:scale-105 active:scale-95"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+
+              {/* Counter badge */}
+              <div className="absolute bottom-3 right-3 z-10 rounded-lg bg-black/70 px-3 py-1.5 text-sm font-bold text-white backdrop-blur-sm">
+                {current.kind === "video" && (
+                  <PlayCircle className="mr-1 inline h-3.5 w-3.5" />
+                )}
+                {active + 1} / {total}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ── Thumbnail strip ── */}
+        {total > 1 && (
+          <div className="relative bg-gray-100 dark:bg-gray-900">
+            {/* Scroll arrows for thumbnails */}
+            <button
+              onClick={() => {
+                if (thumbContainerRef.current) {
+                  thumbContainerRef.current.scrollBy({ left: -200, behavior: "smooth" });
+                }
+              }}
+              className="absolute left-0 top-0 z-10 flex h-full w-8 items-center justify-center bg-gradient-to-r from-gray-100 to-transparent dark:from-gray-900 hover:from-gray-200 dark:hover:from-gray-800 transition"
+              aria-label="Cuộn thumbnail trái"
+            >
+              <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            </button>
+
+            <div
+              ref={thumbContainerRef}
+              className="flex gap-2 overflow-x-auto px-10 py-3 scrollbar-hide scroll-smooth"
+            >
+              {items.map((item, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActive(idx)}
+                  aria-label={`${item.kind === "video" ? "Video" : "Ảnh"} ${idx + 1}`}
+                  className={`relative h-[68px] w-[96px] shrink-0 overflow-hidden rounded-lg border-[2.5px] transition-all duration-200 ${
+                    idx === active
+                      ? "border-[#1572D3] shadow-md shadow-blue-500/30 scale-105"
+                      : "border-transparent opacity-70 hover:opacity-100 hover:border-gray-300 dark:hover:border-gray-600"
+                  }`}
+                >
+                  {item.kind === "image" ? (
+                    <Image
+                      src={item.src}
+                      alt={`Thumbnail ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="96px"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="relative flex h-full w-full items-center justify-center bg-gray-900">
+                      <video
+                        src={item.src}
+                        className="h-full w-full object-cover opacity-70"
+                        muted
+                        playsInline
+                        preload="metadata"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                        <PlayCircle className="h-5 w-5 text-white drop-shadow" />
+                      </div>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                if (thumbContainerRef.current) {
+                  thumbContainerRef.current.scrollBy({ left: 200, behavior: "smooth" });
+                }
+              }}
+              className="absolute right-0 top-0 z-10 flex h-full w-8 items-center justify-center bg-gradient-to-l from-gray-100 to-transparent dark:from-gray-900 hover:from-gray-200 dark:hover:from-gray-800 transition"
+              aria-label="Cuộn thumbnail phải"
+            >
+              <ChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            </button>
+          </div>
         )}
       </div>
 
-      {/* ── Thumbnail strip ── */}
-      {total > 1 && (
-        <div className="flex gap-2 overflow-x-auto px-3 py-3 scrollbar-hide">
-          {items.map((item, idx) => (
-            <button
-              key={idx}
-              onClick={() => setActive(idx)}
-              aria-label={`${item.kind === "video" ? "Video" : "Ảnh"} ${idx + 1}`}
-              className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-200 ${
-                idx === active
-                  ? "border-[#1572D3] shadow-md shadow-blue-400/25"
-                  : "border-transparent hover:border-gray-300 dark:hover:border-gray-600"
-              }`}
-            >
-              {item.kind === "image" ? (
-                <Image
-                  src={item.src}
-                  alt={`Thumbnail ${idx + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="96px"
-                  unoptimized
-                />
-              ) : (
-                /* Video thumbnail: muted preview + play-icon overlay */
-                <div className="relative flex h-full w-full items-center justify-center bg-gray-900">
-                  <video
-                    src={item.src}
-                    className="h-full w-full object-cover opacity-70"
-                    muted
-                    playsInline
-                    preload="metadata"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                    <PlayCircle className="h-5 w-5 text-white drop-shadow" />
-                  </div>
-                </div>
-              )}
-            </button>
-          ))}
-        </div>
+      {/* Fullscreen Lightbox */}
+      {lightboxOpen && (
+        <Lightbox
+          items={items}
+          active={active}
+          onClose={() => setLightboxOpen(false)}
+          onChangeActive={setActive}
+        />
       )}
-    </div>
+    </>
   );
 }
 
