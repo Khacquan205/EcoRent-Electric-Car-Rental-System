@@ -213,76 +213,79 @@ export default function NewPostPage() {
       </div>
 
       {/* Content */}
-      <div className="mx-auto max-w-3xl px-6 py-10 space-y-6">
-        {/* No subscription warning */}
-        {!canPost && (
-          <div className="flex gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100">
-              <span className="text-xl">⚡</span>
-            </div>
-            <div>
-              <p className="font-semibold text-amber-900">
-                {!activeSub
-                  ? "Bạn chưa có gói hoạt động"
-                  : "Bạn đã hết lượt đăng"}
-              </p>
-              <p className="mt-0.5 text-sm text-amber-700">
-                {!activeSub
-                  ? "Mua gói trước để có thể đăng tin cho thuê xe."
-                  : "Vui lòng nâng cấp gói để tiếp tục đăng tin."}
-              </p>
-              <Link
-                href="/owner/owner-packages"
-                className="mt-2 inline-flex items-center gap-1 rounded-lg bg-amber-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-amber-600"
-              >
-                Xem gói ngay →
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {/* Active subscription info */}
-        {activeSub && (
-          <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
-            <div>
-              <p className="text-sm text-slate-500">Lượt đăng còn lại</p>
-              <p className="text-2xl font-bold text-primary">
-                {activeSub.remainingPosts}
-                <span className="text-base font-normal text-slate-400">
-                  {" "}
-                  / {activeSub.totalPosts}
-                </span>
-              </p>
-            </div>
-            {activeSub.remainingPosts === 0 && (
-              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
-                Hết slot
-              </span>
+      <div className="mx-auto max-w-6xl px-6 py-10">
+        <div className="grid gap-6 lg:grid-cols-[120px_1fr] lg:items-start">
+          <div className="space-y-6 lg:order-2">
+            {/* No subscription warning */}
+            {!canPost && (
+              <div className="flex gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+                  <span className="text-xl">⚡</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-amber-900">
+                    {!activeSub
+                      ? "Bạn chưa có gói hoạt động"
+                      : "Bạn đã hết lượt đăng"}
+                  </p>
+                  <p className="mt-0.5 text-sm text-amber-700">
+                    {!activeSub
+                      ? "Mua gói trước để có thể đăng tin cho thuê xe."
+                      : "Vui lòng nâng cấp gói để tiếp tục đăng tin."}
+                  </p>
+                  <Link
+                    href="/owner/owner-packages"
+                    className="mt-2 inline-flex items-center gap-1 rounded-lg bg-amber-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-amber-600"
+                  >
+                    Xem gói ngay →
+                  </Link>
+                </div>
+              </div>
             )}
-          </div>
-        )}
 
-        {/* Error */}
-        {error && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+            {/* Active subscription info */}
+            {activeSub && (
+              <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
+                <div>
+                  <p className="text-sm text-slate-500">Lượt đăng còn lại</p>
+                  <p className="text-2xl font-bold text-primary">
+                    {activeSub.remainingPosts}
+                    <span className="text-base font-normal text-slate-400">
+                      {" "}
+                      / {activeSub.totalPosts}
+                    </span>
+                  </p>
+                </div>
+                {activeSub.remainingPosts === 0 && (
+                  <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
+                    Hết slot
+                  </span>
+                )}
+              </div>
+            )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Progress */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between text-sm font-medium text-slate-600">
-              <span>Mức độ hoàn thành tin đăng</span>
-              <span className="font-bold text-primary">{progressPercent}%</span>
+            {/* Error */}
+            {error && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            {/* Progress for mobile */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:hidden">
+              <div className="flex items-center justify-between text-sm font-medium text-slate-600">
+                <span>Mức độ hoàn thành tin đăng</span>
+                <span className="font-bold text-primary">{progressPercent}%</span>
+              </div>
+              <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
             </div>
-            <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-slate-100">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
 
           {/* Section 1: Basic Info */}
           <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
@@ -529,7 +532,32 @@ export default function NewPostPage() {
               Hủy
             </Link>
           </div>
-        </form>
+            </form>
+          </div>
+
+          {/* Sticky vertical progress for desktop */}
+          <aside className="sticky top-24 hidden h-fit lg:order-1 lg:block">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-center text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                Hoàn thành
+              </p>
+              <p className="mt-1 text-center text-lg font-bold text-primary">
+                {progressPercent}%
+              </p>
+              <div className="mt-4 flex justify-center">
+                <div className="relative h-72 w-3 overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className="absolute bottom-0 left-0 w-full rounded-full bg-primary transition-all duration-300 ease-out"
+                    style={{ height: `${progressPercent}%` }}
+                  />
+                </div>
+              </div>
+              <p className="mt-4 text-center text-[11px] text-slate-400">
+                Tự động theo cuộn
+              </p>
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   );
