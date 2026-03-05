@@ -8,7 +8,7 @@ import { getCategories } from "@/services/categories";
 import { createPost } from "@/services/posts";
 import type { VehicleCategory } from "@/services/categories";
 import type { SubscriptionListItem } from "@/services/subscription";
-import { Car, Loader2 } from "lucide-react";
+import { Car, Loader2, X, ImagePlus } from "lucide-react";
 import { uploadImage, uploadVideo } from "@/utils/cloudinaryUpload";
 
 export default function NewPostPage() {
@@ -27,10 +27,12 @@ export default function NewPostPage() {
   const [price, setPrice] = useState("");
   const [contactPhone, setContactPhone] = useState("");
 
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
+  const MAX_IMAGES = 10;
 
   const [videoFiles, setVideoFiles] = useState<File[]>([]);
   const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
@@ -61,7 +63,7 @@ export default function NewPostPage() {
     categoryId > 0,
     title.trim().length > 0,
     description.trim().length > 0,
-    !!imageUrl || !!imagePreview,
+    imageUrls.length > 0 || imagePreviews.length > 0,
     price.trim().length > 0,
     contactPhone.trim().length > 0,
   ].filter(Boolean).length;
@@ -70,102 +72,54 @@ export default function NewPostPage() {
   );
 
   async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+    const files = Array.from(e.target.files ?? []);
     setImageError(null);
-    setImageUrl(null);
 
-    if (!file) {
-      setImagePreview(null);
+    if (files.length === 0) return;
+
+    const totalAfterAdd = imagePreviews.length + files.length;
+    if (totalAfterAdd > MAX_IMAGES) {
+      setImageError(`Tối đa ${MAX_IMAGES} ảnh. Bạn đã chọn ${imagePreviews.length}, không thể thêm ${files.length} ảnh nữa.`);
       return;
     }
 
-    setImagePreview(URL.createObjectURL(file));
+    // Create previews immediately
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setImageFiles((prev) => [...prev, ...files]);
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
 
-    // #region agent log
-    fetch("http://127.0.0.1:7261/ingest/98244a71-f16f-4de1-9d2c-a48f1033456f", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "c89275",
-      },
-      body: JSON.stringify({
-        sessionId: "c89275",
-        runId: "pre-fix",
-        hypothesisId: "H1",
-        location: "owner/post/new/page.tsx:handleImageChange",
-        message: "Selected image file",
-        data: {
-          hasFile: !!file,
-          fileType: file.type,
-          fileSize: file.size,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion agent log
-
-    setUploadingImage(true);
+    // Upload all new files to Cloudinary in parallel
+    setUploadingImages(true);
     try {
-      const url = await uploadImage(file);
-      setImageUrl(url);
-
-      // #region agent log
-      fetch(
-        "http://127.0.0.1:7261/ingest/98244a71-f16f-4de1-9d2c-a48f1033456f",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Debug-Session-Id": "c89275",
-          },
-          body: JSON.stringify({
-            sessionId: "c89275",
-            runId: "pre-fix",
-            hypothesisId: "H2",
-            location: "owner/post/new/page.tsx:handleImageChange",
-            message: "Image uploaded to Cloudinary",
-            data: {
-              imageUrlSet: !!url,
-            },
-            timestamp: Date.now(),
-          }),
-        },
-      ).catch(() => {});
-      // #endregion agent log
+      const urls = await Promise.all(files.map((file) => uploadImage(file)));
+      setImageUrls((prev) => [...prev, ...urls]);
     } catch (err) {
       setImageError(
         err instanceof Error
           ? err.message
           : "Không thể tải ảnh lên. Vui lòng thử lại.",
       );
-      setImageUrl(null);
-
-      // #region agent log
-      fetch(
-        "http://127.0.0.1:7261/ingest/98244a71-f16f-4de1-9d2c-a48f1033456f",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Debug-Session-Id": "c89275",
-          },
-          body: JSON.stringify({
-            sessionId: "c89275",
-            runId: "pre-fix",
-            hypothesisId: "H3",
-            location: "owner/post/new/page.tsx:handleImageChange",
-            message: "Image upload failed",
-            data: {
-              hasError: true,
-            },
-            timestamp: Date.now(),
-          }),
-        },
-      ).catch(() => {});
-      // #endregion agent log
+      // Roll back previews for failed batch
+      setImageFiles((prev) => prev.slice(0, prev.length - files.length));
+      setImagePreviews((prev) => {
+        const rolled = prev.slice(0, prev.length - newPreviews.length);
+        newPreviews.forEach((u) => URL.revokeObjectURL(u));
+        return rolled;
+      });
     } finally {
-      setUploadingImage(false);
+      setUploadingImages(false);
+      // Reset the input so choosing the same files again triggers onChange
+      e.target.value = "";
     }
+  }
+
+  function removeImage(index: number) {
+    setImagePreviews((prev) => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+    setImageUrls((prev) => prev.filter((_, i) => i !== index));
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function handleVideoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -183,33 +137,13 @@ export default function NewPostPage() {
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    // #region agent log
-    fetch("http://127.0.0.1:7261/ingest/98244a71-f16f-4de1-9d2c-a48f1033456f", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "c89275",
-      },
-      body: JSON.stringify({
-        sessionId: "c89275",
-        runId: "pre-fix",
-        hypothesisId: "H4",
-        location: "owner/post/new/page.tsx:handleSubmit",
-        message: "Entered handleSubmit",
-        data: {},
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion agent log
-
     e.preventDefault();
     if (!canPost) return;
-    if (uploadingImage || uploadingVideos) return;
+    if (uploadingImages || uploadingVideos) return;
 
     setError(null);
     setSubmitting(true);
     try {
-      const uploadedImageUrl = imageUrl ?? null;
       let uploadedVideoUrls: string[] = [];
 
       if (videoFiles.length > 0) {
@@ -239,33 +173,8 @@ export default function NewPostPage() {
         contactPhone: contactPhone || undefined,
       };
 
-      payload.imageUrl = uploadedImageUrl;
-      payload.videoUrls = uploadedVideoUrls;
-
-      // #region agent log
-      fetch(
-        "http://127.0.0.1:7261/ingest/98244a71-f16f-4de1-9d2c-a48f1033456f",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Debug-Session-Id": "c89275",
-          },
-          body: JSON.stringify({
-            sessionId: "c89275",
-            runId: "pre-fix",
-            hypothesisId: "H5",
-            location: "owner/post/new/page.tsx:handleSubmit",
-            message: "Calling createPost",
-            data: {
-              hasImageUrlInPayload: !!payload.imageUrl,
-              videoUrlCount: uploadedVideoUrls.length,
-            },
-            timestamp: Date.now(),
-          }),
-        },
-      ).catch(() => {});
-      // #endregion agent log
+      payload.imageUrls = imageUrls.length > 0 ? imageUrls : undefined;
+      payload.videoUrls = uploadedVideoUrls.length > 0 ? uploadedVideoUrls : undefined;
 
       await createPost(payload);
       router.push("/owner/posts");
@@ -436,37 +345,75 @@ export default function NewPostPage() {
             </h2>
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-slate-700">
-                  Ảnh minh họa
-                </label>
-                <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
-                  <span className="text-2xl">📷</span>
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-semibold text-slate-700">
+                    Ảnh minh họa
+                  </label>
+                  <span className="text-xs text-slate-400">
+                    {imagePreviews.length}/{MAX_IMAGES} ảnh
+                  </span>
+                </div>
+                <label className={`mt-2 flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed px-4 py-4 transition-colors ${
+                  imagePreviews.length >= MAX_IMAGES
+                    ? "border-slate-100 bg-slate-50 cursor-not-allowed opacity-50"
+                    : "border-slate-200 bg-slate-50 hover:border-primary hover:bg-primary/5"
+                }`}>
+                  <ImagePlus className="h-6 w-6 text-slate-400" />
                   <span className="text-sm text-slate-600">
-                    Chọn ảnh từ thiết bị
+                    {imagePreviews.length >= MAX_IMAGES
+                      ? `Đã đạt giới hạn ${MAX_IMAGES} ảnh`
+                      : "Chọn ảnh từ thiết bị (có thể chọn nhiều ảnh)"}
                   </span>
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={handleImageChange}
+                    disabled={imagePreviews.length >= MAX_IMAGES}
                     className="hidden"
                   />
                 </label>
-                {uploadingImage && (
+                {uploadingImages && (
                   <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Đang tải ảnh
-                    lên...
+                    <Loader2 className="h-3 w-3 animate-spin" /> Đang tải ảnh lên Cloudinary...
                   </p>
                 )}
                 {imageError && (
                   <p className="mt-2 text-xs text-red-600">{imageError}</p>
                 )}
-                {imagePreview && (
-                  <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
-                    <img
-                      src={imagePreview}
-                      alt="Xem trước ảnh"
-                      className="h-56 w-full object-cover"
-                    />
+                {imagePreviews.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {imagePreviews.map((src, index) => (
+                      <div
+                        key={index}
+                        className="group relative overflow-hidden rounded-xl border border-slate-200"
+                      >
+                        <img
+                          src={src}
+                          alt={`Ảnh ${index + 1}`}
+                          className="h-36 w-full object-cover"
+                        />
+                        {/* Upload status indicator */}
+                        {index >= imageUrls.length && uploadingImages && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                            <Loader2 className="h-6 w-6 animate-spin text-white" />
+                          </div>
+                        )}
+                        {/* Index badge */}
+                        <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white">
+                          {index + 1}
+                        </span>
+                        {/* Delete button */}
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500/90 text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 hover:bg-red-600"
+                          title="Xóa ảnh"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -563,7 +510,7 @@ export default function NewPostPage() {
               disabled={
                 !canPost ||
                 submitting ||
-                uploadingImage ||
+                uploadingImages ||
                 (activeSub?.remainingPosts ?? 0) === 0
               }
               className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-bold text-white shadow-md transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
