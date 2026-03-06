@@ -1,0 +1,50 @@
+
+> ecorent@0.1.0 build
+> next build
+
+▲ Next.js 16.1.5 (Turbopack)
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 9.3s
+  Running TypeScript ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/25) ...
+  Generating static pages using 15 workers (6/25) 
+  Generating static pages using 15 workers (12/25) 
+  Generating static pages using 15 workers (18/25) 
+✓ Generating static pages using 15 workers (25/25) in 1312.0ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /about-us
+├ ƒ /admin
+├ ƒ /admin/categories
+├ ƒ /admin/owner-subscriptions
+├ ƒ /admin/owners
+├ ƒ /admin/pending-posts
+├ ƒ /api/[...path]
+├ ○ /become-a-renter
+├ ○ /become-owner
+├ ○ /cars
+├ ƒ /cars/[id]
+├ ○ /how-it-works
+├ ○ /login
+├ ○ /owner
+├ ○ /owner/owner-packages
+├ ○ /owner/post/new
+├ ○ /owner/posts
+├ ○ /owner/subscription
+├ ○ /payment/vnpay-return
+├ ○ /posts
+├ ƒ /posts/[id]
+├ ○ /register
+├ ○ /settings
+└ ○ /user
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+BUILD SUCCESS
