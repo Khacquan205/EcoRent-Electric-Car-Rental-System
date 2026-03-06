@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getMySubscriptions } from "@/services/subscription";
 import { getCategories } from "@/services/categories";
 import { createPost } from "@/services/posts";
+import type { CreatePostRequest } from "@/services/posts";
 import type { VehicleCategory } from "@/services/categories";
 import type { SubscriptionListItem } from "@/services/subscription";
 import { Car, Loader2, X, ImagePlus } from "lucide-react";
@@ -167,17 +168,15 @@ export default function NewPostPage() {
         }
       }
 
-      const payload: any = {
+      const payload: CreatePostRequest = {
         categoryId,
         title,
         description: description || undefined,
         price: Number(price) || 0,
         contactPhone: contactPhone || undefined,
+        imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
+        videoUrls: uploadedVideoUrls.length > 0 ? uploadedVideoUrls : undefined,
       };
-
-      payload.imageUrls = imageUrls.length > 0 ? imageUrls : undefined;
-      payload.videoUrls =
-        uploadedVideoUrls.length > 0 ? uploadedVideoUrls : undefined;
 
       await createPost(payload);
       router.push("/owner/posts");

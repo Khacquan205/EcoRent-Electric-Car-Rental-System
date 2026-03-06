@@ -191,6 +191,7 @@ export default function OwnerPostsPage() {
   const [detailLoading, setDetailLoading] = useState(false);
 
   const fetchPosts = useCallback(() => {
+    setLoading(true);
     getMyPosts()
       .then(setPosts)
       .catch((e) => setError(e instanceof Error ? e.message : "Lỗi tải tin"))
@@ -198,8 +199,7 @@ export default function OwnerPostsPage() {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
-    fetchPosts();
+    Promise.resolve().then(fetchPosts);
   }, [fetchPosts]);
 
   const addToast = useCallback((item: Omit<ToastItem, "id">) => {

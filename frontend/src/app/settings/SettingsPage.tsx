@@ -7,10 +7,11 @@ import {
   updateCustomerProfile,
   ApiError,
 } from "@/services";
+import type { CustomerProfile } from "@/services/customer-profile";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<CustomerProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -35,6 +36,7 @@ export default function SettingsPage() {
   }, [router]);
 
   const handleUpdate = async () => {
+    if (!profile) return;
     try {
       await updateCustomerProfile(profile);
       alert("Cập nhật thành công");
@@ -79,9 +81,7 @@ export default function SettingsPage() {
           className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30"
           disabled={!editing}
           value={profile.address ?? ""}
-          onChange={(e) =>
-            setProfile({ ...profile, address: e.target.value })
-          }
+          onChange={(e) => setProfile({ ...profile, address: e.target.value })}
           placeholder="Địa chỉ (gợi ý xe gần bạn)"
         />
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthSession } from "@/components/providers";
 import {
@@ -21,11 +21,11 @@ export default function NavUserMenu({
 }: Props) {
   const router = useRouter();
   const { session, logout: logoutSession } = useAuthSession();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const email = session?.email ?? null;
   const isAdminOrStaff =

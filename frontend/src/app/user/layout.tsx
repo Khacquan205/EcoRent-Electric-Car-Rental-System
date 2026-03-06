@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { clearSessionCookie, getSessionCookie } from "@/lib/authSession";
 import { Button } from "@/components/ui/button";
@@ -17,15 +17,20 @@ export default function UserLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const [email, setEmail] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
     const s = getSessionCookie();
-    setEmail(s?.email ?? null);
-    setRole(s?.role ?? null);
+    Promise.resolve().then(() => {
+      setEmail(s?.email ?? null);
+      setRole(s?.role ?? null);
+    });
   }, []);
 
   const initials = useMemo(() => {

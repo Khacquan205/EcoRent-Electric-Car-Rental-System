@@ -53,7 +53,7 @@ export default function OwnerPackagesPage() {
         source: "Web",
       });
       const { paymentUrl } = await createPaymentUrl(sub.id);
-      window.location.href = paymentUrl;
+      window.location.assign(paymentUrl);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Tạo thanh toán thất bại");
       setPayingId(null);
