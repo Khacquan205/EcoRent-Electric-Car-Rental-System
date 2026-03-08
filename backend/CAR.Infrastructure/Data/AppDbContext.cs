@@ -33,6 +33,9 @@ namespace CAR.Infrastructure.Data
         public DbSet<MIdentityVerification> IdentityVerifications { get; set; }
         public DbSet<MPhone> Phones { get; set; }
         public DbSet<MNotification> Notifications { get; set; }
+        public DbSet<MAdPackage> AdPackages { get; set; }
+        public DbSet<MOwnerAdCredit> OwnerAdCredits { get; set; }
+        public DbSet<MAdOrder> AdOrders { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

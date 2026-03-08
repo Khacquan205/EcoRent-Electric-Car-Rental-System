@@ -266,12 +266,18 @@ namespace CAR.Infrastructure.Services
             if (pageSize <= 0) pageSize = 12;
             if (pageSize > 100) pageSize = 100;
 
+            var now = DateTime.UtcNow;
+            // Sort: (1) ad priority 1–3 (bài có quảng cáo còn hiệu lực), (2) gói đăng bài priority_level, (3) ngày tạo.
             var query = _postRepository.Query()
                 .Include(p => p.Category)
                 .Include(p => p.Images.OrderBy(i => i.SortOrder))
                 .Include(p => p.Videos)
+                .Include(p => p.Advertisement)
                 .Where(p => p.Status == (short)PostStatus.Approved)
-                .OrderByDescending(p => p.CreatedAt);
+                .Where(p => p.ExpiredAt == null || p.ExpiredAt >= now)
+                .OrderByDescending(p => (p.Advertisement != null && p.Advertisement.EndDate >= now) ? p.Advertisement.PriorityLevel : 0)
+                .ThenByDescending(p => p.PriorityLevel)
+                .ThenByDescending(p => p.CreatedAt);
 
             var totalCount = await query.CountAsync();
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
@@ -287,7 +293,10 @@ namespace CAR.Infrastructure.Services
                     p.Status,
                     p.CreatedAt,
                     p.ExpiredAt,
+                    p.PriorityLevel,
                     CategoryName = p.Category.Name,
+                    IsPromoted = p.Advertisement != null && p.Advertisement.EndDate >= now,
+                    PromotedPriorityLevel = (p.Advertisement != null && p.Advertisement.EndDate >= now) ? p.Advertisement.PriorityLevel : 0,
                     Images = p.Images
                         .OrderBy(i => i.SortOrder)
                         .Select(i => i.ImageUrl)
@@ -308,6 +317,8 @@ namespace CAR.Infrastructure.Services
                 CreatedAt = p.CreatedAt,
                 ExpiredAt = p.ExpiredAt,
                 CategoryName = p.CategoryName,
+                IsPromoted = p.IsPromoted,
+                PromotedPriorityLevel = p.PromotedPriorityLevel,
                 Images = p.Images,
                 Videos = p.Videos
             }).ToList();
@@ -319,6 +330,78 @@ namespace CAR.Infrastructure.Services
                 TotalPages = totalPages,
                 CurrentPage = page
             };
+        }
+
+        public async Task<List<PostListItemDto>> GetPublicPostsForSuggestionAsync(decimal? maxPrice, decimal? minPrice, int? categoryId, IReadOnlyList<int>? locationIds, string? brandKeyword, int limit)
+        {
+            if (limit <= 0) limit = 10;
+            if (limit > 20) limit = 20;
+
+            var now = DateTime.UtcNow;
+            var query = _postRepository.Query()
+                .Include(p => p.Category)
+                .Include(p => p.Images.OrderBy(i => i.SortOrder))
+                .Include(p => p.Videos)
+                .Include(p => p.Advertisement)
+                .Where(p => p.Status == (short)PostStatus.Approved)
+                .Where(p => p.ExpiredAt == null || p.ExpiredAt >= now);
+
+            if (maxPrice.HasValue && maxPrice.Value > 0)
+                query = query.Where(p => p.Price <= maxPrice.Value);
+            if (minPrice.HasValue && minPrice.Value > 0)
+                query = query.Where(p => p.Price >= minPrice.Value);
+            if (categoryId.HasValue && categoryId.Value > 0)
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            if (locationIds != null && locationIds.Count > 0)
+                query = query.Where(p => p.LocationId != null && locationIds.Contains(p.LocationId.Value));
+            // Hãng xe: tìm trong Title và Description (chủ đăng thường ghi tên hãng ở đây)
+            if (!string.IsNullOrWhiteSpace(brandKeyword))
+            {
+                var pattern = "%" + brandKeyword.Trim() + "%";
+                query = query.Where(p =>
+                    EF.Functions.ILike(p.Title, pattern) ||
+                    (p.Description != null && EF.Functions.ILike(p.Description, pattern)));
+            }
+
+            var ordered = query
+                .OrderByDescending(p => (p.Advertisement != null && p.Advertisement.EndDate >= now) ? p.Advertisement.PriorityLevel : 0)
+                .ThenByDescending(p => p.PriorityLevel)
+                .ThenByDescending(p => p.CreatedAt);
+
+            var rawPosts = await ordered
+                .Take(limit)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Title,
+                    p.Price,
+                    p.Status,
+                    p.CreatedAt,
+                    p.ExpiredAt,
+                    p.PriorityLevel,
+                    CategoryName = p.Category.Name,
+                    IsPromoted = p.Advertisement != null && p.Advertisement.EndDate >= now,
+                    PromotedPriorityLevel = (p.Advertisement != null && p.Advertisement.EndDate >= now) ? p.Advertisement.PriorityLevel : 0,
+                    Images = p.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
+                    Videos = p.Videos.Select(v => v.VideoUrl).ToList()
+                })
+                .ToListAsync();
+
+            return rawPosts.Select(p => new PostListItemDto
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Price = p.Price,
+                Status = p.Status,
+                StatusName = Enum.GetName(typeof(PostStatus), p.Status) ?? p.Status.ToString(),
+                CreatedAt = p.CreatedAt,
+                ExpiredAt = p.ExpiredAt,
+                CategoryName = p.CategoryName,
+                IsPromoted = p.IsPromoted,
+                PromotedPriorityLevel = p.PromotedPriorityLevel,
+                Images = p.Images,
+                Videos = p.Videos
+            }).ToList();
         }
     }
 }

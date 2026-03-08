@@ -12,5 +12,7 @@ namespace CAR.Application.Interfaces.Services
         Task UpdatePostAsync(int postId, int userId, UpdatePostRequestDto request);
         Task DeletePostAsync(int postId, int userId);
         Task<PagedResultDto<PostListItemDto>> GetPublicPostsAsync(int page, int pageSize);
+        /// <summary>Lấy danh sách bài public có filter (giá, category, location, hãng xe) để gợi ý trong chat, sort giống GetPublicPosts.</summary>
+        Task<List<PostListItemDto>> GetPublicPostsForSuggestionAsync(decimal? maxPrice, decimal? minPrice, int? categoryId, IReadOnlyList<int>? locationIds, string? brandKeyword, int limit);
     }
 }

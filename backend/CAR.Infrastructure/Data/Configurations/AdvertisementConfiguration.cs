@@ -1,4 +1,4 @@
-﻿using CAR.Domain.Entities;
+using CAR.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -39,6 +39,10 @@ namespace CAR.Infrastructure.Data.Configurations
             builder.Property(x => x.Price)
                    .HasColumnName("price")
                    .HasColumnType("numeric(18,2)")
+                   .IsRequired();
+
+            builder.Property(x => x.PriorityLevel)
+                   .HasColumnName("priority_level")
                    .IsRequired();
 
             builder.Property(x => x.CreatedAt)

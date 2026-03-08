@@ -15,9 +15,15 @@ public class PaymentConfiguration : IEntityTypeConfiguration<MPayment>
                .ValueGeneratedOnAdd()
                .IsRequired();
 
-        builder.Property(x => x.SubscriptionId)
-               .HasColumnName("subscription_id")
+        builder.Property(x => x.PaymentType)
+               .HasColumnName("payment_type")
                .IsRequired();
+
+        builder.Property(x => x.SubscriptionId)
+               .HasColumnName("subscription_id");
+
+        builder.Property(x => x.AdOrderId)
+               .HasColumnName("ad_order_id");
 
         builder.Property(x => x.Amount)
                .HasColumnName("amount")
@@ -61,5 +67,10 @@ public class PaymentConfiguration : IEntityTypeConfiguration<MPayment>
                .WithMany(x => x.Payments)
                .HasForeignKey(x => x.SubscriptionId)
                .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(x => x.AdOrder)
+               .WithMany()
+               .HasForeignKey(x => x.AdOrderId)
+               .OnDelete(DeleteBehavior.Restrict);
     }
 }
