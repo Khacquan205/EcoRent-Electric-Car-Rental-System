@@ -11,14 +11,10 @@ namespace CAR.Controllers
     public class OwnerAdvertisementController : ControllerBase
     {
         private readonly IOwnerAdvertisementService _ownerAdvertisementService;
-        private readonly IPaymentService _paymentService;
 
-        public OwnerAdvertisementController(
-            IOwnerAdvertisementService ownerAdvertisementService,
-            IPaymentService paymentService)
+        public OwnerAdvertisementController(IOwnerAdvertisementService ownerAdvertisementService)
         {
             _ownerAdvertisementService = ownerAdvertisementService;
-            _paymentService = paymentService;
         }
 
         /// <summary>Danh sách gói quảng cáo đang bán (cho owner chọn mua).</summary>
@@ -39,26 +35,17 @@ namespace CAR.Controllers
         }
 
         /// <summary>Tạo đơn mua gói quảng cáo (chỉ tạo đơn, chưa thanh toán). Trả về adOrderId để gọi API payment tạo URL.</summary>
-        [HttpPost("create-order")]
-        public async Task<IActionResult> CreateOrder([FromBody] CreateAdOrderRequest request)
+        [HttpPost("create-ads")]
+        public async Task<IActionResult> CreateAds([FromBody] CreateAdOrderRequest request)
         {
             var userId = GetUserId();
             var adOrderId = await _ownerAdvertisementService.CreateAdOrderAsync(userId, request.AdPackageId);
             return Ok(new { adOrderId });
         }
 
-        /// <summary>Mua gói quảng cáo ngay không qua VNPay (tạo credit trực tiếp, dùng cho test/khuyến mãi).</summary>
-        [HttpPost("purchase-direct")]
-        public async Task<IActionResult> PurchaseDirect([FromBody] PurchaseAdPackageRequest request)
-        {
-            var userId = GetUserId();
-            var result = await _ownerAdvertisementService.PurchaseAdPackageAsync(userId, request.AdPackageId);
-            return Ok(result);
-        }
-
         /// <summary>Áp dụng quảng cáo lên một bài đã duyệt (dùng 1 credit).</summary>
-        [HttpPost("apply")]
-        public async Task<IActionResult> ApplyToPost([FromBody] ApplyAdToPostRequest request)
+        [HttpPost("apply-post-ad")]
+        public async Task<IActionResult> ApplyPostAd([FromBody] ApplyAdToPostRequest request)
         {
             var userId = GetUserId();
             await _ownerAdvertisementService.ApplyAdToPostAsync(userId, request.PostId);
@@ -70,11 +57,6 @@ namespace CAR.Controllers
             var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return int.TryParse(claim, out var id) ? id : 0;
         }
-    }
-
-    public class PurchaseAdPackageRequest
-    {
-        public int AdPackageId { get; set; }
     }
 
     /// <summary>Request tạo đơn mua gói quảng cáo (giống create-subscription: chỉ nhập id package).</summary>
