@@ -49,6 +49,8 @@ namespace CAR.Infrastructure
             services.AddScoped<IVehicleCategoryRepository, VehicleCategoryRepository>();
             services.AddScoped<ILocationRepository, LocationRepository>();
             services.AddScoped<IStaffProfileRepository, StaffProfileRepository>();
+            services.AddScoped<IConversationRepository, ConversationRepository>();
+            services.AddScoped<IMessageRepository, MessageRepository>();
             services.AddScoped<IAdPackageRepository, AdPackageRepository>();
             services.AddScoped<IOwnerAdCreditRepository, OwnerAdCreditRepository>();
             services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();
@@ -90,6 +92,7 @@ namespace CAR.Infrastructure
             services.AddScoped<IKycOcrService, FptKycOcrService>();
             services.AddScoped<IFirebasePhoneService, FirebasePhoneService>();
             services.AddScoped<IOwnerPackageService, OwnerPackageService>();
+            services.AddScoped<IChatService, ChatService>();
             services.AddScoped<IAdPackageService, AdPackageService>();
             services.AddScoped<IOwnerAdvertisementService, OwnerAdvertisementService>();
             services.AddScoped<ICarSuggestionChatService, CarSuggestionChatService>();
