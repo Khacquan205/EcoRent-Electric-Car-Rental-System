@@ -49,6 +49,8 @@ namespace CAR.Infrastructure
             services.AddScoped<IVehicleCategoryRepository, VehicleCategoryRepository>();
             services.AddScoped<ILocationRepository, LocationRepository>();
             services.AddScoped<IStaffProfileRepository, StaffProfileRepository>();
+            services.AddScoped<IConversationRepository, ConversationRepository>();
+            services.AddScoped<IMessageRepository, MessageRepository>();
 
             // VNPay options
             services.Configure<VnPaySettings>(configuration.GetSection(VnPaySettings.SectionName));
@@ -84,6 +86,7 @@ namespace CAR.Infrastructure
             services.AddScoped<IKycOcrService, FptKycOcrService>();
             services.AddScoped<IFirebasePhoneService, FirebasePhoneService>();
             services.AddScoped<IOwnerPackageService, OwnerPackageService>();
+            services.AddScoped<IChatService, ChatService>();
 
             return services;
         }
