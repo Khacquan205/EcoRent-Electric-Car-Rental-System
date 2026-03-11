@@ -13,6 +13,10 @@ namespace CAR.Application.Dtos
         public DateTime CreatedAt { get; set; }
         public DateTime? ExpiredAt { get; set; }
         public string? CategoryName { get; set; }
+        /// <summary>True nếu bài đang chạy quảng cáo (apply ad còn hiệu lực) — dùng để verify sort và hiển thị badge.</summary>
+        public bool IsPromoted { get; set; }
+        /// <summary>Cấp ưu tiên quảng cáo: 0 = không quảng cáo, 1–3 = theo gói (dùng để sort và hiển thị).</summary>
+        public int PromotedPriorityLevel { get; set; }
         public List<string> Images { get; set; } = new List<string>();
         public List<string> Videos { get; set; } = new List<string>();
     }

@@ -21,6 +21,8 @@ namespace CAR.Infrastructure.Services
         private readonly VnPaySettings _settings;
         private readonly IPaymentRepository _paymentRepository;
         private readonly IOwnerSubscriptionRepository _subscriptionRepository;
+        private readonly IAdOrderRepository _adOrderRepository;
+        private readonly IOwnerAdCreditRepository _ownerAdCreditRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly AppDbContext _dbContext;
 
@@ -28,12 +30,16 @@ namespace CAR.Infrastructure.Services
             IOptions<VnPaySettings> settings,
             IPaymentRepository paymentRepository,
             IOwnerSubscriptionRepository subscriptionRepository,
+            IAdOrderRepository adOrderRepository,
+            IOwnerAdCreditRepository ownerAdCreditRepository,
             IUnitOfWork unitOfWork,
             AppDbContext dbContext)
         {
             _settings = settings.Value;
             _paymentRepository = paymentRepository;
             _subscriptionRepository = subscriptionRepository;
+            _adOrderRepository = adOrderRepository;
+            _ownerAdCreditRepository = ownerAdCreditRepository;
             _unitOfWork = unitOfWork;
             _dbContext = dbContext;
         }
@@ -52,7 +58,9 @@ namespace CAR.Infrastructure.Services
 
             var payment = new MPayment
             {
+                PaymentType = (int)PaymentType.Subscription,
                 SubscriptionId = subscriptionId,
+                AdOrderId = null,
                 Amount = subscription.Package.Price,
                 PaymentMethod = (int)PaymentMethod.VnPay,
                 PaymentStatus = (int)PaymentStatus.Pending,
@@ -76,6 +84,51 @@ namespace CAR.Infrastructure.Services
                 { "vnp_Locale",     "vn" },
                 { "vnp_ReturnUrl",  _settings.ReturnUrl },
                 { "vnp_IpAddr",     ipAddress },
+                { "vnp_CreateDate", createDate.ToString("yyyyMMddHHmmss") }
+            };
+
+            return BuildPaymentUrl(vnpParams);
+        }
+
+        public async Task<string> CreatePaymentUrlForAdOrderAsync(int adOrderId, string ipAddress)
+        {
+            var order = await _adOrderRepository.GetByIdAsync(adOrderId);
+            if (order == null)
+                throw new UserFriendlyException(404, "AD_ORDER_NOT_FOUND", "Ad order not found");
+            if (order.Status != 0)
+                throw new UserFriendlyException(400, "AD_ORDER_ALREADY_PAID", "Ad order already paid");
+
+            var txnRef = $"AD-{adOrderId}-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+            var createDate = DateTime.UtcNow.AddHours(7);
+
+            var payment = new MPayment
+            {
+                PaymentType = (int)PaymentType.AdPackage,
+                SubscriptionId = null,
+                AdOrderId = adOrderId,
+                Amount = order.Amount,
+                PaymentMethod = (int)PaymentMethod.VnPay,
+                PaymentStatus = (int)PaymentStatus.Pending,
+                TransactionCode = txnRef,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _paymentRepository.AddAsync(payment);
+            await _unitOfWork.SaveChangesAsync();
+
+            var vnpParams = new SortedDictionary<string, string>(StringComparer.Ordinal)
+            {
+                { "vnp_Version", "2.1.0" },
+                { "vnp_Command", "pay" },
+                { "vnp_TmnCode", _settings.TmnCode },
+                { "vnp_Amount", ((long)(order.Amount * 100)).ToString() },
+                { "vnp_CurrCode", "VND" },
+                { "vnp_TxnRef", txnRef },
+                { "vnp_OrderInfo", $"Thanh toan goi quang cao {order.AdPackage?.Name ?? adOrderId.ToString()}" },
+                { "vnp_OrderType", "other" },
+                { "vnp_Locale", "vn" },
+                { "vnp_ReturnUrl", _settings.ReturnUrl },
+                { "vnp_IpAddr", ipAddress },
                 { "vnp_CreateDate", createDate.ToString("yyyyMMddHHmmss") }
             };
 
@@ -145,47 +198,96 @@ namespace CAR.Infrastructure.Services
 
             if (isSuccess)
             {
-                var subscription = await _subscriptionRepository.Query()
-                    .FirstOrDefaultAsync(s => s.Id == payment.SubscriptionId);
-                if (subscription != null)
+                if (payment.SubscriptionId != null)
                 {
-                    var strategy = _dbContext.Database.CreateExecutionStrategy();
-                    await strategy.ExecuteAsync(async () =>
+                    var subscription = await _subscriptionRepository.Query()
+                        .FirstOrDefaultAsync(s => s.Id == payment.SubscriptionId);
+                    if (subscription != null)
                     {
-                        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-                        try
+                        var strategy = _dbContext.Database.CreateExecutionStrategy();
+                        await strategy.ExecuteAsync(async () =>
                         {
-                            var otherActives = await _subscriptionRepository.Query()
-                                .Where(s => s.OwnerId == subscription.OwnerId && s.Status == SubscriptionStatusActive && s.Id != subscription.Id)
-                                .ToListAsync();
-                            foreach (var s in otherActives)
+                            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+                            try
                             {
-                                s.Status = SubscriptionStatusInactive;
-                                s.UpdatedAt = DateTime.UtcNow;
-                                _subscriptionRepository.Update(s);
+                                var otherActives = await _subscriptionRepository.Query()
+                                    .Where(s => s.OwnerId == subscription.OwnerId && s.Status == SubscriptionStatusActive && s.Id != subscription.Id)
+                                    .ToListAsync();
+                                foreach (var s in otherActives)
+                                {
+                                    s.Status = SubscriptionStatusInactive;
+                                    s.UpdatedAt = DateTime.UtcNow;
+                                    _subscriptionRepository.Update(s);
+                                }
+                                subscription.Status = SubscriptionStatusActive;
+                                subscription.UpdatedAt = DateTime.UtcNow;
+                                _subscriptionRepository.Update(subscription);
+                                await _unitOfWork.SaveChangesAsync();
+                                await transaction.CommitAsync();
                             }
-                            subscription.Status = SubscriptionStatusActive;
-                            subscription.UpdatedAt = DateTime.UtcNow;
-                            _subscriptionRepository.Update(subscription);
-                            await _unitOfWork.SaveChangesAsync();
-                            await transaction.CommitAsync();
-                        }
-                        catch
+                            catch
+                            {
+                                await transaction.RollbackAsync();
+                                throw;
+                            }
+                        });
+                        await _unitOfWork.SaveChangesAsync();
+                        return new PaymentResponseDto
                         {
-                            await transaction.RollbackAsync();
-                            throw;
-                        }
-                    });
-                    return new PaymentResponseDto
+                            Success = true,
+                            OrderId = txnRef,
+                            TransactionId = vnpayTxnId,
+                            Amount = rawAmount / 100,
+                            ResponseCode = responseCode,
+                            Message = "Payment successful",
+                            PayDate = payment.PayDate
+                        };
+                    }
+                }
+                else if (payment.AdOrderId != null)
+                {
+                    var adOrder = await _adOrderRepository.GetByIdAsync(payment.AdOrderId.Value);
+                    if (adOrder != null && adOrder.Status == 0)
                     {
-                        Success = true,
-                        OrderId = txnRef,
-                        TransactionId = vnpayTxnId,
-                        Amount = rawAmount / 100,
-                        ResponseCode = responseCode,
-                        Message = "Payment successful",
-                        PayDate = payment.PayDate
-                    };
+                        var pkg = adOrder.AdPackage;
+                        var strategy = _dbContext.Database.CreateExecutionStrategy();
+                        await strategy.ExecuteAsync(async () =>
+                        {
+                            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+                            try
+                            {
+                                var credit = new MOwnerAdCredit
+                                {
+                                    OwnerId = adOrder.OwnerId,
+                                    AdPackageId = adOrder.AdPackageId,
+                                    RemainingPosts = pkg?.MaxPosts ?? 1,
+                                    DurationDays = pkg?.DurationDays ?? 7,
+                                    CreatedAt = DateTime.UtcNow
+                                };
+                                await _ownerAdCreditRepository.AddAsync(credit);
+                                adOrder.Status = 1;
+                                adOrder.UpdatedAt = DateTime.UtcNow;
+                                _adOrderRepository.Update(adOrder);
+                                await _unitOfWork.SaveChangesAsync();
+                                await transaction.CommitAsync();
+                            }
+                            catch
+                            {
+                                await transaction.RollbackAsync();
+                                throw;
+                            }
+                        });
+                        return new PaymentResponseDto
+                        {
+                            Success = true,
+                            OrderId = txnRef,
+                            TransactionId = vnpayTxnId,
+                            Amount = rawAmount / 100,
+                            ResponseCode = responseCode,
+                            Message = "Thanh toan goi quang cao thanh cong",
+                            PayDate = payment.PayDate
+                        };
+                    }
                 }
             }
 

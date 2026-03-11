@@ -1,8 +1,20 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import { AuthSession, clearSessionCookie, getSessionCookie, setSessionCookie } from "@/lib/authSession";
+import {
+  AuthSession,
+  clearSessionCookie,
+  getSessionCookie,
+  setSessionCookie,
+} from "@/lib/authSession";
 
 type AuthContextValue = {
   session: AuthSession | null;
@@ -12,11 +24,20 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthSessionProvider({ children }: { children: React.ReactNode }) {
+export function AuthSessionProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [session, setSessionState] = useState<AuthSession | null>(null);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    setSessionState(getSessionCookie());
+    if (!initialized.current) {
+      initialized.current = true;
+      const cookie = getSessionCookie();
+      Promise.resolve().then(() => setSessionState(cookie));
+    }
   }, []);
 
   const value = useMemo<AuthContextValue>(() => {

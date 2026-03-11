@@ -31,6 +31,21 @@ namespace CAR.Controllers
         }
 
         /// <summary>
+        /// Creates a VNPay payment URL for an ad order (nhập adOrderId sau khi đã gọi create-order).
+        /// </summary>
+        [HttpPost("create/ad-order/{adOrderId:int}")]
+        [Authorize]
+        public async Task<IActionResult> CreatePaymentForAdOrder(int adOrderId)
+        {
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString()
+                            ?? "127.0.0.1";
+
+            var paymentUrl = await _paymentService.CreatePaymentUrlForAdOrderAsync(adOrderId, ipAddress);
+
+            return Ok(new { paymentUrl });
+        }
+
+        /// <summary>
         /// VNPay return callback – verifies hash and updates payment status (when VNPay redirects to backend).
         /// </summary>
         [HttpGet("vnpay-return")]

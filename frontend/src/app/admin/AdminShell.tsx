@@ -10,11 +10,11 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/pending-posts", label: "Pending Car Posts" },
-  { href: "/admin/categories", label: "Categories" },
-  { href: "/admin/packages", label: "Packages" },
-  { href: "/admin/owners", label: "Owners" },
+  { href: "/admin", label: "Bảng điều khiển" },
+  { href: "/admin/pending-posts", label: "Bài đăng xe chờ duyệt" },
+  { href: "/admin/categories", label: "Danh mục" },
+  { href: "/admin/owner-subscriptions", label: "Gói" },
+  { href: "/admin/owners", label: "Chủ xe" },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -22,7 +22,11 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+export default function AdminShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
 
   return (
@@ -30,19 +34,31 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       <div className="container mx-auto px-6 py-8">
         <div className="grid gap-6 lg:grid-cols-[290px_1fr]">
           <aside className="rounded-2xl border bg-white/90 p-4 shadow-sm backdrop-blur">
-            <Link href="/" className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-slate-50">
+            <Link
+              href="/"
+              className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-slate-50"
+            >
               <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
-                <Image src="/Vector.png" alt="EcoRent" fill className="object-contain p-2" />
+                <Image
+                  src="/Vector.png"
+                  alt="EcoRent"
+                  fill
+                  className="object-contain p-2"
+                />
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900">EcoRent Admin</p>
-                <p className="truncate text-xs text-slate-500">Management Console</p>
+                <p className="truncate text-sm font-semibold text-slate-900">
+                  Quản trị EcoRent
+                </p>
+                <p className="truncate text-xs text-slate-500">
+                  Bảng điều khiển quản trị
+                </p>
               </div>
             </Link>
 
             <div className="mt-4 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 px-3 py-3 text-white">
-              <p className="text-xs opacity-90">Role</p>
-              <p className="text-sm font-semibold">ADMIN / STAFF</p>
+              <p className="text-xs opacity-90">Vai trò</p>
+              <p className="text-sm font-semibold">QUẢN TRỊ / NHÂN VIÊN</p>
             </div>
 
             <nav className="mt-4 grid gap-1">
@@ -65,12 +81,17 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </nav>
 
             <div className="mt-6 rounded-xl border bg-slate-50 p-4">
-              <p className="text-xs font-medium text-slate-900">Tip</p>
-              <p className="mt-1 text-xs text-slate-600">Bạn đang đăng nhập admin. Hãy kiểm tra cookie/session nếu API trả về 401.</p>
+              <p className="text-xs font-medium text-slate-900">Gợi ý</p>
+              <p className="mt-1 text-xs text-slate-600">
+                Bạn đang đăng nhập quản trị. Hãy kiểm tra cookie/session nếu API
+                trả về 401.
+              </p>
             </div>
           </aside>
 
-          <section className="min-w-0 rounded-2xl border bg-white p-6 shadow-sm">{children}</section>
+          <section className="min-w-0 rounded-2xl border bg-white p-6 shadow-sm">
+            {children}
+          </section>
         </div>
       </div>
     </div>

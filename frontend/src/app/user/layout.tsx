@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { clearSessionCookie, getSessionCookie } from "@/lib/authSession";
 import { Button } from "@/components/ui/button";
@@ -17,15 +17,20 @@ export default function UserLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const [email, setEmail] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
     const s = getSessionCookie();
-    setEmail(s?.email ?? null);
-    setRole(s?.role ?? null);
+    Promise.resolve().then(() => {
+      setEmail(s?.email ?? null);
+      setRole(s?.role ?? null);
+    });
   }, []);
 
   const initials = useMemo(() => {
@@ -49,7 +54,7 @@ export default function UserLayout({
             <div>
               <p className="text-sm font-semibold text-gray-900">EcoRent</p>
               <p className="text-xs text-gray-500">
-                {isAdmin ? "Admin" : "User"}
+                {isAdmin ? "Quản trị" : "Người dùng"}
               </p>
             </div>
           </Link>
@@ -59,7 +64,7 @@ export default function UserLayout({
               href="/"
               className="text-sm font-medium text-gray-700 hover:text-emerald-700"
             >
-              Home
+              Trang chủ
             </Link>
             {isAdmin && (
               <Link
@@ -73,11 +78,11 @@ export default function UserLayout({
             {!mounted || !email ? (
               <div className="flex items-center gap-2">
                 <Link href="/login">
-                  <Button variant="ghost">Sign in</Button>
+                  <Button variant="ghost">Đăng nhập</Button>
                 </Link>
                 <Link href="/register">
                   <Button className="bg-emerald-600 text-white hover:bg-emerald-700">
-                    Sign up
+                    Đăng ký
                   </Button>
                 </Link>
               </div>
@@ -87,7 +92,7 @@ export default function UserLayout({
                   <button
                     type="button"
                     className="flex h-10 w-10 items-center justify-center rounded-full border bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                    aria-label="User menu"
+                    aria-label="Menu người dùng"
                   >
                     {initials}
                   </button>
@@ -104,19 +109,19 @@ export default function UserLayout({
                         href="/user/settings"
                         className="block rounded-md px-2 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       >
-                        Settings
+                        Cài đặt
                       </Link>
                       <Link
                         href="/become-renter"
                         className="block rounded-md px-2 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       >
-                        Become a renter
+                        Trở thành người thuê
                       </Link>
                       <Link
                         href="/owner"
                         className="block rounded-md px-2 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       >
-                        Owner
+                        Chủ xe
                       </Link>
                     </>
                   )}
@@ -140,7 +145,7 @@ export default function UserLayout({
                     }}
                     className="w-full rounded-md px-2 py-2 text-left text-sm text-red-600 hover:bg-red-50"
                   >
-                    Logout
+                    Đăng xuất
                   </button>
                 </PopoverContent>
               </Popover>

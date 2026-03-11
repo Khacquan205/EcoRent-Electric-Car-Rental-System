@@ -108,7 +108,9 @@ export default function CarsPage() {
           <span className="text-sm font-medium text-slate-500">Bộ lọc:</span>
 
           <div className="flex flex-wrap items-center gap-2">
-            <label className="text-xs font-medium text-slate-500">Giá (triệu/ngày)</label>
+            <label className="text-xs font-medium text-slate-500">
+              Giá (triệu/ngày)
+            </label>
             <div className="flex items-center gap-2">
               <input
                 type="number"
@@ -203,17 +205,11 @@ export default function CarsPage() {
               <>
                 <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {items.map((post) => {
-                    const anyPost = post as any;
                     const imageUrl =
-                      anyPost.thumbnailUrl ??
-                      anyPost.imageUrl ??
-                      (Array.isArray(anyPost.images) && anyPost.images.length > 0
-                        ? anyPost.images[0]
-                        : null);
-                    const locationText =
-                      anyPost.locationName ??
-                      anyPost.location ??
-                      null;
+                      post.images && post.images.length > 0
+                        ? post.images[0]
+                        : null;
+                    const locationText: string | null = null;
 
                     return (
                       <CarPostCard
@@ -245,10 +241,13 @@ export default function CarsPage() {
                           1,
                           Math.min(
                             currentPage - Math.floor(windowSize / 2),
-                            totalPages - windowSize + 1
-                          )
+                            totalPages - windowSize + 1,
+                          ),
                         );
-                        const end = Math.min(start + windowSize - 1, totalPages);
+                        const end = Math.min(
+                          start + windowSize - 1,
+                          totalPages,
+                        );
                         const pages: number[] = [];
                         for (let i = start; i <= end; i++) pages.push(i);
                         return pages.map((p) => (

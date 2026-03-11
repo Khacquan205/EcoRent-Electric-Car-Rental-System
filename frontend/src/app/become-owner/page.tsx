@@ -3,9 +3,18 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Upload, FileCheck, CheckCircle2, Camera, ImagePlus, Video } from "lucide-react";
+import {
+  ChevronRight,
+  Upload,
+  FileCheck,
+  CheckCircle2,
+  Camera,
+  ImagePlus,
+  Video,
+} from "lucide-react";
 import * as ownerApi from "@/services/owner";
 import { ApiError } from "@/services/client";
+import { useAuthSession } from "@/components/providers";
 
 const STEPS = [
   { id: 1, title: "Upload CCCD", desc: "Tải ảnh mặt trước và mặt sau" },
@@ -16,6 +25,7 @@ const STEPS = [
 
 export default function BecomeOwnerPage() {
   const router = useRouter();
+  const { session, setSession } = useAuthSession();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [frontFile, setFrontFile] = useState<File | null>(null);
   const [backFile, setBackFile] = useState<File | null>(null);
@@ -45,7 +55,9 @@ export default function BecomeOwnerPage() {
     useState<ownerApi.KycFaceVerificationResult | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
   /** Face step: which input method user chose. null = show picker. */
-  const [faceMediaMode, setFaceMediaMode] = useState<"upload_image" | "upload_video" | "camera" | null>(null);
+  const [faceMediaMode, setFaceMediaMode] = useState<
+    "upload_image" | "upload_video" | "camera" | null
+  >(null);
 
   useEffect(() => {
     ownerApi
@@ -203,7 +215,9 @@ export default function BecomeOwnerPage() {
       const videoFile =
         recordedBlob instanceof File
           ? recordedBlob
-          : new File([recordedBlob], "liveness.webm", { type: recordedBlob.type });
+          : new File([recordedBlob], "liveness.webm", {
+              type: recordedBlob.type,
+            });
       const result = await ownerApi.kycLivenessCheck(
         videoFile,
         ocrData.cccdFaceId,
@@ -298,15 +312,25 @@ export default function BecomeOwnerPage() {
     setFaceLoading(true);
     setFaceError(null);
     try {
-      const result = await ownerApi.kycLivenessCheck(videoFile, ocrData.cccdFaceId);
+      const result = await ownerApi.kycLivenessCheck(
+        videoFile,
+        ocrData.cccdFaceId,
+      );
       if (result.isMatch && result.isLive !== false) {
         setFaceVerified(true);
         setStep(4);
       } else {
-        setFaceError(result.errorMessage ?? "Xác thực khuôn mặt không thành công. Bạn có thể thử tải ảnh selfie bên dưới.");
+        setFaceError(
+          result.errorMessage ??
+            "Xác thực khuôn mặt không thành công. Bạn có thể thử tải ảnh selfie bên dưới.",
+        );
       }
     } catch (e) {
-      setFaceError(e instanceof Error ? e.message : "Xác thực camera thất bại. Bạn có thể tải ảnh selfie thay thế.");
+      setFaceError(
+        e instanceof Error
+          ? e.message
+          : "Xác thực camera thất bại. Bạn có thể tải ảnh selfie thay thế.",
+      );
     } finally {
       setFaceLoading(false);
     }
@@ -317,15 +341,23 @@ export default function BecomeOwnerPage() {
     setFaceLoading(true);
     setFaceError(null);
     try {
-      const result = await ownerApi.kycVerifyFaceUpload(selfieFile, ocrData.cccdFaceId);
+      const result = await ownerApi.kycVerifyFaceUpload(
+        selfieFile,
+        ocrData.cccdFaceId,
+      );
       if (result.isMatched) {
         setFaceVerified(true);
         setStep(4);
       } else {
-        setFaceError(result.message ?? "Khuôn mặt không khớp. Vui lòng dùng ảnh selfie rõ mặt.");
+        setFaceError(
+          result.message ??
+            "Khuôn mặt không khớp. Vui lòng dùng ảnh selfie rõ mặt.",
+        );
       }
     } catch (e) {
-      setFaceError(e instanceof Error ? e.message : "Xác thực ảnh selfie thất bại.");
+      setFaceError(
+        e instanceof Error ? e.message : "Xác thực ảnh selfie thất bại.",
+      );
     } finally {
       setFaceLoading(false);
     }
@@ -339,12 +371,22 @@ export default function BecomeOwnerPage() {
     setLoading(true);
     setOcrError(null);
     try {
-      await ownerApi.submitKycBecomeOwner({
+      const res = await ownerApi.submitKycBecomeOwner({
         fullName: ocrData.fullName,
         dateOfBirth: ocrData.dob,
         idNumber: ocrData.cccdNumber,
         gender: ocrData.gender ?? undefined,
       });
+
+      // If the backend confirms the user is now an Owner, update the
+      // session cookie so all role-gated UI re-renders correctly, then
+      // redirect to the owner dashboard.
+      if (res.role && res.role.toLowerCase() === "owner" && session) {
+        setSession({ ...session, role: res.role });
+        router.replace("/owner");
+        return;
+      }
+
       setSubmitSuccess(true);
     } catch (e) {
       if (e instanceof ApiError) {
@@ -563,7 +605,8 @@ export default function BecomeOwnerPage() {
                 Bước 3: Xác thực khuôn mặt
               </h2>
               <p className="mt-1 text-sm text-slate-600">
-                Chọn một cách để xác minh khuôn mặt khớp với CCCD: tải ảnh selfie, tải video, hoặc mở camera.
+                Chọn một cách để xác minh khuôn mặt khớp với CCCD: tải ảnh
+                selfie, tải video, hoặc mở camera.
               </p>
 
               {(faceError || livenessError) && (
@@ -575,7 +618,9 @@ export default function BecomeOwnerPage() {
               {/* Media mode picker (tabs) */}
               {faceMediaMode === null && (
                 <div className="mt-6">
-                  <p className="mb-3 text-sm font-medium text-slate-700">Chọn cách xác thực:</p>
+                  <p className="mb-3 text-sm font-medium text-slate-700">
+                    Chọn cách xác thực:
+                  </p>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <button
                       type="button"
@@ -583,7 +628,9 @@ export default function BecomeOwnerPage() {
                       className="flex flex-col items-center gap-2 rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center transition-colors hover:border-[#1572D3] hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-[#1572D3]"
                     >
                       <ImagePlus className="h-10 w-10 text-slate-600" />
-                      <span className="text-sm font-medium text-slate-800">Tải ảnh selfie</span>
+                      <span className="text-sm font-medium text-slate-800">
+                        Tải ảnh selfie
+                      </span>
                       <span className="text-xs text-slate-500">JPG, PNG</span>
                     </button>
                     <button
@@ -592,7 +639,9 @@ export default function BecomeOwnerPage() {
                       className="flex flex-col items-center gap-2 rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center transition-colors hover:border-[#1572D3] hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-[#1572D3]"
                     >
                       <Video className="h-10 w-10 text-slate-600" />
-                      <span className="text-sm font-medium text-slate-800">Tải video</span>
+                      <span className="text-sm font-medium text-slate-800">
+                        Tải video
+                      </span>
                       <span className="text-xs text-slate-500">MP4, WebM</span>
                     </button>
                     <button
@@ -605,8 +654,12 @@ export default function BecomeOwnerPage() {
                       className="flex flex-col items-center gap-2 rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center transition-colors hover:border-[#1572D3] hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-[#1572D3]"
                     >
                       <Camera className="h-10 w-10 text-slate-600" />
-                      <span className="text-sm font-medium text-slate-800">Mở camera</span>
-                      <span className="text-xs text-slate-500">Quay trực tiếp</span>
+                      <span className="text-sm font-medium text-slate-800">
+                        Mở camera
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        Quay trực tiếp
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -632,7 +685,9 @@ export default function BecomeOwnerPage() {
                       ← Chọn lại
                     </button>
                   </div>
-                  <label className="block text-sm font-medium text-slate-700">Ảnh selfie (mặt rõ, nhìn thẳng)</label>
+                  <label className="block text-sm font-medium text-slate-700">
+                    Ảnh selfie (mặt rõ, nhìn thẳng)
+                  </label>
                   <input
                     type="file"
                     accept="image/*"
@@ -645,11 +700,17 @@ export default function BecomeOwnerPage() {
                     className="flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 hover:border-slate-300 hover:bg-slate-100"
                   >
                     {selfiePreview ? (
-                      <img src={selfiePreview} alt="Selfie" className="max-h-48 rounded-lg object-contain" />
+                      <img
+                        src={selfiePreview}
+                        alt="Selfie"
+                        className="max-h-48 rounded-lg object-contain"
+                      />
                     ) : (
                       <>
                         <ImagePlus className="h-10 w-10 text-slate-400" />
-                        <p className="mt-2 text-sm text-slate-500">Chọn ảnh selfie</p>
+                        <p className="mt-2 text-sm text-slate-500">
+                          Chọn ảnh selfie
+                        </p>
                       </>
                     )}
                   </label>
@@ -686,7 +747,9 @@ export default function BecomeOwnerPage() {
                   </div>
                   {!recordedPreview ? (
                     <>
-                      <label className="block text-sm font-medium text-slate-700">Chọn file video (MP4 hoặc WebM)</label>
+                      <label className="block text-sm font-medium text-slate-700">
+                        Chọn file video (MP4 hoặc WebM)
+                      </label>
                       <input
                         type="file"
                         accept="video/mp4,video/webm,.mp4,.webm"
@@ -699,20 +762,27 @@ export default function BecomeOwnerPage() {
                         className="flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 hover:border-slate-300 hover:bg-slate-100"
                       >
                         <Video className="h-10 w-10 text-slate-400" />
-                        <p className="mt-2 text-sm text-slate-500">Chọn file video</p>
+                        <p className="mt-2 text-sm text-slate-500">
+                          Chọn file video
+                        </p>
                       </label>
                     </>
                   ) : (
                     <>
                       <div className="relative w-full max-w-sm overflow-hidden rounded-xl border-2 border-slate-200 bg-black aspect-[4/3]">
-                        <video src={recordedPreview} controls className="h-full w-full object-cover" />
+                        <video
+                          src={recordedPreview}
+                          controls
+                          className="h-full w-full object-cover"
+                        />
                       </div>
                       <div className="flex gap-3">
                         <button
                           type="button"
                           onClick={() => {
                             setRecordedBlob(null);
-                            if (recordedPreview) URL.revokeObjectURL(recordedPreview);
+                            if (recordedPreview)
+                              URL.revokeObjectURL(recordedPreview);
                             setRecordedPreview(null);
                           }}
                           className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
@@ -767,19 +837,28 @@ export default function BecomeOwnerPage() {
                       {isRecording && (
                         <div className="absolute top-3 left-3 flex items-center gap-1.5">
                           <span className="h-3 w-3 animate-pulse rounded-full bg-red-500" />
-                          <span className="text-xs font-medium text-white drop-shadow">Đang quay...</span>
+                          <span className="text-xs font-medium text-white drop-shadow">
+                            Đang quay...
+                          </span>
                         </div>
                       )}
                       {!cameraReady && !livenessError && (
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-sm text-slate-400">Đang khởi tạo camera...</span>
+                          <span className="text-sm text-slate-400">
+                            Đang khởi tạo camera...
+                          </span>
                         </div>
                       )}
                     </div>
                   )}
                   {recordedPreview && (
                     <div className="relative w-full max-w-sm overflow-hidden rounded-xl border-2 border-emerald-200 bg-black aspect-[4/3]">
-                      <video src={recordedPreview} controls className="h-full w-full object-cover" style={{ transform: "scaleX(-1)" }} />
+                      <video
+                        src={recordedPreview}
+                        controls
+                        className="h-full w-full object-cover"
+                        style={{ transform: "scaleX(-1)" }}
+                      />
                       <div className="absolute top-3 left-3 rounded-full bg-emerald-500/90 px-2 py-0.5 text-xs font-medium text-white">
                         Đã quay xong
                       </div>
@@ -797,18 +876,27 @@ export default function BecomeOwnerPage() {
                       </button>
                     )}
                     {isRecording && (
-                      <button type="button" onClick={stopRecording} className="inline-flex items-center rounded-lg bg-slate-600 px-4 py-2 text-sm font-medium text-white">
+                      <button
+                        type="button"
+                        onClick={stopRecording}
+                        className="inline-flex items-center rounded-lg bg-slate-600 px-4 py-2 text-sm font-medium text-white"
+                      >
                         <Video className="mr-2 h-4 w-4" /> Dừng quay
                       </button>
                     )}
                     {recordedPreview && !loading && (
-                      <button type="button" onClick={() => void retryLiveness()} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                      <button
+                        type="button"
+                        onClick={() => void retryLiveness()}
+                        className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      >
                         Quay lại video
                       </button>
                     )}
                   </div>
                   <p className="text-xs text-slate-500 text-center max-w-sm">
-                    Nhìn thẳng vào camera, giữ khuôn mặt rõ. Video tự động dừng sau 5 giây.
+                    Nhìn thẳng vào camera, giữ khuôn mặt rõ. Video tự động dừng
+                    sau 5 giây.
                   </p>
                 </div>
               )}

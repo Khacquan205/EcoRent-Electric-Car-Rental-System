@@ -51,9 +51,15 @@ namespace CAR.Infrastructure
             services.AddScoped<IStaffProfileRepository, StaffProfileRepository>();
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<IMessageRepository, MessageRepository>();
+            services.AddScoped<IAdPackageRepository, AdPackageRepository>();
+            services.AddScoped<IOwnerAdCreditRepository, OwnerAdCreditRepository>();
+            services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();
+            services.AddScoped<IAdOrderRepository, AdOrderRepository>();
 
             // VNPay options
             services.Configure<VnPaySettings>(configuration.GetSection(VnPaySettings.SectionName));
+            services.Configure<GeminiSettings>(configuration.GetSection(GeminiSettings.SectionName));
+            services.AddHttpClient();
 
             // Services
             services.AddScoped<IEmailService, EmailService>();
@@ -87,6 +93,9 @@ namespace CAR.Infrastructure
             services.AddScoped<IFirebasePhoneService, FirebasePhoneService>();
             services.AddScoped<IOwnerPackageService, OwnerPackageService>();
             services.AddScoped<IChatService, ChatService>();
+            services.AddScoped<IAdPackageService, AdPackageService>();
+            services.AddScoped<IOwnerAdvertisementService, OwnerAdvertisementService>();
+            services.AddScoped<ICarSuggestionChatService, CarSuggestionChatService>();
 
             return services;
         }

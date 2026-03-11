@@ -4,7 +4,14 @@ namespace CAR.Domain.Entities
     {
         public int Id { get; set; }
 
-        public int SubscriptionId { get; set; }
+        /// <summary>1 = Subscription (gói đăng bài), 2 = AdPackage (gói quảng cáo).</summary>
+        public int PaymentType { get; set; }
+
+        /// <summary>Khi PaymentType = Subscription.</summary>
+        public int? SubscriptionId { get; set; }
+
+        /// <summary>Khi PaymentType = AdPackage.</summary>
+        public int? AdOrderId { get; set; }
 
         public decimal Amount { get; set; }
 
@@ -28,6 +35,7 @@ namespace CAR.Domain.Entities
 
         public DateTime? UpdatedAt { get; set; }
 
-        public MOwnerSubscription Subscription { get; set; } = null!;
+        public MOwnerSubscription? Subscription { get; set; }
+        public MAdOrder? AdOrder { get; set; }
     }
 }

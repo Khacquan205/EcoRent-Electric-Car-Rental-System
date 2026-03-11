@@ -15,5 +15,7 @@ namespace CAR.Application.Dtos.Moderation
         public string? RejectReason { get; set; }
         public decimal Price { get; set; }
         public string? Description { get; set; }
+        public List<string> Images { get; set; } = new();
+        public List<string> Videos { get; set; } = new();
     }
 }

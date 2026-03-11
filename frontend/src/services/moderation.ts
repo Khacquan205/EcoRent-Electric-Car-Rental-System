@@ -12,6 +12,8 @@ export interface ModerationPostItem {
   rejectReason: string | null;
   price: number;
   description: string | null;
+  images?: string[] | null;
+  videos?: string[] | null;
 }
 
 export interface ModerationPostsParams {

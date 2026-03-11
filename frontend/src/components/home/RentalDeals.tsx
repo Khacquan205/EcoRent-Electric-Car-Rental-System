@@ -1,9 +1,23 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { CarCard } from "@/components/cards";
-import { popularCars } from "@/lib/data/cars";
+import { PostCard, PostCardSkeleton } from "@/components/posts";
+import { getPublicPosts } from "@/services/posts";
+import type { PostListItemDto } from "@/types/api";
 
 const RentalDeals = () => {
+  const [posts, setPosts] = useState<PostListItemDto[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getPublicPosts({ page: 1, pageSize: 4 })
+      .then((res) => setPosts(res.items.slice(0, 4)))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <section className="bg-white py-16 lg:py-24">
       <div className="container mx-auto px-6">
@@ -26,20 +40,13 @@ const RentalDeals = () => {
           </Link>
         </div>
 
-        {/* Car grid — reference-style 4-column */}
+        {/* Car grid — 4-column */}
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {popularCars.map((car, index) => (
-            <div
-              key={car.id}
-              className={
-                index === 1
-                  ? "ring-2 ring-[#1572D3] ring-offset-2 rounded-2xl"
-                  : ""
-              }
-            >
-              <CarCard car={car} />
-            </div>
-          ))}
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <PostCardSkeleton key={i} />
+              ))
+            : posts.map((post) => <PostCard key={post.id} post={post} />)}
         </div>
 
         {/* Bottom note */}

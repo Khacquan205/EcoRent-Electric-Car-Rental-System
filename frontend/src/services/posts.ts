@@ -8,6 +8,9 @@ export interface CreatePostRequest {
   description?: string | null;
   price: number;
   contactPhone?: string | null;
+  imageUrls?: string[];
+  imageUrl?: string;
+  videoUrls?: string[];
 }
 
 export interface CreatePostResponse {
@@ -65,6 +68,7 @@ export async function getPublicPosts(
   params: {
     page?: number;
     pageSize?: number;
+    categoryId?: number | null;
   } = {},
 ): Promise<PagedResultDto<PostListItemDto>> {
   const page = Math.max(1, params.page ?? 1);
@@ -73,5 +77,8 @@ export async function getPublicPosts(
     page: String(page),
     pageSize: String(pageSize),
   });
+  if (params.categoryId != null) {
+    search.set("categoryId", String(params.categoryId));
+  }
   return apiFetch<PagedResultDto<PostListItemDto>>(`/api/posts?${search}`);
 }

@@ -165,6 +165,8 @@ namespace CAR.Infrastructure.Services
             var query = _postRepository.Query()
                 .Include(p => p.OwnerProfile)
                 .Include(p => p.Category)
+                .Include(p => p.Images)
+                .Include(p => p.Videos)
                 .AsQueryable();
 
             if (status.HasValue)
@@ -192,7 +194,9 @@ namespace CAR.Infrastructure.Services
                     Status = p.Status,
                     RejectReason = p.RejectReason,
                     Price = p.Price,
-                    Description = p.Description
+                    Description = p.Description,
+                    Images = p.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
+                    Videos = p.Videos.OrderBy(v => v.Id).Select(v => v.VideoUrl).ToList()
                 })
                 .ToListAsync();
         }
