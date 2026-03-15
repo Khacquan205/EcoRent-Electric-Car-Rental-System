@@ -25,5 +25,12 @@ namespace CAR.Application.Dtos
 
         /// <summary>Optional list of video URLs for the post.</summary>
         public List<string>? VideoUrls { get; set; }
+
+        /// <summary>URL ảnh giấy đăng ký xe (để staff đối chiếu với ảnh xe khi duyệt bài).</summary>
+        public string? RegistrationImageUrl { get; set; }
+        /// <summary>URL ảnh giấy kiểm định xe.</summary>
+        public string? InspectionImageUrl { get; set; }
+        /// <summary>URL ảnh bảo hiểm xe.</summary>
+        public string? InsuranceImageUrl { get; set; }
     }
 }

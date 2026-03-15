@@ -55,6 +55,7 @@ namespace CAR.Infrastructure
             services.AddScoped<IOwnerAdCreditRepository, OwnerAdCreditRepository>();
             services.AddScoped<IAdvertisementRepository, AdvertisementRepository>();
             services.AddScoped<IAdOrderRepository, AdOrderRepository>();
+            services.AddScoped<IVehicleVerificationRepository, VehicleVerificationRepository>();
 
             // VNPay options
             services.Configure<VnPaySettings>(configuration.GetSection(VnPaySettings.SectionName));
@@ -96,6 +97,8 @@ namespace CAR.Infrastructure
             services.AddScoped<IAdPackageService, AdPackageService>();
             services.AddScoped<IOwnerAdvertisementService, OwnerAdvertisementService>();
             services.AddScoped<ICarSuggestionChatService, CarSuggestionChatService>();
+            services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+            services.AddScoped<IOwnerDashboardService, OwnerDashboardService>();
 
             return services;
         }

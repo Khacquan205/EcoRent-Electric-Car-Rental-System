@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace RentalCar.Controllers
+namespace CAR.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -12,25 +12,12 @@ namespace RentalCar.Controllers
     public class ChatController : ControllerBase
     {
         private readonly IChatService _chatService;
+        private readonly ICarSuggestionChatService _carSuggestionChatService;
 
-        public ChatController(IChatService chatService)
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using CAR.Application.Dtos.Chat;
-using CAR.Application.Interfaces.Services;
-
-namespace CAR.Controllers
-{
-    [ApiController]
-    [Route("api/[controller]")]
-    [AllowAnonymous]
-    public class ChatController : ControllerBase
-    {
-        private readonly ICarSuggestionChatService _chatService;
-
-        public ChatController(ICarSuggestionChatService chatService)
+        public ChatController(IChatService chatService, ICarSuggestionChatService carSuggestionChatService)
         {
             _chatService = chatService;
+            _carSuggestionChatService = carSuggestionChatService;
         }
 
         /// <summary>Get or create a conversation with another user.</summary>
@@ -83,19 +70,20 @@ namespace CAR.Controllers
             return Ok(new { Success = true, Message = "Messages marked as read" });
         }
 
+        /// <summary>Gửi tin nhắn, nhận gợi ý xe từ AI (chỉ xe có trong DB, ưu tiên xe quảng cáo).</summary>
+        [HttpPost("suggest-cars")]
+        public async Task<IActionResult> SuggestCars([FromBody] SuggestCarsRequestDto request)
+        {
+            var result = await _carSuggestionChatService.SuggestCarsAsync(request.Message ?? string.Empty);
+            return Ok(result);
+        }
+
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (claim == null || !int.TryParse(claim.Value, out int userId))
                 throw new UnauthorizedAccessException("Invalid user token");
             return userId;
-        }
-        /// <summary>Gửi tin nhắn, nhận gợi ý xe từ AI (chỉ xe có trong DB, ưu tiên xe quảng cáo).</summary>
-        [HttpPost("suggest-cars")]
-        public async Task<IActionResult> SuggestCars([FromBody] SuggestCarsRequestDto request)
-        {
-            var result = await _chatService.SuggestCarsAsync(request.Message ?? string.Empty);
-            return Ok(result);
         }
     }
 }

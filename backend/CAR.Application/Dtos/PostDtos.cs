@@ -41,6 +41,16 @@ namespace CAR.Application.Dtos
         public DateTime? ExpiredAt { get; set; }
         public List<string> Images { get; set; } = new List<string>();
         public List<string> Videos { get; set; } = new List<string>();
+        /// <summary>Giấy tờ xe (ảnh đăng ký, kiểm định, bảo hiểm) để staff đối chiếu khi duyệt.</summary>
+        public VehicleVerificationDto? VehicleVerification { get; set; }
+    }
+
+    /// <summary>Giấy tờ xe đính kèm bài đăng (cho staff xem khi duyệt).</summary>
+    public class VehicleVerificationDto
+    {
+        public string? RegistrationImageUrl { get; set; }
+        public string? InspectionImageUrl { get; set; }
+        public string? InsuranceImageUrl { get; set; }
     }
 
     public class UpdatePostRequestDto

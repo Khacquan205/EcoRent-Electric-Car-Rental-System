@@ -19,6 +19,7 @@ namespace CAR.Infrastructure.Services
         private readonly IOwnerSubscriptionRepository _ownerSubscriptionRepository;
         private readonly IVehicleCategoryRepository _categoryRepository;
         private readonly ISubscriptionService _subscriptionService;
+        private readonly IVehicleVerificationRepository _vehicleVerificationRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public PostService(
@@ -27,6 +28,7 @@ namespace CAR.Infrastructure.Services
             IOwnerSubscriptionRepository ownerSubscriptionRepository,
             IVehicleCategoryRepository categoryRepository,
             ISubscriptionService subscriptionService,
+            IVehicleVerificationRepository vehicleVerificationRepository,
             IUnitOfWork unitOfWork)
         {
             _postRepository = postRepository;
@@ -34,6 +36,7 @@ namespace CAR.Infrastructure.Services
             _ownerSubscriptionRepository = ownerSubscriptionRepository;
             _categoryRepository = categoryRepository;
             _subscriptionService = subscriptionService;
+            _vehicleVerificationRepository = vehicleVerificationRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -130,6 +133,24 @@ namespace CAR.Infrastructure.Services
             // Do NOT deduct slot here – deduct only when admin approves (see PostModerationService.ApprovePostAsync)
             await _unitOfWork.SaveChangesAsync();
 
+            // Giấy tờ xe: tạo bản ghi sau khi post đã có Id để staff xem khi duyệt
+            var hasVehicleDocs = !string.IsNullOrWhiteSpace(request.RegistrationImageUrl)
+                || !string.IsNullOrWhiteSpace(request.InspectionImageUrl)
+                || !string.IsNullOrWhiteSpace(request.InsuranceImageUrl);
+            if (hasVehicleDocs)
+            {
+                var vv = new MVehicleVerification
+                {
+                    PostId = post.Id,
+                    RegistrationImage = request.RegistrationImageUrl?.Trim(),
+                    InspectionImage = request.InspectionImageUrl?.Trim(),
+                    InsuranceImage = request.InsuranceImageUrl?.Trim(),
+                    CreatedAt = currentTime
+                };
+                await _vehicleVerificationRepository.AddAsync(vv);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
             return new CreatePostResponseDto
             {
                 Id = post.Id,
@@ -181,6 +202,9 @@ namespace CAR.Infrastructure.Services
 
             if (post == null) throw new UserFriendlyException(404, "POST_NOT_FOUND", "Post not found or access denied");
 
+            var vehicleVerification = await _vehicleVerificationRepository.Query()
+                .FirstOrDefaultAsync(v => v.PostId == postId);
+
             return new PostDetailDto
             {
                 Id = post.Id,
@@ -202,7 +226,13 @@ namespace CAR.Infrastructure.Services
                 UpdatedAt = post.UpdatedAt,
                 ExpiredAt = post.ExpiredAt,
                 Images = post.Images.Select(i => i.ImageUrl).ToList(),
-                Videos = post.Videos.Select(v => v.VideoUrl).ToList()
+                Videos = post.Videos.Select(v => v.VideoUrl).ToList(),
+                VehicleVerification = vehicleVerification == null ? null : new VehicleVerificationDto
+                {
+                    RegistrationImageUrl = vehicleVerification.RegistrationImage,
+                    InspectionImageUrl = vehicleVerification.InspectionImage,
+                    InsuranceImageUrl = vehicleVerification.InsuranceImage
+                }
             };
         }
 

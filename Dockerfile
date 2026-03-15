@@ -17,8 +17,6 @@ COPY backend/ ./backend/
 RUN dotnet publish backend/RentalCar/CAR.csproj \
     -c Release \
     -o /app/publish \
-    -r linux-x64 \
-    --self-contained false \
     /p:UseAppHost=false
 
 # Runtime stage – Ubuntu 22.04 for OpenCvSharp native lib compatibility (libavcodec58, libjpeg8, etc.)
