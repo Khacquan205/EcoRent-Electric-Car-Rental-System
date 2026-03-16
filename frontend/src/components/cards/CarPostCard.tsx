@@ -36,11 +36,14 @@ export default function CarPostCard({
     description ??
     post.categoryName ??
     (post.title.length > 60 ? `${post.title.slice(0, 60)}…` : post.title);
+  const isPromoted =
+    Boolean(post.isPromoted) && (post.promotedPriorityLevel ?? 0) > 0;
+  const promotedLevel = post.promotedPriorityLevel ?? 0;
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:border-primary/20 hover:shadow-xl">
       <Link href={`/posts/${post.id}`} className="block flex-1">
-        <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-50">
+        <div className="relative aspect-16/10 w-full overflow-hidden bg-slate-50">
           <Image
             src={imgSrc}
             alt={post.title}
@@ -49,7 +52,24 @@ export default function CarPostCard({
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
             unoptimized={imgSrc.startsWith("http")}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          {isPromoted && (
+            <div className="absolute right-3 top-3 z-10">
+              <span
+                className={[
+                  "rounded-full px-2.5 py-1 text-[11px] font-extrabold shadow-sm",
+                  promotedLevel >= 3
+                    ? "bg-amber-100 text-amber-800 ring-1 ring-amber-200"
+                    : promotedLevel === 2
+                      ? "bg-sky-100 text-sky-800 ring-1 ring-sky-200"
+                      : "bg-slate-100 text-slate-800 ring-1 ring-slate-200",
+                ].join(" ")}
+                title={`Tin được quảng cáo (ưu tiên ${promotedLevel})`}
+              >
+                Quảng cáo
+              </span>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
           <div className="absolute bottom-0 left-0 right-0 flex justify-center p-3 opacity-0 transition-all duration-300 group-hover:opacity-100">
             <span className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg">
               Xem chi tiết

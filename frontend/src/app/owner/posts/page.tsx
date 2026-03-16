@@ -5,6 +5,8 @@ import Link from "next/link";
 import { getMyPosts, getPostDetail } from "@/services/posts";
 import type { PostListItemDto } from "@/types/api";
 import type { PostDetail } from "@/services/posts";
+import { applyAdToPost } from "@/services/owner-advertisements";
+import { ApiError } from "@/services/client";
 import { useSignalRNotifications } from "@/hooks/useSignalRNotifications";
 import { ToastList, type ToastItem } from "@/components/ui/toast-simple";
 import {
@@ -92,7 +94,7 @@ function DetailGallery({
   return (
     <div className="overflow-hidden rounded-xl bg-gray-950">
       {/* Main viewer */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden">
+      <div className="relative aspect-16/10 w-full overflow-hidden">
         {current.kind === "image" ? (
           <img
             key={current.src}
@@ -189,6 +191,7 @@ export default function OwnerPostsPage() {
   const [detailPostId, setDetailPostId] = useState<number | null>(null);
   const [detailPost, setDetailPost] = useState<PostDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [boostLoading, setBoostLoading] = useState(false);
 
   const fetchPosts = useCallback(() => {
     setLoading(true);
@@ -215,6 +218,37 @@ export default function OwnerPostsPage() {
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
+
+  const boostPost = useCallback(
+    async (postId: number) => {
+      setBoostLoading(true);
+      try {
+        const res = await applyAdToPost(postId);
+        addToast({
+          title: "Quảng cáo",
+          message: res.message || "Quảng cáo đã được áp dụng cho bài viết.",
+          type: "success",
+          postId,
+        });
+      } catch (e) {
+        const msg =
+          e instanceof ApiError
+            ? e.detail
+            : e instanceof Error
+              ? e.message
+              : "Áp dụng quảng cáo thất bại.";
+        addToast({
+          title: "Quảng cáo",
+          message: msg,
+          type: "error",
+          postId,
+        });
+      } finally {
+        setBoostLoading(false);
+      }
+    },
+    [addToast],
+  );
 
   useSignalRNotifications(
     useCallback(
@@ -508,6 +542,29 @@ export default function OwnerPostsPage() {
                     </p>
                   </div>
                 )}
+
+                {/* Actions */}
+                <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-4">
+                  <Link
+                    href="/owner/advertisements"
+                    className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Mua credit quảng cáo
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => detailPostId && void boostPost(detailPostId)}
+                    disabled={boostLoading || detailPost.status !== 1}
+                    className="inline-flex items-center rounded-lg bg-[#1572D3] px-4 py-2 text-sm font-medium text-white hover:bg-[#1260B0] disabled:opacity-50"
+                    title={
+                      detailPost.status !== 1
+                        ? "Chỉ áp dụng quảng cáo cho bài đã duyệt"
+                        : undefined
+                    }
+                  >
+                    {boostLoading ? "Đang áp dụng..." : "Quảng cáo bài này"}
+                  </button>
+                </div>
               </div>
             )}
           </DialogContent>

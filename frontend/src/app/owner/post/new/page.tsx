@@ -40,41 +40,12 @@ export default function NewPostPage() {
   const [uploadingVideos, setUploadingVideos] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
 
-  const [licenseImageFiles, setLicenseImageFiles] = useState<File[]>([]);
-  const [licenseImagePreviews, setLicenseImagePreviews] = useState<string[]>(
-    [],
-  );
-  const [licenseImageUrls, setLicenseImageUrls] = useState<string[]>([]);
-  const [uploadingLicenseImages, setUploadingLicenseImages] = useState(false);
-  const [licenseImageError, setLicenseImageError] = useState<string | null>(
-    null,
-  );
-  const MAX_LICENSE_IMAGES = 5;
-
-  // Vehicle documents
-  const [registrationFile, setRegistrationFile] = useState<File | null>(null);
-  const [registrationPreview, setRegistrationPreview] = useState<string | null>(
-    null,
-  );
-  const [registrationUrl, setRegistrationUrl] = useState<string | null>(null);
-  const [uploadingRegistration, setUploadingRegistration] = useState(false);
-  const [registrationError, setRegistrationError] = useState<string | null>(
-    null,
-  );
-
-  const [inspectionFile, setInspectionFile] = useState<File | null>(null);
-  const [inspectionPreview, setInspectionPreview] = useState<string | null>(
-    null,
-  );
-  const [inspectionUrl, setInspectionUrl] = useState<string | null>(null);
-  const [uploadingInspection, setUploadingInspection] = useState(false);
-  const [inspectionError, setInspectionError] = useState<string | null>(null);
-
-  const [insuranceFile, setInsuranceFile] = useState<File | null>(null);
-  const [insurancePreview, setInsurancePreview] = useState<string | null>(null);
-  const [insuranceUrl, setInsuranceUrl] = useState<string | null>(null);
-  const [uploadingInsurance, setUploadingInsurance] = useState(false);
-  const [insuranceError, setInsuranceError] = useState<string | null>(null);
+  const [vehicleDocFiles, setVehicleDocFiles] = useState<File[]>([]);
+  const [vehicleDocPreviews, setVehicleDocPreviews] = useState<string[]>([]);
+  const [vehicleDocUrls, setVehicleDocUrls] = useState<string[]>([]);
+  const [uploadingVehicleDocs, setUploadingVehicleDocs] = useState(false);
+  const [vehicleDocError, setVehicleDocError] = useState<string | null>(null);
+  const MAX_VEHICLE_DOCS = 6;
 
   useEffect(() => {
     Promise.all([getCategories(), getMySubscriptions()])
@@ -175,149 +146,55 @@ export default function NewPostPage() {
     setVideoPreviews(previews);
   }
 
-  async function handleLicenseImageChange(
+  async function handleVehicleDocChange(
     e: React.ChangeEvent<HTMLInputElement>,
   ) {
     const files = Array.from(e.target.files ?? []);
-    setLicenseImageError(null);
+    setVehicleDocError(null);
 
     if (files.length === 0) return;
 
-    const totalAfterAdd = licenseImagePreviews.length + files.length;
-    if (totalAfterAdd > MAX_LICENSE_IMAGES) {
-      setLicenseImageError(
-        `Tối đa ${MAX_LICENSE_IMAGES} ảnh. Bạn đã chọn ${licenseImagePreviews.length}, không thể thêm ${files.length} ảnh nữa.`,
+    const totalAfterAdd = vehicleDocPreviews.length + files.length;
+    if (totalAfterAdd > MAX_VEHICLE_DOCS) {
+      setVehicleDocError(
+        `Tối đa ${MAX_VEHICLE_DOCS} ảnh giấy tờ. Bạn đã chọn ${vehicleDocPreviews.length}, không thể thêm ${files.length} ảnh nữa.`,
       );
       return;
     }
 
-    // Create previews immediately
     const newPreviews = files.map((file) => URL.createObjectURL(file));
-    setLicenseImageFiles((prev) => [...prev, ...files]);
-    setLicenseImagePreviews((prev) => [...prev, ...newPreviews]);
+    setVehicleDocFiles((prev) => [...prev, ...files]);
+    setVehicleDocPreviews((prev) => [...prev, ...newPreviews]);
 
-    // Upload all new files to Cloudinary in parallel
-    setUploadingLicenseImages(true);
+    setUploadingVehicleDocs(true);
     try {
       const urls = await Promise.all(files.map((file) => uploadImage(file)));
-      setLicenseImageUrls((prev) => [...prev, ...urls]);
+      setVehicleDocUrls((prev) => [...prev, ...urls]);
     } catch (err) {
-      setLicenseImageError(
+      setVehicleDocError(
         err instanceof Error
           ? err.message
-          : "Không thể tải ảnh lên. Vui lòng thử lại.",
+          : "Không thể tải ảnh giấy tờ lên. Vui lòng thử lại.",
       );
-      // Roll back previews for failed batch
-      setLicenseImageFiles((prev) => prev.slice(0, prev.length - files.length));
-      setLicenseImagePreviews((prev) => {
+      setVehicleDocFiles((prev) => prev.slice(0, prev.length - files.length));
+      setVehicleDocPreviews((prev) => {
         const rolled = prev.slice(0, prev.length - newPreviews.length);
         newPreviews.forEach((u) => URL.revokeObjectURL(u));
         return rolled;
       });
     } finally {
-      setUploadingLicenseImages(false);
-      // Reset the input so choosing the same files again triggers onChange
+      setUploadingVehicleDocs(false);
       e.target.value = "";
     }
   }
 
-  function removeLicenseImage(index: number) {
-    setLicenseImagePreviews((prev) => {
+  function removeVehicleDoc(index: number) {
+    setVehicleDocPreviews((prev) => {
       URL.revokeObjectURL(prev[index]);
       return prev.filter((_, i) => i !== index);
     });
-    setLicenseImageUrls((prev) => prev.filter((_, i) => i !== index));
-    setLicenseImageFiles((prev) => prev.filter((_, i) => i !== index));
-  }
-
-  async function handleDocumentChange(
-    e: React.ChangeEvent<HTMLInputElement>,
-    docType: "registration" | "inspection" | "insurance",
-  ) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const preview = URL.createObjectURL(file);
-
-    if (docType === "registration") {
-      setRegistrationFile(file);
-      setRegistrationPreview(preview);
-      setRegistrationError(null);
-      setUploadingRegistration(true);
-      try {
-        const url = await uploadImage(file);
-        setRegistrationUrl(url);
-      } catch (err) {
-        setRegistrationError(
-          err instanceof Error ? err.message : "Không thể tải lên",
-        );
-        setRegistrationFile(null);
-        setRegistrationPreview(null);
-        URL.revokeObjectURL(preview);
-      } finally {
-        setUploadingRegistration(false);
-        e.target.value = "";
-      }
-    } else if (docType === "inspection") {
-      setInspectionFile(file);
-      setInspectionPreview(preview);
-      setInspectionError(null);
-      setUploadingInspection(true);
-      try {
-        const url = await uploadImage(file);
-        setInspectionUrl(url);
-      } catch (err) {
-        setInspectionError(
-          err instanceof Error ? err.message : "Không thể tải lên",
-        );
-        setInspectionFile(null);
-        setInspectionPreview(null);
-        URL.revokeObjectURL(preview);
-      } finally {
-        setUploadingInspection(false);
-        e.target.value = "";
-      }
-    } else if (docType === "insurance") {
-      setInsuranceFile(file);
-      setInsurancePreview(preview);
-      setInsuranceError(null);
-      setUploadingInsurance(true);
-      try {
-        const url = await uploadImage(file);
-        setInsuranceUrl(url);
-      } catch (err) {
-        setInsuranceError(
-          err instanceof Error ? err.message : "Không thể tải lên",
-        );
-        setInsuranceFile(null);
-        setInsurancePreview(null);
-        URL.revokeObjectURL(preview);
-      } finally {
-        setUploadingInsurance(false);
-        e.target.value = "";
-      }
-    }
-  }
-
-  function removeDocument(
-    docType: "registration" | "inspection" | "insurance",
-  ) {
-    if (docType === "registration") {
-      if (registrationPreview) URL.revokeObjectURL(registrationPreview);
-      setRegistrationFile(null);
-      setRegistrationPreview(null);
-      setRegistrationUrl(null);
-    } else if (docType === "inspection") {
-      if (inspectionPreview) URL.revokeObjectURL(inspectionPreview);
-      setInspectionFile(null);
-      setInspectionPreview(null);
-      setInspectionUrl(null);
-    } else if (docType === "insurance") {
-      if (insurancePreview) URL.revokeObjectURL(insurancePreview);
-      setInsuranceFile(null);
-      setInsurancePreview(null);
-      setInsuranceUrl(null);
-    }
+    setVehicleDocUrls((prev) => prev.filter((_, i) => i !== index));
+    setVehicleDocFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -364,11 +241,12 @@ export default function NewPostPage() {
         contactPhone: contactPhone || undefined,
         imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
         videoUrls: uploadedVideoUrls.length > 0 ? uploadedVideoUrls : undefined,
-        licenseImageUrls:
-          licenseImageUrls.length > 0 ? licenseImageUrls : undefined,
-        registrationImageUrl: registrationUrl || undefined,
-        inspectionImageUrl: inspectionUrl || undefined,
-        insuranceImageUrl: insuranceUrl || undefined,
+        registrationImageUrl:
+          vehicleDocUrls.length > 0 ? vehicleDocUrls[0] : undefined,
+        inspectionImageUrl:
+          vehicleDocUrls.length > 1 ? vehicleDocUrls[1] : undefined,
+        insuranceImageUrl:
+          vehicleDocUrls.length > 2 ? vehicleDocUrls[2] : undefined,
       };
 
       await createPost(payload);
@@ -667,6 +545,89 @@ export default function NewPostPage() {
                           </li>
                         ))}
                       </ul>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm font-semibold text-slate-700">
+                        Giấy tờ xe{" "}
+                        <span className="font-normal text-slate-400">
+                          (tùy chọn)
+                        </span>
+                      </label>
+                      <span className="text-xs text-slate-400">
+                        {vehicleDocPreviews.length}/{MAX_VEHICLE_DOCS} ảnh
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Có thể tải nhiều ảnh (đăng ký xe, kiểm định, bảo hiểm...)
+                    </p>
+                    <label
+                      className={`mt-2 flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed px-4 py-4 transition-colors ${
+                        vehicleDocPreviews.length >= MAX_VEHICLE_DOCS
+                          ? "border-slate-100 bg-slate-50 cursor-not-allowed opacity-50"
+                          : "border-slate-200 bg-slate-50 hover:border-primary hover:bg-primary/5"
+                      }`}
+                    >
+                      <ImagePlus className="h-6 w-6 text-slate-400" />
+                      <span className="text-sm text-slate-600">
+                        {vehicleDocPreviews.length >= MAX_VEHICLE_DOCS
+                          ? `Đã đạt giới hạn ${MAX_VEHICLE_DOCS} ảnh`
+                          : "Chọn ảnh giấy tờ từ thiết bị (có thể chọn nhiều ảnh)"}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleVehicleDocChange}
+                        disabled={vehicleDocPreviews.length >= MAX_VEHICLE_DOCS}
+                        className="hidden"
+                      />
+                    </label>
+                    {uploadingVehicleDocs && (
+                      <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Đang tải
+                        ảnh giấy tờ lên Cloudinary...
+                      </p>
+                    )}
+                    {vehicleDocError && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {vehicleDocError}
+                      </p>
+                    )}
+                    {vehicleDocPreviews.length > 0 && (
+                      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        {vehicleDocPreviews.map((src, index) => (
+                          <div
+                            key={index}
+                            className="group relative overflow-hidden rounded-xl border border-slate-200"
+                          >
+                            <img
+                              src={src}
+                              alt={`Giấy tờ xe ${index + 1}`}
+                              className="h-36 w-full object-cover"
+                            />
+                            {index >= vehicleDocUrls.length &&
+                              uploadingVehicleDocs && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                  <Loader2 className="h-6 w-6 animate-spin text-white" />
+                                </div>
+                              )}
+                            <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white">
+                              {index + 1}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => removeVehicleDoc(index)}
+                              className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500/90 text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 hover:bg-red-600"
+                              title="Xóa ảnh giấy tờ"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>

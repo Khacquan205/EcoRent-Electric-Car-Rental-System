@@ -9,8 +9,6 @@ import {
   FileCheck,
   CheckCircle2,
   Camera,
-  ImagePlus,
-  Video,
 } from "lucide-react";
 import * as ownerApi from "@/services/owner";
 import { ApiError } from "@/services/client";
@@ -19,7 +17,7 @@ import { useAuthSession } from "@/components/providers";
 const STEPS = [
   { id: 1, title: "Upload CCCD", desc: "Tải ảnh mặt trước và mặt sau" },
   { id: 2, title: "KYC Check", desc: "Nhận diện thông tin từ CCCD" },
-  { id: 3, title: "Xác thực khuôn mặt", desc: "Camera hoặc tải ảnh selfie" },
+  { id: 3, title: "Xác thực khuôn mặt", desc: "Mở camera để chụp selfie" },
   { id: 4, title: "Xem lại & Xác nhận", desc: "Kiểm tra và gửi KYC" },
 ] as const;
 
@@ -41,6 +39,7 @@ export default function BecomeOwnerPage() {
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
   const [faceLoading, setFaceLoading] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Liveness state
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -56,7 +55,7 @@ export default function BecomeOwnerPage() {
   const [cameraReady, setCameraReady] = useState(false);
   /** Face step: which input method user chose. null = show picker. */
   const [faceMediaMode, setFaceMediaMode] = useState<
-    "upload_image" | "upload_video" | "camera" | null
+    "camera" | null
   >(null);
 
   useEffect(() => {
@@ -179,6 +178,60 @@ export default function BecomeOwnerPage() {
       }
     }, 5000);
   }, [recordedPreview, stopCamera, pickMimeType]);
+
+  const captureSelfieFromCamera = useCallback(async () => {
+    if (!ocrData?.cccdFaceId) return;
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    if (!w || !h) {
+      setFaceError("Camera chưa sẵn sàng. Vui lòng đợi một chút rồi thử lại.");
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.width = w;
+    canvas.height = h;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Video is mirrored in CSS (scaleX(-1)), mirror back when capturing.
+    ctx.save();
+    ctx.translate(w, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.restore();
+
+    const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.92),
+    );
+    if (!blob) {
+      setFaceError("Không thể chụp ảnh. Vui lòng thử lại.");
+      return;
+    }
+
+    const file = new File([blob], "selfie.jpg", { type: "image/jpeg" });
+    setFaceLoading(true);
+    setFaceError(null);
+    try {
+      const result = await ownerApi.kycVerifyFaceUpload(file, ocrData.cccdFaceId);
+      if (result.isMatched) {
+        setFaceVerified(true);
+        stopCamera();
+        setStep(4);
+      } else {
+        setFaceError(result.message ?? "Khuôn mặt không khớp. Vui lòng thử lại.");
+      }
+    } catch (e) {
+      setFaceError(e instanceof Error ? e.message : "Xác thực khuôn mặt thất bại.");
+    } finally {
+      setFaceLoading(false);
+    }
+  }, [ocrData?.cccdFaceId, setStep, stopCamera]);
 
   /** Handle file upload fallback (user picks an MP4 file) */
   const handleVideoUpload = useCallback(
@@ -605,8 +658,7 @@ export default function BecomeOwnerPage() {
                 Bước 3: Xác thực khuôn mặt
               </h2>
               <p className="mt-1 text-sm text-slate-600">
-                Chọn một cách để xác minh khuôn mặt khớp với CCCD: tải ảnh
-                selfie, tải video, hoặc mở camera.
+                Mở camera và chụp ảnh khuôn mặt để hệ thống đối chiếu với CCCD.
               </p>
 
               {(faceError || livenessError) && (
@@ -621,33 +673,12 @@ export default function BecomeOwnerPage() {
                   <p className="mb-3 text-sm font-medium text-slate-700">
                     Chọn cách xác thực:
                   </p>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <button
-                      type="button"
-                      onClick={() => setFaceMediaMode("upload_image")}
-                      className="flex flex-col items-center gap-2 rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center transition-colors hover:border-[#1572D3] hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-[#1572D3]"
-                    >
-                      <ImagePlus className="h-10 w-10 text-slate-600" />
-                      <span className="text-sm font-medium text-slate-800">
-                        Tải ảnh selfie
-                      </span>
-                      <span className="text-xs text-slate-500">JPG, PNG</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFaceMediaMode("upload_video")}
-                      className="flex flex-col items-center gap-2 rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-center transition-colors hover:border-[#1572D3] hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-[#1572D3]"
-                    >
-                      <Video className="h-10 w-10 text-slate-600" />
-                      <span className="text-sm font-medium text-slate-800">
-                        Tải video
-                      </span>
-                      <span className="text-xs text-slate-500">MP4, WebM</span>
-                    </button>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-1">
                     <button
                       type="button"
                       onClick={() => {
                         setFaceMediaMode("camera");
+                        setFaceError(null);
                         setLivenessError(null);
                         void startCamera();
                       }}
@@ -658,148 +689,10 @@ export default function BecomeOwnerPage() {
                         Mở camera
                       </span>
                       <span className="text-xs text-slate-500">
-                        Quay trực tiếp
+                        Chụp ảnh khuôn mặt
                       </span>
                     </button>
                   </div>
-                </div>
-              )}
-
-              {/* --- Upload Image branch --- */}
-              {faceMediaMode === "upload_image" && (
-                <div className="mt-6 flex flex-col gap-4">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFaceMediaMode(null);
-                        setSelfieFile(null);
-                        setSelfiePreview((p) => {
-                          if (p) URL.revokeObjectURL(p);
-                          return null;
-                        });
-                        setFaceError(null);
-                      }}
-                      className="text-sm text-slate-600 hover:text-slate-900"
-                    >
-                      ← Chọn lại
-                    </button>
-                  </div>
-                  <label className="block text-sm font-medium text-slate-700">
-                    Ảnh selfie (mặt rõ, nhìn thẳng)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleSelfieChange}
-                    className="sr-only"
-                    id="selfie-upload-step3"
-                  />
-                  <label
-                    htmlFor="selfie-upload-step3"
-                    className="flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 hover:border-slate-300 hover:bg-slate-100"
-                  >
-                    {selfiePreview ? (
-                      <img
-                        src={selfiePreview}
-                        alt="Selfie"
-                        className="max-h-48 rounded-lg object-contain"
-                      />
-                    ) : (
-                      <>
-                        <ImagePlus className="h-10 w-10 text-slate-400" />
-                        <p className="mt-2 text-sm text-slate-500">
-                          Chọn ảnh selfie
-                        </p>
-                      </>
-                    )}
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => void runSelfieVerify()}
-                    disabled={!selfieFile || faceLoading}
-                    className="rounded-lg bg-[#1572D3] px-4 py-2 text-sm font-medium text-white hover:bg-[#1260B0] disabled:opacity-50"
-                  >
-                    {faceLoading ? "Đang xác thực..." : "Xác thực khuôn mặt"}
-                  </button>
-                </div>
-              )}
-
-              {/* --- Upload Video branch --- */}
-              {faceMediaMode === "upload_video" && (
-                <div className="mt-6 flex flex-col gap-4">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFaceMediaMode(null);
-                        setRecordedBlob(null);
-                        setRecordedPreview((p) => {
-                          if (p) URL.revokeObjectURL(p);
-                          return null;
-                        });
-                        setLivenessError(null);
-                      }}
-                      className="text-sm text-slate-600 hover:text-slate-900"
-                    >
-                      ← Chọn lại
-                    </button>
-                  </div>
-                  {!recordedPreview ? (
-                    <>
-                      <label className="block text-sm font-medium text-slate-700">
-                        Chọn file video (MP4 hoặc WebM)
-                      </label>
-                      <input
-                        type="file"
-                        accept="video/mp4,video/webm,.mp4,.webm"
-                        onChange={handleVideoUpload}
-                        className="sr-only"
-                        id="video-upload-step3"
-                      />
-                      <label
-                        htmlFor="video-upload-step3"
-                        className="flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 hover:border-slate-300 hover:bg-slate-100"
-                      >
-                        <Video className="h-10 w-10 text-slate-400" />
-                        <p className="mt-2 text-sm text-slate-500">
-                          Chọn file video
-                        </p>
-                      </label>
-                    </>
-                  ) : (
-                    <>
-                      <div className="relative w-full max-w-sm overflow-hidden rounded-xl border-2 border-slate-200 bg-black aspect-[4/3]">
-                        <video
-                          src={recordedPreview}
-                          controls
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div className="flex gap-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setRecordedBlob(null);
-                            if (recordedPreview)
-                              URL.revokeObjectURL(recordedPreview);
-                            setRecordedPreview(null);
-                          }}
-                          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                        >
-                          Chọn video khác
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void runLivenessCheck()}
-                          disabled={loading}
-                          className="rounded-lg bg-[#1572D3] px-4 py-2 text-sm font-medium text-white hover:bg-[#1260B0] disabled:opacity-50"
-                        >
-                          {loading ? "Đang xác thực..." : "Xác thực khuôn mặt"}
-                        </button>
-                      </div>
-                    </>
-                  )}
                 </div>
               )}
 
@@ -824,93 +717,46 @@ export default function BecomeOwnerPage() {
                       ← Chọn lại
                     </button>
                   </div>
-                  {!recordedPreview && (
-                    <div className="relative w-full max-w-sm overflow-hidden rounded-xl border-2 border-slate-200 bg-black aspect-[4/3]">
-                      <video
-                        ref={videoRef}
-                        autoPlay
-                        muted
-                        playsInline
-                        className="h-full w-full object-cover"
-                        style={{ transform: "scaleX(-1)" }}
-                      />
-                      {isRecording && (
-                        <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                          <span className="h-3 w-3 animate-pulse rounded-full bg-red-500" />
-                          <span className="text-xs font-medium text-white drop-shadow">
-                            Đang quay...
-                          </span>
-                        </div>
-                      )}
-                      {!cameraReady && !livenessError && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-sm text-slate-400">
-                            Đang khởi tạo camera...
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {recordedPreview && (
-                    <div className="relative w-full max-w-sm overflow-hidden rounded-xl border-2 border-emerald-200 bg-black aspect-[4/3]">
-                      <video
-                        src={recordedPreview}
-                        controls
-                        className="h-full w-full object-cover"
-                        style={{ transform: "scaleX(-1)" }}
-                      />
-                      <div className="absolute top-3 left-3 rounded-full bg-emerald-500/90 px-2 py-0.5 text-xs font-medium text-white">
-                        Đã quay xong
+                  <div className="relative w-full max-w-sm overflow-hidden rounded-xl border-2 border-slate-200 bg-black aspect-4/3">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      muted
+                      playsInline
+                      className="h-full w-full object-cover"
+                      style={{ transform: "scaleX(-1)" }}
+                    />
+                    {/* Face frame overlay */}
+                    <div className="pointer-events-none absolute inset-0">
+                      <div className="absolute inset-0 bg-black/20" />
+                      <div className="absolute left-1/2 top-1/2 h-[72%] w-[62%] -translate-x-1/2 -translate-y-1/2 rounded-[999px] border-2 border-white/90 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/45 px-3 py-1 text-xs text-white">
+                        Đưa khuôn mặt vào khung và nhìn thẳng
                       </div>
                     </div>
-                  )}
-                  <div className="flex flex-wrap gap-3 justify-center">
-                    {!recordedPreview && !isRecording && cameraReady && (
-                      <button
-                        type="button"
-                        onClick={startRecording}
-                        className="inline-flex items-center rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600"
-                      >
-                        <Camera className="mr-2 h-4 w-4" />
-                        Bắt đầu quay (5 giây)
-                      </button>
-                    )}
-                    {isRecording && (
-                      <button
-                        type="button"
-                        onClick={stopRecording}
-                        className="inline-flex items-center rounded-lg bg-slate-600 px-4 py-2 text-sm font-medium text-white"
-                      >
-                        <Video className="mr-2 h-4 w-4" /> Dừng quay
-                      </button>
-                    )}
-                    {recordedPreview && !loading && (
-                      <button
-                        type="button"
-                        onClick={() => void retryLiveness()}
-                        className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                      >
-                        Quay lại video
-                      </button>
+                    {!cameraReady && !livenessError && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-sm text-slate-200">
+                          Đang khởi tạo camera...
+                        </span>
+                      </div>
                     )}
                   </div>
+                  <canvas ref={canvasRef} className="hidden" />
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    <button
+                      type="button"
+                      onClick={() => void captureSelfieFromCamera()}
+                      disabled={!cameraReady || faceLoading}
+                      className="inline-flex items-center rounded-lg bg-[#1572D3] px-4 py-2 text-sm font-medium text-white hover:bg-[#1260B0] disabled:opacity-50"
+                    >
+                      <Camera className="mr-2 h-4 w-4" />
+                      {faceLoading ? "Đang xác thực..." : "Chụp & Xác nhận"}
+                    </button>
+                  </div>
                   <p className="text-xs text-slate-500 text-center max-w-sm">
-                    Nhìn thẳng vào camera, giữ khuôn mặt rõ. Video tự động dừng
-                    sau 5 giây.
+                    Đảm bảo đủ sáng, không che mặt (khẩu trang/kính râm), nhìn thẳng.
                   </p>
-                </div>
-              )}
-
-              {faceMediaMode === "camera" && recordedPreview && (
-                <div className="mt-4 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => void runLivenessCheck()}
-                    disabled={loading}
-                    className="inline-flex items-center rounded-lg bg-[#1572D3] px-4 py-2 text-sm font-medium text-white hover:bg-[#1260B0] disabled:opacity-50"
-                  >
-                    {loading ? "Đang xác thực..." : "Xác thực khuôn mặt"}
-                  </button>
                 </div>
               )}
 

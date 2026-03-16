@@ -105,6 +105,7 @@ export async function apiFetch<TResponse>(
 
   if (!res.ok) {
     const message = `Request failed: ${res.status} ${res.statusText}`;
+    console.error("API Fetch Error Body:", body);
     throw new ApiError(message, res.status, body);
   }
 

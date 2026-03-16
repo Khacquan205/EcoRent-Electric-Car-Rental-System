@@ -25,6 +25,8 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
   const hasVideos = post.videos != null && post.videos.length > 0;
   const expired = isExpired(post.expiredAt);
   const expiryText = formatExpiry(post.expiredAt);
+  const isPromoted = Boolean(post.isPromoted) && (post.promotedPriorityLevel ?? 0) > 0;
+  const promotedLevel = post.promotedPriorityLevel ?? 0;
 
   return (
     <Link
@@ -84,6 +86,25 @@ export default function PostCard({ post, index = 0 }: PostCardProps) {
             <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold text-blue-700 shadow-sm backdrop-blur-sm">
               <Tag className="h-2.5 w-2.5 shrink-0" />
               {post.categoryName}
+            </span>
+          </div>
+        )}
+
+        {/* Promoted badge — top-right */}
+        {isPromoted && (
+          <div className="absolute right-3 top-3 z-10">
+            <span
+              className={[
+                "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold shadow-sm backdrop-blur-sm",
+                promotedLevel >= 3
+                  ? "bg-amber-100/95 text-amber-800 ring-1 ring-amber-200"
+                  : promotedLevel === 2
+                    ? "bg-sky-100/95 text-sky-800 ring-1 ring-sky-200"
+                    : "bg-slate-100/95 text-slate-800 ring-1 ring-slate-200",
+              ].join(" ")}
+              title={`Tin được quảng cáo (ưu tiên ${promotedLevel})`}
+            >
+              Quảng cáo
             </span>
           </div>
         )}
