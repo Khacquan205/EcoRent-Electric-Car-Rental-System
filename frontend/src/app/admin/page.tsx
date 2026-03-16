@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -16,66 +17,23 @@ import {
   Cell,
 } from "recharts";
 import { Package, FileText, Users, TrendingUp } from "lucide-react";
+import {
+  getAdminStats,
+  getAdminMonthly,
+  getAdminPackageDistribution,
+  getAdminPostStatus,
+} from "@/services/admin-dashboard";
 
-/* ── Mock data ────────────────────────────────────────────────── */
+/* ── Types ─────────────────────────────────────────────────────── */
 
-const MONTHLY_DATA = [
-  { month: "T10", packages: 12, posts: 34 },
-  { month: "T11", packages: 19, posts: 45 },
-  { month: "T12", packages: 25, posts: 58 },
-  { month: "T01", packages: 30, posts: 72 },
-  { month: "T02", packages: 38, posts: 85 },
-  { month: "T03", packages: 42, posts: 96 },
-];
-
-const PACKAGE_DISTRIBUTION = [
-  { name: "Gói Cơ bản", value: 45, color: "#3B82F6" },
-  { name: "Gói Nâng cao", value: 30, color: "#8B5CF6" },
-  { name: "Gói Premium", value: 18, color: "#F59E0B" },
-  { name: "Gói VIP", value: 7, color: "#10B981" },
-];
-
-const POST_STATUS_DATA = [
-  { name: "Đã duyệt", value: 156, color: "#10B981" },
-  { name: "Chờ duyệt", value: 23, color: "#F59E0B" },
-  { name: "Từ chối", value: 12, color: "#EF4444" },
-  { name: "Hết hạn", value: 45, color: "#6B7280" },
-];
-
-const SUMMARY_STATS = [
-  {
-    label: "Tổng gói đã bán",
-    value: "100",
-    change: "+12%",
-    icon: Package,
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-  },
-  {
-    label: "Tổng bài đăng",
-    value: "236",
-    change: "+18%",
-    icon: FileText,
-    color: "text-violet-600",
-    bg: "bg-violet-50",
-  },
-  {
-    label: "Chủ xe hoạt động",
-    value: "78",
-    change: "+8%",
-    icon: Users,
-    color: "text-emerald-600",
-    bg: "bg-emerald-50",
-  },
-  {
-    label: "Doanh thu tháng",
-    value: "15.2M",
-    change: "+22%",
-    icon: TrendingUp,
-    color: "text-amber-600",
-    bg: "bg-amber-50",
-  },
-];
+interface SummaryStatItem {
+  label: string;
+  value: string;
+  change: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  bg: string;
+}
 
 /* ── Custom tooltip ───────────────────────────────────────────── */
 
@@ -104,6 +62,128 @@ function CustomTooltip({
 /* ── Page ──────────────────────────────────────────────────────── */
 
 export default function AdminHomePage() {
+  const [stats, setStats] = useState<SummaryStatItem[]>([]);
+  const [monthlyData, setMonthlyData] = useState<
+    Array<{ month: string; packages: number; posts: number }>
+  >([]);
+  const [packageDistribution, setPackageDistribution] = useState<
+    Array<{ name: string; value: number; color: string }>
+  >([]);
+  const [postStatusData, setPostStatusData] = useState<
+    Array<{ name: string; value: number; color: string }>
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch all dashboard data in parallel
+      const [statsRes, monthlyRes, packageDistRes, postStatusRes] =
+        await Promise.all([
+          getAdminStats(),
+          getAdminMonthly(6),
+          getAdminPackageDistribution(),
+          getAdminPostStatus(),
+        ]);
+
+      // Transform stats
+      if (statsRes) {
+        const statData: SummaryStatItem[] = [
+          {
+            label: "Tổng gói đã bán",
+            value: statsRes.totalPackagesSold?.toString() || "0",
+            change: "+0%",
+            icon: Package,
+            color: "text-blue-600",
+            bg: "bg-blue-50",
+          },
+          {
+            label: "Tổng bài đăng",
+            value: statsRes.totalPosts?.toString() || "0",
+            change: "+0%",
+            icon: FileText,
+            color: "text-violet-600",
+            bg: "bg-violet-50",
+          },
+          {
+            label: "Chủ xe hoạt động",
+            value: statsRes.activeOwnersCount?.toString() || "0",
+            change: "+0%",
+            icon: Users,
+            color: "text-emerald-600",
+            bg: "bg-emerald-50",
+          },
+          {
+            label: "Doanh thu tháng",
+            value:
+              (statsRes.monthlyRevenue?.toLocaleString("vi-VN") || "0") + " đ",
+            change: "+0%",
+            icon: TrendingUp,
+            color: "text-amber-600",
+            bg: "bg-amber-50",
+          },
+        ];
+        setStats(statData);
+      }
+
+      // Transform monthly data
+      if (monthlyRes && Array.isArray(monthlyRes)) {
+        const monthlyChartData = monthlyRes.map((item) => ({
+          month: item.month || "",
+          packages: item.packagesSold || 0,
+          posts: item.postsCount || 0,
+        }));
+        setMonthlyData(monthlyChartData);
+      }
+
+      // Transform package distribution
+      if (packageDistRes && Array.isArray(packageDistRes)) {
+        const colors = ["#3B82F6", "#8B5CF6", "#F59E0B", "#10B981"];
+        const packageData = packageDistRes.map((item, index) => ({
+          name: item.packageName || "Unknown",
+          value: item.count || 0,
+          color: colors[index % colors.length],
+        }));
+        setPackageDistribution(packageData);
+      }
+
+      // Transform post status data
+      if (postStatusRes && Array.isArray(postStatusRes)) {
+        const statusColorMap: Record<string, string> = {
+          "Đã duyệt": "#10B981",
+          "Chờ duyệt": "#F59E0B",
+          "Từ chối": "#EF4444",
+          "Hết hạn": "#6B7280",
+        };
+        const postStatusChartData = postStatusRes.map((item) => ({
+          name: item.statusName || "Unknown",
+          value: item.count || 0,
+          color: statusColorMap[item.statusName || ""] || "#6B7280",
+        }));
+        setPostStatusData(postStatusChartData);
+      }
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-gray-600">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-semibold text-gray-900">Bảng điều khiển</h1>
@@ -113,7 +193,7 @@ export default function AdminHomePage() {
 
       {/* ── Summary stat cards ── */}
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {SUMMARY_STATS.map((stat) => (
+        {stats.map((stat) => (
           <div
             key={stat.label}
             className="flex items-center gap-4 rounded-2xl border bg-white p-5"
@@ -145,7 +225,7 @@ export default function AdminHomePage() {
           <div className="mt-4 h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={MONTHLY_DATA}
+                data={monthlyData}
                 margin={{ top: 5, right: 10, left: -10, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -196,7 +276,7 @@ export default function AdminHomePage() {
           <div className="mt-4 h-72">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={MONTHLY_DATA}
+                data={monthlyData}
                 margin={{ top: 5, right: 10, left: -10, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -254,7 +334,7 @@ export default function AdminHomePage() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={PACKAGE_DISTRIBUTION}
+                    data={packageDistribution}
                     cx="50%"
                     cy="50%"
                     innerRadius={50}
@@ -262,7 +342,7 @@ export default function AdminHomePage() {
                     paddingAngle={3}
                     dataKey="value"
                   >
-                    {PACKAGE_DISTRIBUTION.map((entry) => (
+                    {packageDistribution.map((entry) => (
                       <Cell key={entry.name} fill={entry.color} />
                     ))}
                   </Pie>
@@ -271,7 +351,7 @@ export default function AdminHomePage() {
               </ResponsiveContainer>
             </div>
             <div className="space-y-2.5">
-              {PACKAGE_DISTRIBUTION.map((item) => (
+              {packageDistribution.map((item) => (
                 <div
                   key={item.name}
                   className="flex items-center gap-2 text-sm"
@@ -301,7 +381,7 @@ export default function AdminHomePage() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={POST_STATUS_DATA}
+                    data={postStatusData}
                     cx="50%"
                     cy="50%"
                     innerRadius={50}
@@ -309,7 +389,7 @@ export default function AdminHomePage() {
                     paddingAngle={3}
                     dataKey="value"
                   >
-                    {POST_STATUS_DATA.map((entry) => (
+                    {postStatusData.map((entry) => (
                       <Cell key={entry.name} fill={entry.color} />
                     ))}
                   </Pie>
@@ -318,7 +398,7 @@ export default function AdminHomePage() {
               </ResponsiveContainer>
             </div>
             <div className="space-y-2.5">
-              {POST_STATUS_DATA.map((item) => (
+              {postStatusData.map((item) => (
                 <div
                   key={item.name}
                   className="flex items-center gap-2 text-sm"

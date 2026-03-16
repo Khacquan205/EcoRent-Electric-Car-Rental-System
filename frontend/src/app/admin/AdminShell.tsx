@@ -13,7 +13,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin", label: "Bảng điều khiển" },
   { href: "/admin/pending-posts", label: "Bài đăng xe chờ duyệt" },
   { href: "/admin/categories", label: "Danh mục" },
-  { href: "/admin/owner-subscriptions", label: "Gói" },
+  { href: "/admin/ad-packages", label: "Gói" },
   { href: "/admin/owners", label: "Chủ xe" },
 ];
 
