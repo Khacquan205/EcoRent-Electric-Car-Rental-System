@@ -9,9 +9,7 @@ const nextConfig: NextConfig = {
 
   async rewrites() {
     const backend = process.env.BACKEND_BASE_URL ?? "http://localhost:8080";
-    return [
-      { source: "/hubs/:path*", destination: `${backend}/hubs/:path*` },
-    ];
+    return [{ source: "/hubs/:path*", destination: `${backend}/hubs/:path*` }];
   },
 
   images: {
