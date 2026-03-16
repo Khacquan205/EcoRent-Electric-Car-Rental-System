@@ -200,7 +200,14 @@ export default function NewPostPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canPost) return;
-    if (uploadingImages || uploadingVideos) return;
+    if (
+      uploadingImages ||
+      uploadingVideos ||
+      uploadingRegistration ||
+      uploadingInspection ||
+      uploadingInsurance
+    )
+      return;
 
     setError(null);
     setSubmitting(true);
@@ -357,7 +364,7 @@ export default function NewPostPage() {
               {/* Section 1: Basic Info */}
               <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
                 <h2 className="mb-6 text-lg font-bold text-slate-800">
-                  📋 Thông tin cơ bản
+                  Thông tin cơ bản
                 </h2>
                 <div className="space-y-5">
                   <div>
@@ -411,7 +418,7 @@ export default function NewPostPage() {
               {/* Section 2: Media */}
               <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
                 <h2 className="mb-6 text-lg font-bold text-slate-800">
-                  🖼️ Hình ảnh &amp; Video
+                  Hình ảnh &amp; Video
                 </h2>
                 <div className="space-y-6">
                   <div>
@@ -499,7 +506,7 @@ export default function NewPostPage() {
                       </span>
                     </label>
                     <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
-                      <span className="text-2xl">🎥</span>
+                      <span className="text-2xl"></span>
                       <span className="text-sm text-slate-600">
                         Chọn video từ thiết bị (nhiều file)
                       </span>
@@ -626,10 +633,225 @@ export default function NewPostPage() {
                 </div>
               </div>
 
-              {/* Section 3: Pricing & Contact */}
+              {/* Section 3: Vehicle Documents */}
               <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
                 <h2 className="mb-6 text-lg font-bold text-slate-800">
-                  💰 Giá &amp; Liên hệ
+                  Giấy tờ xe
+                </h2>
+                <p className="mb-6 text-sm text-slate-600">
+                  Tải ảnh giấy tờ lên để Admin có thể xem khi duyệt bài đăng.
+                  Các tệp sẽ được tự động tải lên Cloudinary.
+                </p>
+                <div className="space-y-6">
+                  {/* Registration Document */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Giấy đăng ký xe{" "}
+                      <span className="text-slate-500">(tùy chọn)</span>
+                    </label>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
+                      <span className="text-2xl"></span>
+                      <span className="text-sm text-slate-600">
+                        {registrationUrl
+                          ? `✓ Đã tải lên: ${registrationFile?.name}`
+                          : registrationPreview
+                            ? `Đang xử lý: ${registrationFile?.name}`
+                            : "Chọn giấy đăng ký xe"}
+                      </span>
+                      {registrationUrl && (
+                        <span className="text-xs font-semibold text-emerald-600">
+                          ✓ Hoàn thành
+                        </span>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) =>
+                          handleDocumentChange(e, "registration")
+                        }
+                        disabled={uploadingRegistration}
+                        className="hidden"
+                      />
+                    </label>
+                    {uploadingRegistration && (
+                      <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Đang tải
+                        lên Cloudinary...
+                      </p>
+                    )}
+                    {registrationError && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {registrationError}
+                      </p>
+                    )}
+                    {registrationPreview && (
+                      <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <img
+                          src={registrationPreview}
+                          alt="Giấy đăng ký"
+                          className="h-16 w-20 rounded object-cover"
+                        />
+                        <div className="flex-1">
+                          <span className="truncate text-sm text-slate-700">
+                            {registrationFile?.name}
+                          </span>
+                          {registrationUrl && (
+                            <p className="mt-1 text-xs text-emerald-600">
+                              ✓ Đã tải lên thành công
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeDocument("registration")}
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/90 text-white hover:bg-red-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Inspection Document */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Giấy kiểm định xe{" "}
+                      <span className="text-slate-500">(tùy chọn)</span>
+                    </label>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
+                      <span className="text-2xl"></span>
+                      <span className="text-sm text-slate-600">
+                        {inspectionUrl
+                          ? `✓ Đã tải lên: ${inspectionFile?.name}`
+                          : inspectionPreview
+                            ? `Đang xử lý: ${inspectionFile?.name}`
+                            : "Chọn giấy kiểm định xe"}
+                      </span>
+                      {inspectionUrl && (
+                        <span className="text-xs font-semibold text-emerald-600">
+                          ✓ Hoàn thành
+                        </span>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) => handleDocumentChange(e, "inspection")}
+                        disabled={uploadingInspection}
+                        className="hidden"
+                      />
+                    </label>
+                    {uploadingInspection && (
+                      <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Đang tải
+                        lên Cloudinary...
+                      </p>
+                    )}
+                    {inspectionError && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {inspectionError}
+                      </p>
+                    )}
+                    {inspectionPreview && (
+                      <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <img
+                          src={inspectionPreview}
+                          alt="Giấy kiểm định"
+                          className="h-16 w-20 rounded object-cover"
+                        />
+                        <div className="flex-1">
+                          <span className="truncate text-sm text-slate-700">
+                            {inspectionFile?.name}
+                          </span>
+                          {inspectionUrl && (
+                            <p className="mt-1 text-xs text-emerald-600">
+                              ✓ Đã tải lên thành công
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeDocument("inspection")}
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/90 text-white hover:bg-red-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Insurance Document */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Giấy bảo hiểm xe{" "}
+                      <span className="text-slate-500">(tùy chọn)</span>
+                    </label>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
+                      <span className="text-2xl"></span>
+                      <span className="text-sm text-slate-600">
+                        {insuranceUrl
+                          ? `✓ Đã tải lên: ${insuranceFile?.name}`
+                          : insurancePreview
+                            ? `Đang xử lý: ${insuranceFile?.name}`
+                            : "Chọn giấy bảo hiểm xe"}
+                      </span>
+                      {insuranceUrl && (
+                        <span className="text-xs font-semibold text-emerald-600">
+                          ✓ Hoàn thành
+                        </span>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) => handleDocumentChange(e, "insurance")}
+                        disabled={uploadingInsurance}
+                        className="hidden"
+                      />
+                    </label>
+                    {uploadingInsurance && (
+                      <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Đang tải
+                        lên Cloudinary...
+                      </p>
+                    )}
+                    {insuranceError && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {insuranceError}
+                      </p>
+                    )}
+                    {insurancePreview && (
+                      <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <img
+                          src={insurancePreview}
+                          alt="Giấy bảo hiểm"
+                          className="h-16 w-20 rounded object-cover"
+                        />
+                        <div className="flex-1">
+                          <span className="truncate text-sm text-slate-700">
+                            {insuranceFile?.name}
+                          </span>
+                          {insuranceUrl && (
+                            <p className="mt-1 text-xs text-emerald-600">
+                              ✓ Đã tải lên thành công
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeDocument("insurance")}
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/90 text-white hover:bg-red-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 4: Pricing & Contact */}
+              <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
+                <h2 className="mb-6 text-lg font-bold text-slate-800">
+                  Giá &amp; Liên hệ
                 </h2>
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
@@ -669,6 +891,10 @@ export default function NewPostPage() {
                     !canPost ||
                     submitting ||
                     uploadingImages ||
+                    uploadingVideos ||
+                    uploadingRegistration ||
+                    uploadingInspection ||
+                    uploadingInsurance ||
                     (activeSub?.remainingPosts ?? 0) === 0
                   }
                   className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-bold text-white shadow-md transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"

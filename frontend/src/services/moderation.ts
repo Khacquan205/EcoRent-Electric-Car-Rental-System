@@ -14,6 +14,9 @@ export interface ModerationPostItem {
   description: string | null;
   images?: string[] | null;
   videos?: string[] | null;
+  registrationImageUrl?: string | null;
+  inspectionImageUrl?: string | null;
+  insuranceImageUrl?: string | null;
 }
 
 export interface ModerationPostsParams {
@@ -30,11 +33,12 @@ export interface ApproveRejectResponse {
 }
 
 export async function getModerationPosts(
-  params?: ModerationPostsParams
+  params?: ModerationPostsParams,
 ): Promise<ModerationPostItem[]> {
   const search = new URLSearchParams();
   if (params?.status !== undefined) search.set("status", String(params.status));
-  if (params?.ownerId !== undefined) search.set("ownerId", String(params.ownerId));
+  if (params?.ownerId !== undefined)
+    search.set("ownerId", String(params.ownerId));
   if (params?.fromDate) search.set("fromDate", params.fromDate);
   if (params?.toDate) search.set("toDate", params.toDate);
   const qs = search.toString();
@@ -42,18 +46,26 @@ export async function getModerationPosts(
   return apiFetch<ModerationPostItem[]>(url, { method: "GET" });
 }
 
-export async function approvePost(postId: number): Promise<ApproveRejectResponse> {
-  return apiFetch<ApproveRejectResponse>(`/api/moderation/posts/${postId}/approve`, {
-    method: "POST",
-  });
+export async function approvePost(
+  postId: number,
+): Promise<ApproveRejectResponse> {
+  return apiFetch<ApproveRejectResponse>(
+    `/api/moderation/posts/${postId}/approve`,
+    {
+      method: "POST",
+    },
+  );
 }
 
 export async function rejectPost(
   postId: number,
-  reason: string
+  reason: string,
 ): Promise<ApproveRejectResponse> {
-  return apiFetch<ApproveRejectResponse>(`/api/moderation/posts/${postId}/reject`, {
-    method: "POST",
-    body: { reason },
-  });
+  return apiFetch<ApproveRejectResponse>(
+    `/api/moderation/posts/${postId}/reject`,
+    {
+      method: "POST",
+      body: { reason },
+    },
+  );
 }
