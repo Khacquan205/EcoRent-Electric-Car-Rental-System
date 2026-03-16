@@ -40,15 +40,28 @@ export class ApiError extends Error {
 }
 
 const DEFAULT_BASE_URL = "http://localhost:5084";
+/** Production API - Nginx routes api.ecorent.site → backend. FE phải gọi trực tiếp, không qua ecorent.site/api. */
+const PRODUCTION_API_URL = "https://api.ecorent.site";
 
 function getBaseUrl() {
-  const configured = process.env.NEXT_PUBLIC_API_BASE_URL;
-  if (configured && configured.trim().length > 0) return configured;
+  // NEXT_PUBLIC_API_BASE_URL hoặc NEXT_PUBLIC_API_URL (theo guide) - phải set lúc build
+  const configured =
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.NEXT_PUBLIC_API_URL;
+  if (configured && configured.trim().length > 0) return configured.trim();
 
-  // In the browser, prefer same-origin so Next.js rewrites (/api/* -> backend) can avoid CORS.
-  if (typeof window !== "undefined") return "";
+  // Browser: nếu đang chạy trên ecorent.site → gọi api.ecorent.site trực tiếp (tránh 503)
+  if (typeof window !== "undefined") {
+    const host = window.location?.hostname ?? "";
+    if (host === "ecorent.site" || host === "www.ecorent.site") {
+      return PRODUCTION_API_URL;
+    }
+    // Localhost: dùng same-origin để Next.js proxy tránh CORS
+    return "";
+  }
 
-  // On the server (Node.js), call backend directly.
+  // Server (SSR): dùng BACKEND_BASE_URL hoặc default
+  const serverUrl = process.env.BACKEND_BASE_URL;
+  if (serverUrl && serverUrl.trim().length > 0) return serverUrl;
   return DEFAULT_BASE_URL;
 }
 
