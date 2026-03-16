@@ -13,4 +13,13 @@ namespace CAR.Application.Dtos.Chat
         public string Reply { get; set; } = string.Empty;
         public List<PostListItemDto> SuggestedPosts { get; set; } = new List<PostListItemDto>();
     }
+
+    public class SuggestCarsTrainingSampleDto
+    {
+        public string Query { get; set; } = string.Empty;
+        public int PositivePostId { get; set; }
+        public List<int> CandidatePostIds { get; set; } = new List<int>();
+        public string Rationale { get; set; } = string.Empty;
+        public string Language { get; set; } = "vi";
+    }
 }

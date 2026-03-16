@@ -1,0 +1,27 @@
+[
+  {
+    "query": "Tôi cần xe giá dưới 800k/ngày để đi làm hằng ngày",
+    "intent": "budget_low",
+    "expectation": "Top results should prioritize posts with price <= 800000 and match practical-use terms in description."
+  },
+  {
+    "query": "Gợi ý xe VinFast dưới 1 triệu ở Hà Nội",
+    "intent": "brand_budget_location",
+    "expectation": "Top results should include VinFast-related title/description, price <= 1000000, and matching Hanoi location when available."
+  },
+  {
+    "query": "Tôi cần xe rộng rãi cho gia đình 7 chỗ",
+    "intent": "need_family_space",
+    "expectation": "Top results should rank posts whose title/description imply family, spacious, SUV, or 7-seat usage."
+  },
+  {
+    "query": "Tìm xe sang để đi sự kiện cuối tuần",
+    "intent": "need_luxury",
+    "expectation": "Top results should emphasize premium/luxury cues in title and description with reasonable relevance."
+  },
+  {
+    "query": "Có xe nào khoảng 1.2 triệu đến 1.5 triệu một ngày không",
+    "intent": "budget_range",
+    "expectation": "Top results should stay near the requested budget range and provide coherent reasoning in match reasons."
+  }
+]

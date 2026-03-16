@@ -70,7 +70,10 @@ namespace CAR.Infrastructure.Services
             }
 
             var (maxPrice, minPrice, categoryId, locationIds, brandKeyword) = await ParseIntentAsync(userMessage).ConfigureAwait(false);
-            var posts = await _postService.GetPublicPostsForSuggestionAsync(maxPrice, minPrice, categoryId, locationIds, brandKeyword, limit: 10);
+            var posts = await _postService.GetPublicPostsForSuggestionAsync(maxPrice, minPrice, categoryId, locationIds, brandKeyword, limit: 120);
+            posts = RankPosts(posts, userMessage, maxPrice, minPrice, categoryId, locationIds, brandKeyword)
+                .Take(10)
+                .ToList();
 
             // Khi không có xe: lấy danh mục để trả lời kiểu "hiện có các danh mục ..., nhưng chưa có xe 300k"
             List<string>? categoryNamesForNoResult = null;
@@ -92,6 +95,70 @@ namespace CAR.Infrastructure.Services
             return await BuildReplyWithGeminiAsync(posts, userMessage, categoryNamesForNoResult);
         }
 
+        public async Task<List<SuggestCarsTrainingSampleDto>> BuildTrainingDatasetAsync(int sampleSize)
+        {
+            if (sampleSize <= 0) sampleSize = 120;
+            if (sampleSize > 500) sampleSize = 500;
+
+            var posts = await _postService
+                .GetPublicPostsForSuggestionAsync(null, null, null, null, null, limit: 200)
+                .ConfigureAwait(false);
+
+            if (posts.Count == 0)
+            {
+                return new List<SuggestCarsTrainingSampleDto>();
+            }
+
+            var results = new List<SuggestCarsTrainingSampleDto>();
+            var sortedPosts = posts.OrderByDescending(p => p.CreatedAt).ToList();
+
+            for (var i = 0; i < sortedPosts.Count && results.Count < sampleSize; i++)
+            {
+                var post = sortedPosts[i];
+                var priceK = Math.Max(100, (int)Math.Round(post.Price / 1000m));
+                var titleToken = ExtractTitleHint(post.Title);
+                var locationHint = string.IsNullOrWhiteSpace(post.LocationName) ? "" : $" ở {post.LocationName}";
+                var categoryHint = string.IsNullOrWhiteSpace(post.CategoryName) ? "xe" : post.CategoryName!;
+
+                var templates = new List<string>
+                {
+                    $"Tôi cần {categoryHint} khoảng {priceK}k/ngày{locationHint}",
+                    $"Gợi ý xe {titleToken} giá dưới {priceK + 200}k",
+                };
+
+                var descKeywords = ExtractDescriptionKeywords(post.Description);
+                if (descKeywords.Count > 0)
+                {
+                    templates.Add($"Tìm xe {descKeywords[0]} ngân sách tầm {priceK}k/ngày");
+                }
+
+                foreach (var query in templates)
+                {
+                    if (results.Count >= sampleSize) break;
+
+                    var candidates = BuildCandidateSet(sortedPosts, post, 6)
+                        .Select(p => p.Id)
+                        .ToList();
+
+                    if (!candidates.Contains(post.Id))
+                    {
+                        candidates.Insert(0, post.Id);
+                    }
+
+                    results.Add(new SuggestCarsTrainingSampleDto
+                    {
+                        Query = query,
+                        PositivePostId = post.Id,
+                        CandidatePostIds = candidates.Distinct().Take(6).ToList(),
+                        Rationale = BuildRationale(post),
+                        Language = "vi"
+                    });
+                }
+            }
+
+            return results;
+        }
+
         /// <summary>Parse giá (dưới X, trên X, tầm X, giá rẻ), category, địa điểm và hãng xe từ message.</summary>
         private async Task<(decimal? maxPrice, decimal? minPrice, int? categoryId, IReadOnlyList<int>? locationIds, string? brandKeyword)> ParseIntentAsync(string message)
         {
@@ -101,8 +168,8 @@ namespace CAR.Infrastructure.Services
             var normalizedNoDiacritic = NormalizeForMatch(normalized);
 
             // --- Giá: dưới X, trên X, tầm X, khoảng X, X triệu, giá rẻ ---
-            var underMatch = Regex.Match(normalized, @"d[uưở]i\s*(\d+)\s*(k|ngh[iì]n|tri[eệ]u)?", RegexOptions.IgnoreCase);
-            if (underMatch.Success && decimal.TryParse(underMatch.Groups[1].Value, out var underVal))
+            var underMatch = Regex.Match(normalized, @"d[uưở]i\s*(\d+(?:[\.,]\d+)?)\s*(k|ngh[iì]n|tri[eệ]u)?", RegexOptions.IgnoreCase);
+            if (underMatch.Success && TryParseNumber(underMatch.Groups[1].Value, out var underVal))
             {
                 maxPrice = underMatch.Groups[2].Value switch
                 {
@@ -113,8 +180,8 @@ namespace CAR.Infrastructure.Services
                 };
             }
 
-            var overMatch = Regex.Match(normalized, @"(tr[eê]n|t[uừ])\s*(\d+)\s*(k|ngh[iì]n|tri[eệ]u)?", RegexOptions.IgnoreCase);
-            if (overMatch.Success && decimal.TryParse(overMatch.Groups[2].Value, out var overVal))
+            var overMatch = Regex.Match(normalized, @"(tr[eê]n|t[uừ])\s*(\d+(?:[\.,]\d+)?)\s*(k|ngh[iì]n|tri[eệ]u)?", RegexOptions.IgnoreCase);
+            if (overMatch.Success && TryParseNumber(overMatch.Groups[2].Value, out var overVal))
             {
                 minPrice = overMatch.Groups[3].Value switch
                 {
@@ -128,8 +195,8 @@ namespace CAR.Infrastructure.Services
             // "tầm X", "khoảng X", "X triệu", "giá rẻ"
             if (!maxPrice.HasValue && !minPrice.HasValue)
             {
-                var tamMatch = Regex.Match(normalized, @"(t[eầ]m|kho[eả]ng)\s*(\d+)\s*(k|tri[eệ]u)?", RegexOptions.IgnoreCase);
-                if (tamMatch.Success && decimal.TryParse(tamMatch.Groups[2].Value, out var tamVal))
+                var tamMatch = Regex.Match(normalized, @"(t[eầ]m|kho[eả]ng)\s*(\d+(?:[\.,]\d+)?)\s*(k|tri[eệ]u)?", RegexOptions.IgnoreCase);
+                if (tamMatch.Success && TryParseNumber(tamMatch.Groups[2].Value, out var tamVal))
                 {
                     var unit = (tamMatch.Groups[3].Value ?? "").ToLowerInvariant();
                     if (unit.Contains("tri")) // triệu
@@ -141,8 +208,8 @@ namespace CAR.Infrastructure.Services
                 }
                 else
                 {
-                    var soTrieu = Regex.Match(normalized, @"(\d+)\s*tri[eệ]u", RegexOptions.IgnoreCase);
-                    if (soTrieu.Success && decimal.TryParse(soTrieu.Groups[1].Value, out var trieuVal))
+                    var soTrieu = Regex.Match(normalized, @"(\d+(?:[\.,]\d+)?)\s*tri[eệ]u", RegexOptions.IgnoreCase);
+                    if (soTrieu.Success && TryParseNumber(soTrieu.Groups[1].Value, out var trieuVal))
                     { minPrice = (trieuVal - 0.5m) * 1_000_000; maxPrice = (trieuVal + 0.5m) * 1_000_000; }
                     else
                     {
@@ -250,6 +317,14 @@ namespace CAR.Infrastructure.Services
             return new string(chars.ToArray()).Normalize(System.Text.NormalizationForm.FormC);
         }
 
+        private static bool TryParseNumber(string raw, out decimal value)
+        {
+            value = 0;
+            if (string.IsNullOrWhiteSpace(raw)) return false;
+            var normalized = raw.Trim().Replace(",", ".");
+            return decimal.TryParse(normalized, NumberStyles.Any, CultureInfo.InvariantCulture, out value);
+        }
+
         /// <summary>Nhận diện tin nhắn chỉ là chào hỏi để trả lời dẫn dắt, không im re.</summary>
         private static bool IsGreeting(string message)
         {
@@ -266,6 +341,241 @@ namespace CAR.Infrastructure.Services
             if (t.Length > 40) return false;
             var phrases = new[] { "cảm ơn", "cam on", "thanks", "thank you", "tạm biệt", "tam biet", "bye", "goodbye", "hẹn gặp lại", "hen gap lai" };
             return phrases.Any(p => t == p || t.StartsWith(p + " ") || t.StartsWith(p + "!"));
+        }
+
+        private static IReadOnlyList<PostListItemDto> RankPosts(
+            IReadOnlyList<PostListItemDto> posts,
+            string userMessage,
+            decimal? maxPrice,
+            decimal? minPrice,
+            int? categoryId,
+            IReadOnlyList<int>? locationIds,
+            string? brandKeyword)
+        {
+            if (posts.Count == 0) return posts;
+
+            var queryNorm = NormalizeForMatch(userMessage ?? string.Empty);
+            var queryTokens = TokenizeKeywords(queryNorm);
+
+            return posts
+                .Select((post, index) =>
+                {
+                    var score = 0d;
+                    var reasons = new List<string>();
+
+                    var titleNorm = NormalizeForMatch(post.Title ?? string.Empty);
+                    var descNorm = NormalizeForMatch(post.Description ?? string.Empty);
+                    var categoryNorm = NormalizeForMatch(post.CategoryName ?? string.Empty);
+                    var locationNorm = NormalizeForMatch(post.LocationName ?? string.Empty);
+                    var fullTextNorm = $"{titleNorm} {descNorm} {categoryNorm} {locationNorm}";
+
+                    // 1) Price matching is the strongest signal when user asked by budget.
+                    if (maxPrice.HasValue || minPrice.HasValue)
+                    {
+                        if (maxPrice.HasValue && post.Price <= maxPrice.Value)
+                        {
+                            score += 32;
+                            reasons.Add("Hợp ngân sách bạn yêu cầu");
+                            var closeness = 1d - Math.Min(1d, (double)(maxPrice.Value - post.Price) / Math.Max(1d, (double)maxPrice.Value));
+                            score += 8 * closeness;
+                        }
+
+                        if (minPrice.HasValue && post.Price >= minPrice.Value)
+                        {
+                            score += 26;
+                            if (!reasons.Contains("Hợp ngân sách bạn yêu cầu")) reasons.Add("Nằm trong khoảng giá bạn cần");
+                        }
+                    }
+
+                    // 2) Brand relevance from title/description.
+                    if (!string.IsNullOrWhiteSpace(brandKeyword))
+                    {
+                        var brandNorm = NormalizeForMatch(brandKeyword);
+                        if (titleNorm.Contains(brandNorm))
+                        {
+                            score += 24;
+                            reasons.Add($"Khớp hãng {brandKeyword}");
+                        }
+                        else if (descNorm.Contains(brandNorm))
+                        {
+                            score += 16;
+                            reasons.Add($"Mô tả có nhắc hãng {brandKeyword}");
+                        }
+                    }
+
+                    // 3) Free-form need matching from title + description.
+                    if (queryTokens.Count > 0)
+                    {
+                        var titleHits = queryTokens.Count(t => titleNorm.Contains(t));
+                        var descHits = queryTokens.Count(t => descNorm.Contains(t));
+                        var totalHits = queryTokens.Count(t => fullTextNorm.Contains(t));
+
+                        if (titleHits > 0)
+                        {
+                            score += Math.Min(26, titleHits * 7);
+                            reasons.Add("Tên xe khớp nhu cầu tìm kiếm");
+                        }
+                        if (descHits > 0)
+                        {
+                            score += Math.Min(24, descHits * 4);
+                            reasons.Add("Mô tả xe phù hợp nhu cầu");
+                        }
+
+                        if (totalHits > 0)
+                        {
+                            var overlap = (double)totalHits / queryTokens.Count;
+                            score += overlap * 20;
+                            if (!reasons.Contains("Mô tả xe phù hợp nhu cầu"))
+                                reasons.Add("Nội dung bài đăng khớp yêu cầu");
+                        }
+                        else
+                        {
+                            score -= 8;
+                        }
+                    }
+
+                    // 4) Soft boosts for category/location context.
+                    if (categoryId.HasValue && !string.IsNullOrWhiteSpace(categoryNorm) && queryNorm.Contains(categoryNorm))
+                    {
+                        score += 10;
+                        reasons.Add("Đúng danh mục bạn đề cập");
+                    }
+
+                    if (locationIds != null && locationIds.Count > 0 && !string.IsNullOrWhiteSpace(locationNorm))
+                    {
+                        score += 8;
+                        reasons.Add("Có khu vực phù hợp");
+                    }
+
+                    // 5) Keep ad priority as a controlled boost, not the primary rank factor.
+                    if (post.IsPromoted)
+                    {
+                        score += 2 + Math.Min(3, post.PromotedPriorityLevel);
+                    }
+
+                    // Keep original ordering stable when scores tie.
+                    score += 0.0001 * (posts.Count - index);
+
+                    post.MatchReasons = reasons.Distinct().Take(3).ToList();
+                    return new { Post = post, Score = score };
+                })
+                .OrderByDescending(x => x.Score)
+                .Select(x => x.Post)
+                .ToList();
+        }
+
+        private static HashSet<string> TokenizeKeywords(string normalizedText)
+        {
+            if (string.IsNullOrWhiteSpace(normalizedText)) return new HashSet<string>();
+
+            var stopWords = new HashSet<string>
+            {
+                "xe", "thue", "cho", "toi", "minh", "can", "muon", "gia", "duoi", "tren", "khoang", "tam", "mot", "nhung", "cua", "va", "o", "tai", "goi", "hay", "giup", "tim", "kiem", "de", "duoc", "voi", "theo", "choi", "di", "ngay", "dem", "chiec", "nhu", "cau", "khuyen", "nghi", "toi"
+            };
+
+            var tokens = Regex.Split(normalizedText, @"[^a-z0-9]+")
+                .Select(t => t.Trim())
+                .Where(t => t.Length >= 3)
+                .Where(t => !Regex.IsMatch(t, @"^\d+$"))
+                .Where(t => !stopWords.Contains(t))
+                .ToHashSet();
+
+            foreach (var keyword in ExpandNeedKeywords(normalizedText))
+            {
+                tokens.Add(keyword);
+            }
+
+            return tokens;
+        }
+
+        private static IEnumerable<string> ExpandNeedKeywords(string normalizedText)
+        {
+            var aliases = new Dictionary<string, string[]>
+            {
+                { "gia dinh", new[] { "rong rai", "7 cho", "suv", "mpv" } },
+                { "tiet kiem", new[] { "gia re", "kinh te" } },
+                { "di sang", new[] { "sang", "cao cap", "luxury" } },
+                { "di xa", new[] { "thoai mai", "on dinh", "du lich" } },
+            };
+
+            foreach (var pair in aliases)
+            {
+                if (!ContainsPhrase(normalizedText, pair.Key)) continue;
+                foreach (var value in pair.Value)
+                {
+                    yield return value.Replace(" ", string.Empty);
+                }
+            }
+        }
+
+        private static bool ContainsPhrase(string normalizedText, string phrase)
+        {
+            if (normalizedText.Contains(phrase)) return true;
+            return normalizedText.Replace(" ", string.Empty).Contains(phrase.Replace(" ", string.Empty));
+        }
+
+        private static string ExtractTitleHint(string title)
+        {
+            if (string.IsNullOrWhiteSpace(title)) return "phù hợp";
+            var raw = Regex.Replace(title, @"\s+", " ").Trim();
+            var parts = raw.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            return string.Join(" ", parts.Take(3));
+        }
+
+        private static List<string> ExtractDescriptionKeywords(string? description)
+        {
+            if (string.IsNullOrWhiteSpace(description)) return new List<string>();
+            var normalized = NormalizeForMatch(description);
+            var stopWords = new HashSet<string>
+            {
+                "va", "cho", "toi", "minh", "xe", "thue", "gia", "theo", "voi", "nhung", "duoc", "khong", "co", "mot", "nhieu"
+            };
+
+            return Regex.Split(normalized, @"[^a-z0-9]+")
+                .Select(w => w.Trim())
+                .Where(w => w.Length >= 5)
+                .Where(w => !stopWords.Contains(w))
+                .Distinct()
+                .Take(4)
+                .ToList();
+        }
+
+        private static IReadOnlyList<PostListItemDto> BuildCandidateSet(
+            IReadOnlyList<PostListItemDto> allPosts,
+            PostListItemDto positive,
+            int size)
+        {
+            var sameCategory = allPosts
+                .Where(p => p.Id != positive.Id)
+                .Where(p => string.Equals(p.CategoryName, positive.CategoryName, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(p => Math.Abs(p.Price - positive.Price))
+                .Take(size - 1)
+                .ToList();
+
+            if (sameCategory.Count < size - 1)
+            {
+                var fallback = allPosts
+                    .Where(p => p.Id != positive.Id)
+                    .Where(p => sameCategory.All(c => c.Id != p.Id))
+                    .OrderBy(p => Math.Abs(p.Price - positive.Price))
+                    .Take((size - 1) - sameCategory.Count)
+                    .ToList();
+                sameCategory.AddRange(fallback);
+            }
+
+            var candidates = new List<PostListItemDto> { positive };
+            candidates.AddRange(sameCategory);
+            return candidates;
+        }
+
+        private static string BuildRationale(PostListItemDto post)
+        {
+            var reasons = new List<string>();
+            reasons.Add($"Giá {post.Price:N0} đ/ngày");
+            if (!string.IsNullOrWhiteSpace(post.CategoryName)) reasons.Add($"Danh mục {post.CategoryName}");
+            if (!string.IsNullOrWhiteSpace(post.LocationName)) reasons.Add($"Khu vực {post.LocationName}");
+            if (!string.IsNullOrWhiteSpace(post.Description)) reasons.Add("Mô tả có thông tin nhu cầu sử dụng");
+            return string.Join("; ", reasons);
         }
 
         private static SuggestCarsResponseDto BuildFallbackReply(List<PostListItemDto> posts, string userMessage, IReadOnlyList<string>? categoryNamesWhenEmpty = null)
@@ -300,7 +610,8 @@ namespace CAR.Infrastructure.Services
         {
             var carList = posts.Count == 0
                 ? "(Không có xe nào trong hệ thống phù hợp với yêu cầu.)"
-                : string.Join("\n", posts.Select((p, i) => $"{i + 1}. ID={p.Id}, {p.Title}, giá {p.Price:N0} đ/ngày, {p.CategoryName}"));
+                : string.Join("\n", posts.Select((p, i) =>
+                    $"{i + 1}. ID={p.Id}, {p.Title}, giá {p.Price:N0} đ/ngày, {p.CategoryName}, khu vực: {(string.IsNullOrWhiteSpace(p.LocationName) ? "chưa cập nhật" : p.LocationName)}, mô tả: {(string.IsNullOrWhiteSpace(p.Description) ? "không có" : p.Description)}, lý do match: {(p.MatchReasons.Count == 0 ? "không có" : string.Join("; ", p.MatchReasons))}"));
 
             var userPrompt = $@"Danh sách xe được phép gợi ý (chỉ được nhắc đến các xe trong danh sách này):
 {carList}

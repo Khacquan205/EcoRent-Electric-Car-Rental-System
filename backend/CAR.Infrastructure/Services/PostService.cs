@@ -365,7 +365,7 @@ namespace CAR.Infrastructure.Services
         public async Task<List<PostListItemDto>> GetPublicPostsForSuggestionAsync(decimal? maxPrice, decimal? minPrice, int? categoryId, IReadOnlyList<int>? locationIds, string? brandKeyword, int limit)
         {
             if (limit <= 0) limit = 10;
-            if (limit > 20) limit = 20;
+            if (limit > 200) limit = 200;
 
             var now = DateTime.UtcNow;
             var query = _postRepository.Query()
@@ -404,12 +404,14 @@ namespace CAR.Infrastructure.Services
                 {
                     p.Id,
                     p.Title,
+                    p.Description,
                     p.Price,
                     p.Status,
                     p.CreatedAt,
                     p.ExpiredAt,
                     p.PriorityLevel,
                     CategoryName = p.Category.Name,
+                    LocationName = p.Location != null ? ((p.Location.District ?? "") + ", " + (p.Location.Province ?? "")).Trim(' ', ',') : null,
                     IsPromoted = p.Advertisement != null && p.Advertisement.EndDate >= now,
                     PromotedPriorityLevel = (p.Advertisement != null && p.Advertisement.EndDate >= now) ? p.Advertisement.PriorityLevel : 0,
                     Images = p.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
@@ -421,12 +423,14 @@ namespace CAR.Infrastructure.Services
             {
                 Id = p.Id,
                 Title = p.Title,
+                Description = p.Description,
                 Price = p.Price,
                 Status = p.Status,
                 StatusName = Enum.GetName(typeof(PostStatus), p.Status) ?? p.Status.ToString(),
                 CreatedAt = p.CreatedAt,
                 ExpiredAt = p.ExpiredAt,
                 CategoryName = p.CategoryName,
+                LocationName = p.LocationName,
                 IsPromoted = p.IsPromoted,
                 PromotedPriorityLevel = p.PromotedPriorityLevel,
                 Images = p.Images,

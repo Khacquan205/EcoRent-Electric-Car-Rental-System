@@ -6,7 +6,8 @@ import { getCategories } from "@/services/categories";
 import type { PostListItemDto } from "@/types/api";
 import type { VehicleCategory } from "@/services/categories";
 import { PostList } from "@/components/posts";
-import { Sparkles } from "lucide-react";
+import { Search, MessageCircle } from "lucide-react";
+import Link from "next/link";
 
 const PAGE_SIZE = 12;
 
@@ -81,9 +82,11 @@ export default function PostsPage() {
     return items.filter((post) => {
       const title = post.title?.toLowerCase() ?? "";
       const categoryName = post.categoryName?.toLowerCase() ?? "";
+      const description = post.description?.toLowerCase() ?? "";
       return (
         title.includes(normalizedKeyword) ||
-        categoryName.includes(normalizedKeyword)
+        categoryName.includes(normalizedKeyword) ||
+        description.includes(normalizedKeyword)
       );
     });
   }, [items, isSearching, normalizedKeyword]);
@@ -108,15 +111,15 @@ export default function PostsPage() {
           </p>
         </div>
 
-        {/* ── AI search ───────────────────────────────────────── */}
+        {/* ── Text search ─────────────────────────────────────── */}
         <div className="mt-6 max-w-xl">
           <div className="relative">
-            <Sparkles className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-blue-500" />
+            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-blue-500" />
             <input
               type="text"
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="Tìm kiếm xe bằng AI: tên xe hoặc danh mục..."
+              placeholder="Tìm kiếm xe theo tên, danh mục hoặc mô tả..."
               className="h-11 w-full rounded-xl border border-blue-100 bg-white pr-4 pl-10 text-sm text-gray-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
             />
           </div>
@@ -169,6 +172,15 @@ export default function PostsPage() {
           />
         )}
       </div>
+
+      <Link
+        href="/chat"
+        aria-label="Mở chat AI"
+        title="Chat với AI"
+        className="fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition hover:bg-blue-700 hover:shadow-xl"
+      >
+        <MessageCircle className="h-6 w-6" />
+      </Link>
     </div>
   );
 }

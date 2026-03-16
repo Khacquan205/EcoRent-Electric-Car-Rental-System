@@ -6,5 +6,6 @@ namespace CAR.Application.Interfaces.Services
     public interface ICarSuggestionChatService
     {
         Task<SuggestCarsResponseDto> SuggestCarsAsync(string userMessage);
+        Task<List<SuggestCarsTrainingSampleDto>> BuildTrainingDatasetAsync(int sampleSize);
     }
 }
