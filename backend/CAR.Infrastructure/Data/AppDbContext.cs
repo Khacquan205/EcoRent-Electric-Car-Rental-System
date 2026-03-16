@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using CAR.Domain.Entities;
+using CAR.Infrastructure.Data.Entities;
 
 namespace CAR.Infrastructure.Data
 {
@@ -10,6 +11,7 @@ namespace CAR.Infrastructure.Data
         }
 
         // ===== DbSet =====
+        public DbSet<TPostEmbedding> PostEmbeddings { get; set; }
         public DbSet<MUser> Users { get; set; }
         public DbSet<MRole> Roles { get; set; }
         public DbSet<MAuthentication> Authentications { get; set; }
@@ -43,6 +45,9 @@ namespace CAR.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Phase 3: pgvector extension
+            modelBuilder.HasPostgresExtension("vector");
 
             // Auto apply all IEntityTypeConfiguration<>
             modelBuilder.ApplyConfigurationsFromAssembly(

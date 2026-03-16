@@ -6,6 +6,7 @@ using CAR.Infrastructure.Options;
 using CAR.Infrastructure.Repositories;
 using CAR.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using Pgvector.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using CAR.Infrastructure.Repositiories;
@@ -18,7 +19,7 @@ namespace CAR.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
-            // DbContext with retry for transient failures (e.g. remote DB like Render, connection drops)
+            // DbContext with retry + pgvector (Phase 3)
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(
                     configuration.GetConnectionString("DefaultConnection"),
@@ -26,6 +27,7 @@ namespace CAR.Infrastructure
                     {
                         npgsqlOptions.MigrationsAssembly("CAR.Infrastructure");
                         npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null);
+                        npgsqlOptions.UseVector();
                     }
                 )
             );
@@ -57,9 +59,9 @@ namespace CAR.Infrastructure
             services.AddScoped<IAdOrderRepository, AdOrderRepository>();
             services.AddScoped<IVehicleVerificationRepository, VehicleVerificationRepository>();
 
-            // VNPay options
+            // VNPay & AI options
             services.Configure<VnPaySettings>(configuration.GetSection(VnPaySettings.SectionName));
-            services.Configure<GeminiSettings>(configuration.GetSection(GeminiSettings.SectionName));
+            services.Configure<OpenAISettings>(configuration.GetSection(OpenAISettings.SectionName));
             services.AddHttpClient();
 
             // Services
@@ -96,6 +98,8 @@ namespace CAR.Infrastructure
             services.AddScoped<IChatService, ChatService>();
             services.AddScoped<IAdPackageService, AdPackageService>();
             services.AddScoped<IOwnerAdvertisementService, OwnerAdvertisementService>();
+            services.AddScoped<IEmbeddingService, OpenAiEmbeddingService>();
+            services.AddScoped<IEmbeddingBackfillService, PostEmbeddingBackfillService>();
             services.AddScoped<ICarSuggestionChatService, CarSuggestionChatService>();
             services.AddScoped<IAdminDashboardService, AdminDashboardService>();
             services.AddScoped<IOwnerDashboardService, OwnerDashboardService>();
