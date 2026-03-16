@@ -130,6 +130,20 @@ namespace CAR.Infrastructure.Services
                 }
             }
 
+            // Add license/CCCD images
+            if (request.LicenseImageUrls != null && request.LicenseImageUrls.Count > 0)
+            {
+                for (var i = 0; i < request.LicenseImageUrls.Count; i++)
+                {
+                    post.LicenseImages.Add(new TPostLicenseImage
+                    {
+                        ImageUrl = request.LicenseImageUrls[i],
+                        SortOrder = i,
+                        CreatedAt = currentTime
+                    });
+                }
+            }
+
             // Do NOT deduct slot here – deduct only when admin approves (see PostModerationService.ApprovePostAsync)
             await _unitOfWork.SaveChangesAsync();
 

@@ -11,6 +11,10 @@ export interface CreatePostRequest {
   imageUrls?: string[];
   imageUrl?: string;
   videoUrls?: string[];
+  licenseImageUrls?: string[];
+  registrationImageUrl?: string | null;
+  inspectionImageUrl?: string | null;
+  insuranceImageUrl?: string | null;
 }
 
 export interface CreatePostResponse {
@@ -39,6 +43,14 @@ export interface PostDetail {
   images?: string[] | null;
   /** Optional videos returned by backend for the post detail. */
   videos?: string[] | null;
+  /** Optional license/CCCD images */
+  licenseImages?: string[] | null;
+  /** URL ảnh giấy đăng ký xe */
+  registrationImageUrl?: string | null;
+  /** URL ảnh giấy kiểm định xe */
+  inspectionImageUrl?: string | null;
+  /** URL ảnh bảo hiểm xe */
+  insuranceImageUrl?: string | null;
   /** Optional owner display name if backend provides it. */
   ownerName?: string | null;
 }
