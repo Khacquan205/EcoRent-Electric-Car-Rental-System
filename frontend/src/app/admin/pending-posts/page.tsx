@@ -8,6 +8,7 @@ import {
   type ModerationPostItem,
   type ModerationPostsParams,
 } from "@/services/moderation";
+import { getPostDetail, type PostDetail } from "@/services/posts";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -99,7 +100,7 @@ function AdminDetailGallery({
   return (
     <div className="overflow-hidden rounded-xl bg-gray-950">
       {/* Main viewer */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden">
+      <div className="relative aspect-16/10 w-full overflow-hidden">
         {current.kind === "image" ? (
           <img
             key={current.src}
@@ -189,6 +190,10 @@ function AdminDetailGallery({
 }
 
 export default function PendingCarPostsPage() {
+  type AdminDetailPost = ModerationPostItem & {
+    vehicleVerification?: PostDetail["vehicleVerification"];
+  };
+
   const [posts, setPosts] = useState<ModerationPostItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{
@@ -210,7 +215,8 @@ export default function PendingCarPostsPage() {
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
 
   // View details modal
-  const [detailPost, setDetailPost] = useState<ModerationPostItem | null>(null);
+  const [detailPost, setDetailPost] = useState<AdminDetailPost | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
@@ -300,6 +306,27 @@ export default function PendingCarPostsPage() {
     if (!rejectSubmitting) {
       setRejectModalPost(null);
       setRejectReason("");
+    }
+  };
+
+  const openDetailModal = async (post: ModerationPostItem) => {
+    setDetailLoading(true);
+    try {
+      const detail = await getPostDetail(post.id);
+      setDetailPost({
+        ...post,
+        ...detail,
+        ownerName: post.ownerName ?? detail.ownerName ?? null,
+      });
+    } catch {
+      // Fallback to list item data so admin can still view base info.
+      setDetailPost(post);
+      setMessage({
+        type: "error",
+        text: "Không tải được chi tiết đầy đủ của bài đăng.",
+      });
+    } finally {
+      setDetailLoading(false);
     }
   };
 
@@ -406,7 +433,7 @@ export default function PendingCarPostsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px] text-left text-sm">
+            <table className="w-full min-w-200 text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
                   <th className="px-4 py-3 font-semibold text-slate-700">
@@ -476,7 +503,7 @@ export default function PendingCarPostsPage() {
                           variant="ghost"
                           size="sm"
                           className="h-8 text-slate-600"
-                          onClick={() => setDetailPost(post)}
+                          onClick={() => openDetailModal(post)}
                           title="Xem chi tiết"
                         >
                           <Eye className="h-4 w-4" />
@@ -549,7 +576,7 @@ export default function PendingCarPostsPage() {
                 Lý do (bắt buộc)
               </label>
               <Textarea
-                className="min-h-[80px] rounded-lg border-slate-200"
+                className="min-h-20 rounded-lg border-slate-200"
                 rows={3}
                 placeholder="Ví dụ: Ảnh mờ, thiếu giấy tờ bắt buộc..."
                 value={rejectReason}
@@ -591,6 +618,12 @@ export default function PendingCarPostsPage() {
               Thông tin xe và chi tiết gửi duyệt
             </DialogDescription>
           </DialogHeader>
+          {detailLoading && (
+            <div className="flex items-center justify-center py-8 text-slate-500">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span className="ml-2 text-sm">Đang tải chi tiết...</span>
+            </div>
+          )}
           {detailPost && (
             <div className="space-y-4 text-sm">
               {/* Gallery */}
@@ -650,6 +683,76 @@ export default function PendingCarPostsPage() {
                   </p>
                 </div>
               )}
+
+              {(detailPost.vehicleVerification?.registrationImageUrl ||
+                detailPost.vehicleVerification?.inspectionImageUrl ||
+                detailPost.vehicleVerification?.insuranceImageUrl) && (
+                <div>
+                  <div className="mb-2 font-medium text-slate-700">
+                    Giấy tờ xe
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    {detailPost.vehicleVerification?.registrationImageUrl && (
+                      <a
+                        href={
+                          detailPost.vehicleVerification.registrationImageUrl
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group block overflow-hidden rounded-lg border border-slate-200 bg-white"
+                      >
+                        <img
+                          src={
+                            detailPost.vehicleVerification.registrationImageUrl
+                          }
+                          alt="Giấy đăng ký xe"
+                          className="h-36 w-full object-cover transition-transform group-hover:scale-105"
+                        />
+                        <div className="px-2 py-1.5 text-xs text-slate-600">
+                          Giấy đăng ký xe
+                        </div>
+                      </a>
+                    )}
+                    {detailPost.vehicleVerification?.inspectionImageUrl && (
+                      <a
+                        href={detailPost.vehicleVerification.inspectionImageUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group block overflow-hidden rounded-lg border border-slate-200 bg-white"
+                      >
+                        <img
+                          src={
+                            detailPost.vehicleVerification.inspectionImageUrl
+                          }
+                          alt="Giấy kiểm định"
+                          className="h-36 w-full object-cover transition-transform group-hover:scale-105"
+                        />
+                        <div className="px-2 py-1.5 text-xs text-slate-600">
+                          Giấy kiểm định
+                        </div>
+                      </a>
+                    )}
+                    {detailPost.vehicleVerification?.insuranceImageUrl && (
+                      <a
+                        href={detailPost.vehicleVerification.insuranceImageUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group block overflow-hidden rounded-lg border border-slate-200 bg-white"
+                      >
+                        <img
+                          src={detailPost.vehicleVerification.insuranceImageUrl}
+                          alt="Giấy bảo hiểm"
+                          className="h-36 w-full object-cover transition-transform group-hover:scale-105"
+                        />
+                        <div className="px-2 py-1.5 text-xs text-slate-600">
+                          Giấy bảo hiểm
+                        </div>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {detailPost.status === STATUS_REJECTED &&
                 detailPost.rejectReason && (
                   <div>

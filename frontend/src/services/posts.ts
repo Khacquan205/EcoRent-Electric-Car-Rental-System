@@ -11,6 +11,9 @@ export interface CreatePostRequest {
   imageUrls?: string[];
   imageUrl?: string;
   videoUrls?: string[];
+  registrationImageUrl?: string;
+  inspectionImageUrl?: string;
+  insuranceImageUrl?: string;
 }
 
 export interface CreatePostResponse {
@@ -41,6 +44,12 @@ export interface PostDetail {
   videos?: string[] | null;
   /** Optional owner display name if backend provides it. */
   ownerName?: string | null;
+  /** Optional vehicle verification document images. */
+  vehicleVerification?: {
+    registrationImageUrl?: string | null;
+    inspectionImageUrl?: string | null;
+    insuranceImageUrl?: string | null;
+  } | null;
 }
 
 export async function createPost(

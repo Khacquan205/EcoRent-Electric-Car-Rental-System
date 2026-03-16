@@ -40,6 +40,13 @@ export default function NewPostPage() {
   const [uploadingVideos, setUploadingVideos] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
 
+  const [vehicleDocFiles, setVehicleDocFiles] = useState<File[]>([]);
+  const [vehicleDocPreviews, setVehicleDocPreviews] = useState<string[]>([]);
+  const [vehicleDocUrls, setVehicleDocUrls] = useState<string[]>([]);
+  const [uploadingVehicleDocs, setUploadingVehicleDocs] = useState(false);
+  const [vehicleDocError, setVehicleDocError] = useState<string | null>(null);
+  const MAX_VEHICLE_DOCS = 6;
+
   useEffect(() => {
     Promise.all([getCategories(), getMySubscriptions()])
       .then(([cats, subs]) => {
@@ -139,6 +146,57 @@ export default function NewPostPage() {
     setVideoPreviews(previews);
   }
 
+  async function handleVehicleDocChange(
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const files = Array.from(e.target.files ?? []);
+    setVehicleDocError(null);
+
+    if (files.length === 0) return;
+
+    const totalAfterAdd = vehicleDocPreviews.length + files.length;
+    if (totalAfterAdd > MAX_VEHICLE_DOCS) {
+      setVehicleDocError(
+        `Tối đa ${MAX_VEHICLE_DOCS} ảnh giấy tờ. Bạn đã chọn ${vehicleDocPreviews.length}, không thể thêm ${files.length} ảnh nữa.`,
+      );
+      return;
+    }
+
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setVehicleDocFiles((prev) => [...prev, ...files]);
+    setVehicleDocPreviews((prev) => [...prev, ...newPreviews]);
+
+    setUploadingVehicleDocs(true);
+    try {
+      const urls = await Promise.all(files.map((file) => uploadImage(file)));
+      setVehicleDocUrls((prev) => [...prev, ...urls]);
+    } catch (err) {
+      setVehicleDocError(
+        err instanceof Error
+          ? err.message
+          : "Không thể tải ảnh giấy tờ lên. Vui lòng thử lại.",
+      );
+      setVehicleDocFiles((prev) => prev.slice(0, prev.length - files.length));
+      setVehicleDocPreviews((prev) => {
+        const rolled = prev.slice(0, prev.length - newPreviews.length);
+        newPreviews.forEach((u) => URL.revokeObjectURL(u));
+        return rolled;
+      });
+    } finally {
+      setUploadingVehicleDocs(false);
+      e.target.value = "";
+    }
+  }
+
+  function removeVehicleDoc(index: number) {
+    setVehicleDocPreviews((prev) => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+    setVehicleDocUrls((prev) => prev.filter((_, i) => i !== index));
+    setVehicleDocFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canPost) return;
@@ -176,6 +234,12 @@ export default function NewPostPage() {
         contactPhone: contactPhone || undefined,
         imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
         videoUrls: uploadedVideoUrls.length > 0 ? uploadedVideoUrls : undefined,
+        registrationImageUrl:
+          vehicleDocUrls.length > 0 ? vehicleDocUrls[0] : undefined,
+        inspectionImageUrl:
+          vehicleDocUrls.length > 1 ? vehicleDocUrls[1] : undefined,
+        insuranceImageUrl:
+          vehicleDocUrls.length > 2 ? vehicleDocUrls[2] : undefined,
       };
 
       await createPost(payload);
@@ -474,6 +538,89 @@ export default function NewPostPage() {
                           </li>
                         ))}
                       </ul>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm font-semibold text-slate-700">
+                        Giấy tờ xe{" "}
+                        <span className="font-normal text-slate-400">
+                          (tùy chọn)
+                        </span>
+                      </label>
+                      <span className="text-xs text-slate-400">
+                        {vehicleDocPreviews.length}/{MAX_VEHICLE_DOCS} ảnh
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Có thể tải nhiều ảnh (đăng ký xe, kiểm định, bảo hiểm...)
+                    </p>
+                    <label
+                      className={`mt-2 flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed px-4 py-4 transition-colors ${
+                        vehicleDocPreviews.length >= MAX_VEHICLE_DOCS
+                          ? "border-slate-100 bg-slate-50 cursor-not-allowed opacity-50"
+                          : "border-slate-200 bg-slate-50 hover:border-primary hover:bg-primary/5"
+                      }`}
+                    >
+                      <ImagePlus className="h-6 w-6 text-slate-400" />
+                      <span className="text-sm text-slate-600">
+                        {vehicleDocPreviews.length >= MAX_VEHICLE_DOCS
+                          ? `Đã đạt giới hạn ${MAX_VEHICLE_DOCS} ảnh`
+                          : "Chọn ảnh giấy tờ từ thiết bị (có thể chọn nhiều ảnh)"}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleVehicleDocChange}
+                        disabled={vehicleDocPreviews.length >= MAX_VEHICLE_DOCS}
+                        className="hidden"
+                      />
+                    </label>
+                    {uploadingVehicleDocs && (
+                      <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Đang tải
+                        ảnh giấy tờ lên Cloudinary...
+                      </p>
+                    )}
+                    {vehicleDocError && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {vehicleDocError}
+                      </p>
+                    )}
+                    {vehicleDocPreviews.length > 0 && (
+                      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        {vehicleDocPreviews.map((src, index) => (
+                          <div
+                            key={index}
+                            className="group relative overflow-hidden rounded-xl border border-slate-200"
+                          >
+                            <img
+                              src={src}
+                              alt={`Giấy tờ xe ${index + 1}`}
+                              className="h-36 w-full object-cover"
+                            />
+                            {index >= vehicleDocUrls.length &&
+                              uploadingVehicleDocs && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                  <Loader2 className="h-6 w-6 animate-spin text-white" />
+                                </div>
+                              )}
+                            <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white">
+                              {index + 1}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => removeVehicleDoc(index)}
+                              className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500/90 text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 hover:bg-red-600"
+                              title="Xóa ảnh giấy tờ"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>
