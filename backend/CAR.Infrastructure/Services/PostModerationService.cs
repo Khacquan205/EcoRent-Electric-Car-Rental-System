@@ -167,6 +167,8 @@ namespace CAR.Infrastructure.Services
                 .Include(p => p.Category)
                 .Include(p => p.Images)
                 .Include(p => p.Videos)
+                .Include(p => p.LicenseImages)
+                .Include(p => p.VehicleVerification)
                 .AsQueryable();
 
             if (status.HasValue)
@@ -196,7 +198,11 @@ namespace CAR.Infrastructure.Services
                     Price = p.Price,
                     Description = p.Description,
                     Images = p.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
-                    Videos = p.Videos.OrderBy(v => v.Id).Select(v => v.VideoUrl).ToList()
+                    Videos = p.Videos.OrderBy(v => v.Id).Select(v => v.VideoUrl).ToList(),
+                    LicenseImageUrls = p.LicenseImages.OrderBy(li => li.SortOrder).Select(li => li.ImageUrl).ToList(),
+                    RegistrationImageUrl = p.VehicleVerification != null ? p.VehicleVerification.RegistrationImage : null,
+                    InspectionImageUrl = p.VehicleVerification != null ? p.VehicleVerification.InspectionImage : null,
+                    InsuranceImageUrl = p.VehicleVerification != null ? p.VehicleVerification.InsuranceImage : null
                 })
                 .ToListAsync();
         }

@@ -40,6 +40,42 @@ export default function NewPostPage() {
   const [uploadingVideos, setUploadingVideos] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
 
+  const [licenseImageFiles, setLicenseImageFiles] = useState<File[]>([]);
+  const [licenseImagePreviews, setLicenseImagePreviews] = useState<string[]>(
+    [],
+  );
+  const [licenseImageUrls, setLicenseImageUrls] = useState<string[]>([]);
+  const [uploadingLicenseImages, setUploadingLicenseImages] = useState(false);
+  const [licenseImageError, setLicenseImageError] = useState<string | null>(
+    null,
+  );
+  const MAX_LICENSE_IMAGES = 5;
+
+  // Vehicle documents
+  const [registrationFile, setRegistrationFile] = useState<File | null>(null);
+  const [registrationPreview, setRegistrationPreview] = useState<string | null>(
+    null,
+  );
+  const [registrationUrl, setRegistrationUrl] = useState<string | null>(null);
+  const [uploadingRegistration, setUploadingRegistration] = useState(false);
+  const [registrationError, setRegistrationError] = useState<string | null>(
+    null,
+  );
+
+  const [inspectionFile, setInspectionFile] = useState<File | null>(null);
+  const [inspectionPreview, setInspectionPreview] = useState<string | null>(
+    null,
+  );
+  const [inspectionUrl, setInspectionUrl] = useState<string | null>(null);
+  const [uploadingInspection, setUploadingInspection] = useState(false);
+  const [inspectionError, setInspectionError] = useState<string | null>(null);
+
+  const [insuranceFile, setInsuranceFile] = useState<File | null>(null);
+  const [insurancePreview, setInsurancePreview] = useState<string | null>(null);
+  const [insuranceUrl, setInsuranceUrl] = useState<string | null>(null);
+  const [uploadingInsurance, setUploadingInsurance] = useState(false);
+  const [insuranceError, setInsuranceError] = useState<string | null>(null);
+
   useEffect(() => {
     Promise.all([getCategories(), getMySubscriptions()])
       .then(([cats, subs]) => {
@@ -139,10 +175,162 @@ export default function NewPostPage() {
     setVideoPreviews(previews);
   }
 
+  async function handleLicenseImageChange(
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const files = Array.from(e.target.files ?? []);
+    setLicenseImageError(null);
+
+    if (files.length === 0) return;
+
+    const totalAfterAdd = licenseImagePreviews.length + files.length;
+    if (totalAfterAdd > MAX_LICENSE_IMAGES) {
+      setLicenseImageError(
+        `Tối đa ${MAX_LICENSE_IMAGES} ảnh. Bạn đã chọn ${licenseImagePreviews.length}, không thể thêm ${files.length} ảnh nữa.`,
+      );
+      return;
+    }
+
+    // Create previews immediately
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setLicenseImageFiles((prev) => [...prev, ...files]);
+    setLicenseImagePreviews((prev) => [...prev, ...newPreviews]);
+
+    // Upload all new files to Cloudinary in parallel
+    setUploadingLicenseImages(true);
+    try {
+      const urls = await Promise.all(files.map((file) => uploadImage(file)));
+      setLicenseImageUrls((prev) => [...prev, ...urls]);
+    } catch (err) {
+      setLicenseImageError(
+        err instanceof Error
+          ? err.message
+          : "Không thể tải ảnh lên. Vui lòng thử lại.",
+      );
+      // Roll back previews for failed batch
+      setLicenseImageFiles((prev) => prev.slice(0, prev.length - files.length));
+      setLicenseImagePreviews((prev) => {
+        const rolled = prev.slice(0, prev.length - newPreviews.length);
+        newPreviews.forEach((u) => URL.revokeObjectURL(u));
+        return rolled;
+      });
+    } finally {
+      setUploadingLicenseImages(false);
+      // Reset the input so choosing the same files again triggers onChange
+      e.target.value = "";
+    }
+  }
+
+  function removeLicenseImage(index: number) {
+    setLicenseImagePreviews((prev) => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+    setLicenseImageUrls((prev) => prev.filter((_, i) => i !== index));
+    setLicenseImageFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function handleDocumentChange(
+    e: React.ChangeEvent<HTMLInputElement>,
+    docType: "registration" | "inspection" | "insurance",
+  ) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const preview = URL.createObjectURL(file);
+
+    if (docType === "registration") {
+      setRegistrationFile(file);
+      setRegistrationPreview(preview);
+      setRegistrationError(null);
+      setUploadingRegistration(true);
+      try {
+        const url = await uploadImage(file);
+        setRegistrationUrl(url);
+      } catch (err) {
+        setRegistrationError(
+          err instanceof Error ? err.message : "Không thể tải lên",
+        );
+        setRegistrationFile(null);
+        setRegistrationPreview(null);
+        URL.revokeObjectURL(preview);
+      } finally {
+        setUploadingRegistration(false);
+        e.target.value = "";
+      }
+    } else if (docType === "inspection") {
+      setInspectionFile(file);
+      setInspectionPreview(preview);
+      setInspectionError(null);
+      setUploadingInspection(true);
+      try {
+        const url = await uploadImage(file);
+        setInspectionUrl(url);
+      } catch (err) {
+        setInspectionError(
+          err instanceof Error ? err.message : "Không thể tải lên",
+        );
+        setInspectionFile(null);
+        setInspectionPreview(null);
+        URL.revokeObjectURL(preview);
+      } finally {
+        setUploadingInspection(false);
+        e.target.value = "";
+      }
+    } else if (docType === "insurance") {
+      setInsuranceFile(file);
+      setInsurancePreview(preview);
+      setInsuranceError(null);
+      setUploadingInsurance(true);
+      try {
+        const url = await uploadImage(file);
+        setInsuranceUrl(url);
+      } catch (err) {
+        setInsuranceError(
+          err instanceof Error ? err.message : "Không thể tải lên",
+        );
+        setInsuranceFile(null);
+        setInsurancePreview(null);
+        URL.revokeObjectURL(preview);
+      } finally {
+        setUploadingInsurance(false);
+        e.target.value = "";
+      }
+    }
+  }
+
+  function removeDocument(
+    docType: "registration" | "inspection" | "insurance",
+  ) {
+    if (docType === "registration") {
+      if (registrationPreview) URL.revokeObjectURL(registrationPreview);
+      setRegistrationFile(null);
+      setRegistrationPreview(null);
+      setRegistrationUrl(null);
+    } else if (docType === "inspection") {
+      if (inspectionPreview) URL.revokeObjectURL(inspectionPreview);
+      setInspectionFile(null);
+      setInspectionPreview(null);
+      setInspectionUrl(null);
+    } else if (docType === "insurance") {
+      if (insurancePreview) URL.revokeObjectURL(insurancePreview);
+      setInsuranceFile(null);
+      setInsurancePreview(null);
+      setInsuranceUrl(null);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canPost) return;
-    if (uploadingImages || uploadingVideos) return;
+    if (
+      uploadingImages ||
+      uploadingVideos ||
+      uploadingRegistration ||
+      uploadingInspection ||
+      uploadingInsurance
+    )
+      return;
 
     setError(null);
     setSubmitting(true);
@@ -176,6 +364,11 @@ export default function NewPostPage() {
         contactPhone: contactPhone || undefined,
         imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
         videoUrls: uploadedVideoUrls.length > 0 ? uploadedVideoUrls : undefined,
+        licenseImageUrls:
+          licenseImageUrls.length > 0 ? licenseImageUrls : undefined,
+        registrationImageUrl: registrationUrl || undefined,
+        inspectionImageUrl: inspectionUrl || undefined,
+        insuranceImageUrl: insuranceUrl || undefined,
       };
 
       await createPost(payload);
@@ -293,7 +486,7 @@ export default function NewPostPage() {
               {/* Section 1: Basic Info */}
               <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
                 <h2 className="mb-6 text-lg font-bold text-slate-800">
-                  📋 Thông tin cơ bản
+                  Thông tin cơ bản
                 </h2>
                 <div className="space-y-5">
                   <div>
@@ -347,7 +540,7 @@ export default function NewPostPage() {
               {/* Section 2: Media */}
               <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
                 <h2 className="mb-6 text-lg font-bold text-slate-800">
-                  🖼️ Hình ảnh &amp; Video
+                  Hình ảnh &amp; Video
                 </h2>
                 <div className="space-y-6">
                   <div>
@@ -435,7 +628,7 @@ export default function NewPostPage() {
                       </span>
                     </label>
                     <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
-                      <span className="text-2xl">🎥</span>
+                      <span className="text-2xl"></span>
                       <span className="text-sm text-slate-600">
                         Chọn video từ thiết bị (nhiều file)
                       </span>
@@ -479,10 +672,225 @@ export default function NewPostPage() {
                 </div>
               </div>
 
-              {/* Section 3: Pricing & Contact */}
+              {/* Section 3: Vehicle Documents */}
               <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
                 <h2 className="mb-6 text-lg font-bold text-slate-800">
-                  💰 Giá &amp; Liên hệ
+                  Giấy tờ xe
+                </h2>
+                <p className="mb-6 text-sm text-slate-600">
+                  Tải ảnh giấy tờ lên để Admin có thể xem khi duyệt bài đăng.
+                  Các tệp sẽ được tự động tải lên Cloudinary.
+                </p>
+                <div className="space-y-6">
+                  {/* Registration Document */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Giấy đăng ký xe{" "}
+                      <span className="text-slate-500">(tùy chọn)</span>
+                    </label>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
+                      <span className="text-2xl"></span>
+                      <span className="text-sm text-slate-600">
+                        {registrationUrl
+                          ? `✓ Đã tải lên: ${registrationFile?.name}`
+                          : registrationPreview
+                            ? `Đang xử lý: ${registrationFile?.name}`
+                            : "Chọn giấy đăng ký xe"}
+                      </span>
+                      {registrationUrl && (
+                        <span className="text-xs font-semibold text-emerald-600">
+                          ✓ Hoàn thành
+                        </span>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) =>
+                          handleDocumentChange(e, "registration")
+                        }
+                        disabled={uploadingRegistration}
+                        className="hidden"
+                      />
+                    </label>
+                    {uploadingRegistration && (
+                      <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Đang tải
+                        lên Cloudinary...
+                      </p>
+                    )}
+                    {registrationError && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {registrationError}
+                      </p>
+                    )}
+                    {registrationPreview && (
+                      <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <img
+                          src={registrationPreview}
+                          alt="Giấy đăng ký"
+                          className="h-16 w-20 rounded object-cover"
+                        />
+                        <div className="flex-1">
+                          <span className="truncate text-sm text-slate-700">
+                            {registrationFile?.name}
+                          </span>
+                          {registrationUrl && (
+                            <p className="mt-1 text-xs text-emerald-600">
+                              ✓ Đã tải lên thành công
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeDocument("registration")}
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/90 text-white hover:bg-red-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Inspection Document */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Giấy kiểm định xe{" "}
+                      <span className="text-slate-500">(tùy chọn)</span>
+                    </label>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
+                      <span className="text-2xl"></span>
+                      <span className="text-sm text-slate-600">
+                        {inspectionUrl
+                          ? `✓ Đã tải lên: ${inspectionFile?.name}`
+                          : inspectionPreview
+                            ? `Đang xử lý: ${inspectionFile?.name}`
+                            : "Chọn giấy kiểm định xe"}
+                      </span>
+                      {inspectionUrl && (
+                        <span className="text-xs font-semibold text-emerald-600">
+                          ✓ Hoàn thành
+                        </span>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) => handleDocumentChange(e, "inspection")}
+                        disabled={uploadingInspection}
+                        className="hidden"
+                      />
+                    </label>
+                    {uploadingInspection && (
+                      <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Đang tải
+                        lên Cloudinary...
+                      </p>
+                    )}
+                    {inspectionError && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {inspectionError}
+                      </p>
+                    )}
+                    {inspectionPreview && (
+                      <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <img
+                          src={inspectionPreview}
+                          alt="Giấy kiểm định"
+                          className="h-16 w-20 rounded object-cover"
+                        />
+                        <div className="flex-1">
+                          <span className="truncate text-sm text-slate-700">
+                            {inspectionFile?.name}
+                          </span>
+                          {inspectionUrl && (
+                            <p className="mt-1 text-xs text-emerald-600">
+                              ✓ Đã tải lên thành công
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeDocument("inspection")}
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/90 text-white hover:bg-red-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Insurance Document */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Giấy bảo hiểm xe{" "}
+                      <span className="text-slate-500">(tùy chọn)</span>
+                    </label>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 transition-colors hover:border-primary hover:bg-primary/5">
+                      <span className="text-2xl"></span>
+                      <span className="text-sm text-slate-600">
+                        {insuranceUrl
+                          ? `✓ Đã tải lên: ${insuranceFile?.name}`
+                          : insurancePreview
+                            ? `Đang xử lý: ${insuranceFile?.name}`
+                            : "Chọn giấy bảo hiểm xe"}
+                      </span>
+                      {insuranceUrl && (
+                        <span className="text-xs font-semibold text-emerald-600">
+                          ✓ Hoàn thành
+                        </span>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) => handleDocumentChange(e, "insurance")}
+                        disabled={uploadingInsurance}
+                        className="hidden"
+                      />
+                    </label>
+                    {uploadingInsurance && (
+                      <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Đang tải
+                        lên Cloudinary...
+                      </p>
+                    )}
+                    {insuranceError && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {insuranceError}
+                      </p>
+                    )}
+                    {insurancePreview && (
+                      <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <img
+                          src={insurancePreview}
+                          alt="Giấy bảo hiểm"
+                          className="h-16 w-20 rounded object-cover"
+                        />
+                        <div className="flex-1">
+                          <span className="truncate text-sm text-slate-700">
+                            {insuranceFile?.name}
+                          </span>
+                          {insuranceUrl && (
+                            <p className="mt-1 text-xs text-emerald-600">
+                              ✓ Đã tải lên thành công
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeDocument("insurance")}
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/90 text-white hover:bg-red-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 4: Pricing & Contact */}
+              <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md">
+                <h2 className="mb-6 text-lg font-bold text-slate-800">
+                  Giá &amp; Liên hệ
                 </h2>
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
@@ -522,6 +930,10 @@ export default function NewPostPage() {
                     !canPost ||
                     submitting ||
                     uploadingImages ||
+                    uploadingVideos ||
+                    uploadingRegistration ||
+                    uploadingInspection ||
+                    uploadingInsurance ||
                     (activeSub?.remainingPosts ?? 0) === 0
                   }
                   className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-bold text-white shadow-md transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"

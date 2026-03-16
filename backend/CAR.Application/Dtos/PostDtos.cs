@@ -43,6 +43,11 @@ namespace CAR.Application.Dtos
         public List<string> Videos { get; set; } = new List<string>();
         /// <summary>Giấy tờ xe (ảnh đăng ký, kiểm định, bảo hiểm) để staff đối chiếu khi duyệt.</summary>
         public VehicleVerificationDto? VehicleVerification { get; set; }
+        
+        // Flat properties for easy access in frontend
+        public string? RegistrationImageUrl => VehicleVerification?.RegistrationImageUrl;
+        public string? InspectionImageUrl => VehicleVerification?.InspectionImageUrl;
+        public string? InsuranceImageUrl => VehicleVerification?.InsuranceImageUrl;
     }
 
     /// <summary>Giấy tờ xe đính kèm bài đăng (cho staff xem khi duyệt).</summary>

@@ -650,6 +650,74 @@ export default function PendingCarPostsPage() {
                   </p>
                 </div>
               )}
+              {detailPost.registrationImageUrl ||
+              detailPost.inspectionImageUrl ||
+              detailPost.insuranceImageUrl ? (
+                <div>
+                  <div className="mb-4 font-medium text-slate-700">
+                    📋 Giấy tờ xe
+                  </div>
+                  <div className="space-y-4">
+                    {detailPost.registrationImageUrl && (
+                      <div>
+                        <div className="mb-2 text-xs font-semibold text-slate-600">
+                          Giấy đăng ký xe
+                        </div>
+                        <a
+                          href={detailPost.registrationImageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block"
+                        >
+                          <img
+                            src={detailPost.registrationImageUrl}
+                            alt="Giấy đăng ký xe"
+                            className="h-32 rounded-lg border border-slate-200 object-cover hover:opacity-80"
+                          />
+                        </a>
+                      </div>
+                    )}
+                    {detailPost.inspectionImageUrl && (
+                      <div>
+                        <div className="mb-2 text-xs font-semibold text-slate-600">
+                          Giấy kiểm định xe
+                        </div>
+                        <a
+                          href={detailPost.inspectionImageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block"
+                        >
+                          <img
+                            src={detailPost.inspectionImageUrl}
+                            alt="Giấy kiểm định xe"
+                            className="h-32 rounded-lg border border-slate-200 object-cover hover:opacity-80"
+                          />
+                        </a>
+                      </div>
+                    )}
+                    {detailPost.insuranceImageUrl && (
+                      <div>
+                        <div className="mb-2 text-xs font-semibold text-slate-600">
+                          Giấy bảo hiểm xe
+                        </div>
+                        <a
+                          href={detailPost.insuranceImageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block"
+                        >
+                          <img
+                            src={detailPost.insuranceImageUrl}
+                            alt="Giấy bảo hiểm xe"
+                            className="h-32 rounded-lg border border-slate-200 object-cover hover:opacity-80"
+                          />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
               {detailPost.status === STATUS_REJECTED &&
                 detailPost.rejectReason && (
                   <div>
