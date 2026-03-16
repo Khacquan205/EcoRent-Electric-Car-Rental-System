@@ -27,6 +27,7 @@ const ownerNavLinks = [
   { href: "/posts", label: "Xe cho thuê" },
   { href: "/owner/subscription", label: "Gói của tôi" },
   { href: "/owner/owner-packages", label: "Mua gói" },
+  { href: "/owner/advertisements", label: "Quảng cáo" },
   { href: "/owner/post/new", label: "Đăng xe" },
   { href: "/owner/posts", label: "Thông báo mới" },
 ];
@@ -112,13 +113,13 @@ const Navbar = () => {
               <Link href="/login">
                 <Button
                   variant="ghost"
-                  className="rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-primary hover:shadow-sm hover:-translate-y-[1px]"
+                  className="rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-primary hover:shadow-sm hover:-translate-y-px"
                 >
                   Đăng nhập
                 </Button>
               </Link>
               <Link href="/register">
-                <Button className="rounded-full px-4 py-1.5 text-sm font-semibold shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-lg hover:bg-primary/90">
+                <Button className="rounded-full px-4 py-1.5 text-sm font-semibold shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-lg hover:bg-primary/90">
                   Đăng ký
                 </Button>
               </Link>
@@ -188,13 +189,13 @@ const Navbar = () => {
                   <Link href="/login" onClick={() => setMobileOpen(false)}>
                     <Button
                       variant="outline"
-                      className="w-full transition-all duration-200 hover:-translate-y-[1px] hover:shadow-sm"
+                      className="w-full transition-all duration-200 hover:-translate-y-px hover:shadow-sm"
                     >
                       Đăng nhập
                     </Button>
                   </Link>
                   <Link href="/register" onClick={() => setMobileOpen(false)}>
-                    <Button className="mt-2 w-full transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md">
+                    <Button className="mt-2 w-full transition-all duration-200 hover:-translate-y-px hover:shadow-md">
                       Đăng ký
                     </Button>
                   </Link>
