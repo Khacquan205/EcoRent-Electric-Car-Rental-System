@@ -13,7 +13,7 @@ export interface ChatMessage {
   conversationId: number;
   senderId?: number;
   senderName?: string;
-  senderRole?: "user" | "assistant"; 
+  senderRole?: "user" | "assistant";
   content: string;
   isRead?: boolean;
   createdAt: string;
@@ -32,7 +32,3 @@ export interface SuggestCarsResponseDto {
   reply: string;
   suggestedPosts: PostListItemDto[];
 }
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes

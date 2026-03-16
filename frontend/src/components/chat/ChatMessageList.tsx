@@ -1,17 +1,10 @@
-<<<<<<< Updated upstream
 import React, { useRef, useEffect, useState } from "react";
-=======
-import React, { useRef, useEffect } from "react";
->>>>>>> Stashed changes
 import { ChatMessage } from "@/types/chat";
 import { User, Sparkles, ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
-<<<<<<< Updated upstream
 import { PostListItemDto } from "@/types/api";
-=======
->>>>>>> Stashed changes
 
 const PLACEHOLDER_IMAGE =
   "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&h=450&fit=crop";
@@ -21,7 +14,6 @@ interface ChatMessageListProps {
   isLoading?: boolean;
 }
 
-<<<<<<< Updated upstream
 function SuggestedPostsCarousel({ posts }: { posts: PostListItemDto[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const pointerDownRef = useRef(false);
@@ -80,7 +72,8 @@ function SuggestedPostsCarousel({ posts }: { posts: PostListItemDto[] }) {
         style={{ scrollbarWidth: "none" }}
       >
         {posts.map((post) => {
-          const hasImages = post.images && post.images.length > 0;
+          const firstImage = post.images?.[0] ?? null;
+          const hasImages = Boolean(firstImage);
           return (
             <Link
               key={post.id}
@@ -92,7 +85,7 @@ function SuggestedPostsCarousel({ posts }: { posts: PostListItemDto[] }) {
               <div className="relative w-28 h-24 shrink-0 overflow-hidden rounded-lg bg-gray-100 ring-1 ring-border/50">
                 {hasImages ? (
                   <Image
-                    src={post.images![0]!}
+                    src={firstImage!}
                     alt={post.title}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -152,8 +145,6 @@ function SuggestedPostsCarousel({ posts }: { posts: PostListItemDto[] }) {
   );
 }
 
-=======
->>>>>>> Stashed changes
 export function ChatMessageList({ messages, isLoading }: ChatMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -176,21 +167,15 @@ export function ChatMessageList({ messages, isLoading }: ChatMessageListProps) {
             <div
               key={msg.id}
               className={cn(
-<<<<<<< Updated upstream
                 "flex gap-3",
                 isUser
                   ? "ml-auto flex-row-reverse max-w-[85%]"
                   : "mr-auto w-full max-w-[96%]",
-=======
-                "flex gap-3 max-w-[85%]",
-                isUser ? "ml-auto flex-row-reverse" : "mr-auto"
->>>>>>> Stashed changes
               )}
             >
               <div
                 className={cn(
                   "w-8 h-8 shrink-0 rounded-full flex items-center justify-center",
-<<<<<<< Updated upstream
                   isUser
                     ? "bg-primary text-primary-foreground"
                     : "bg-card border border-border text-foreground",
@@ -203,20 +188,11 @@ export function ChatMessageList({ messages, isLoading }: ChatMessageListProps) {
                 )}
               </div>
 
-=======
-                  isUser ? "bg-primary text-primary-foreground" : "bg-card border border-border text-foreground"
-                )}
-              >
-                {isUser ? <User className="w-5 h-5" /> : <Sparkles className="w-5 h-5 text-primary" />}
-              </div>
-              
->>>>>>> Stashed changes
               <div
                 className={cn(
                   "p-3 rounded-2xl shadow-sm relative group",
                   isUser
                     ? "bg-primary text-primary-foreground rounded-tr-sm"
-<<<<<<< Updated upstream
                     : "bg-card border border-border text-foreground rounded-tl-sm w-full",
                 )}
               >
@@ -226,64 +202,6 @@ export function ChatMessageList({ messages, isLoading }: ChatMessageListProps) {
 
                 {msg.suggestedPosts && msg.suggestedPosts.length > 0 && (
                   <SuggestedPostsCarousel posts={msg.suggestedPosts} />
-=======
-                    : "bg-card border border-border text-foreground rounded-tl-sm"
-                )}
-              >
-                <div className="whitespace-pre-wrap text-[15px] leading-relaxed break-words">
-                  {msg.content}
-                </div>
-                {msg.suggestedPosts && msg.suggestedPosts.length > 0 && (
-                  <div className="mt-4 flex flex-col gap-3">
-                    {msg.suggestedPosts.map((post) => {
-                      const hasImages = post.images && post.images.length > 0;
-                      return (
-                      <Link 
-                        key={post.id} 
-                        href={`/posts/${post.id}`}
-                        className="group flex items-stretch gap-3 p-2.5 border border-border/60 rounded-xl bg-card/80 text-sm hover:shadow-md hover:bg-card hover:border-border transition-all w-full max-w-[400px] hover:-translate-y-0.5"
-                      >
-                        <div className="relative w-24 h-[90px] shrink-0 overflow-hidden rounded-lg bg-gray-100 ring-1 ring-border/50">
-                          {hasImages ? (
-                            <Image 
-                              src={post.images![0]!} 
-                              alt={post.title} 
-                              fill 
-                              className="object-cover transition-transform duration-500 group-hover:scale-105" 
-                              unoptimized 
-                            />
-                          ) : (
-                            <>
-                              <Image 
-                                src={PLACEHOLDER_IMAGE} 
-                                alt="Chưa có ảnh" 
-                                fill 
-                                className="object-cover opacity-30" 
-                                unoptimized 
-                              />
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                  <ImageOff className="h-5 w-5 text-gray-400/80" />
-                              </div>
-                            </>
-                          )}
-                        </div>
-                        
-                        <div className="flex flex-col flex-1 justify-between py-0.5 overflow-hidden">
-                          <div>
-                            <h4 className="font-semibold text-foreground line-clamp-2 text-sm leading-snug group-hover:text-blue-600 transition-colors">
-                              {post.title}
-                            </h4>
-                            <p className="text-muted-foreground text-[11px] mt-1 line-clamp-1">{post.categoryName}</p>
-                          </div>
-                          <div className="text-blue-600 font-bold text-sm mt-1.5 flex items-baseline gap-1">
-                            {post.price.toLocaleString("vi-VN")} <span className="text-[10px] text-muted-foreground font-normal">đ/ngày</span>
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                    })}
-                  </div>
->>>>>>> Stashed changes
                 )}
               </div>
             </div>
@@ -292,7 +210,6 @@ export function ChatMessageList({ messages, isLoading }: ChatMessageListProps) {
       )}
 
       {isLoading && (
-<<<<<<< Updated upstream
         <div className="flex gap-3 max-w-[85%] mr-auto">
           <div className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center bg-card border border-border text-foreground">
             <Sparkles className="w-5 h-5 text-primary" />
@@ -305,20 +222,6 @@ export function ChatMessageList({ messages, isLoading }: ChatMessageListProps) {
         </div>
       )}
 
-=======
-         <div className="flex gap-3 max-w-[85%] mr-auto">
-            <div className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center bg-card border border-border text-foreground">
-               <Sparkles className="w-5 h-5 text-primary" />
-            </div>
-            <div className="p-4 rounded-2xl bg-card border border-border rounded-tl-sm flex items-center gap-1.5 h-12">
-               <span className="w-2 h-2 rounded-full bg-primary/40 animate-pulse [animation-delay:-0.3s]"></span>
-               <span className="w-2 h-2 rounded-full bg-primary/40 animate-pulse [animation-delay:-0.15s]"></span>
-               <span className="w-2 h-2 rounded-full bg-primary/40 animate-pulse"></span>
-            </div>
-         </div>
-      )}
-      
->>>>>>> Stashed changes
       <div ref={bottomRef} className="h-1" />
     </div>
   );

@@ -6,7 +6,6 @@ import { ChatMessageList } from "@/components/chat/ChatMessageList";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { Conversation, ChatMessage } from "@/types/chat";
 import { chatService } from "@/services/chat";
-<<<<<<< Updated upstream
 import { ApiError } from "@/services/client";
 
 type StoredChatState = {
@@ -47,17 +46,12 @@ function createDefaultChatState(): StoredChatState {
 
 export default function ChatPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversationId, setActiveConversationId] = useState<
-    number | null
-  >(null);
-  const [messagesByConversation, setMessagesByConversation] = useState<
-    Record<number, ChatMessage[]>
-  >({});
+  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
+  const [messagesByConversation, setMessagesByConversation] = useState<Record<number, ChatMessage[]>>({});
 
   const [isSidebarLoading, setIsSidebarLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
-  // Load chat history from local storage on first render.
   useEffect(() => {
     setIsSidebarLoading(true);
     try {
@@ -88,9 +82,7 @@ export default function ChatPage() {
       const fallbackId = parsedConversations[0]?.id ?? null;
       const restoredId =
         parsed.activeConversationId != null &&
-        parsedConversations.some(
-          (conv) => conv.id === parsed.activeConversationId,
-        )
+        parsedConversations.some((conv) => conv.id === parsed.activeConversationId)
           ? parsed.activeConversationId
           : fallbackId;
       setActiveConversationId(restoredId);
@@ -167,16 +159,14 @@ export default function ChatPage() {
           prev.map((conv) => {
             if (conv.id !== activeConversationId) return conv;
             const currentTitle = conv.title?.trim() ?? "";
-            if (currentTitle && currentTitle !== "Cuộc trò chuyện mới")
-              return conv;
+            if (currentTitle && currentTitle !== "Cuộc trò chuyện mới") return conv;
             return {
               ...conv,
               title: text.slice(0, 40),
             };
-          }),
+          })
         );
 
-        // Call the SuggestCars API
         const response = await chatService.suggestCars({ message: text });
 
         const aiMessageId = Date.now() + 1;
@@ -201,7 +191,6 @@ export default function ChatPage() {
             ? "Bạn cần đăng nhập để tiếp tục chat với AI."
             : "Hệ thống AI đang gặp sự cố kết nối. Vui lòng thử lại sau.";
 
-        // Avoid noisy dev overlay for expected API failures.
         if (process.env.NODE_ENV !== "production") {
           console.warn("[Chat] send message failed", err);
         }
@@ -223,7 +212,7 @@ export default function ChatPage() {
         setIsSending(false);
       }
     },
-    [activeConversationId],
+    [activeConversationId]
   );
 
   const handleSuggestCars = useCallback(
@@ -231,124 +220,14 @@ export default function ChatPage() {
       if (!activeConversationId) return;
       const requestText = text?.trim();
       await handleSendMessage(
-        requestText && requestText.length > 0
-          ? requestText
-          : "Gợi ý xe cho tôi",
+        requestText && requestText.length > 0 ? requestText : "Gợi ý xe cho tôi"
       );
     },
-    [activeConversationId, handleSendMessage],
+    [activeConversationId, handleSendMessage]
   );
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-background">
-=======
-
-export default function ChatPage() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  
-  const [isSidebarLoading, setIsSidebarLoading] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-
-  // Initialize a mock local session
-  useEffect(() => {
-    const defaultConvId = 1;
-    setConversations([
-      {
-        id: defaultConvId,
-        title: "Trợ lý ảo EcoRent",
-        createdAt: new Date().toISOString()
-      }
-    ]);
-    setActiveConversationId(defaultConvId);
-    setMessages([
-      {
-        id: -1,
-        conversationId: defaultConvId,
-        senderRole: "assistant",
-        content: "Xin chào! Bạn muốn tìm xe thuê theo tiêu chí gì? (Ví dụ: xe giá khoảng 400k/ngày, xe hãng Mercedes, xe theo danh mục hoặc khu vực...)",
-        createdAt: new Date().toISOString()
-      }
-    ]);
-  }, []);
-
-  const handleCreateNewChat = useCallback(async () => {
-    // Just clear messages
-    setMessages([
-      {
-        id: -1,
-        conversationId: activeConversationId || 1,
-        senderRole: "assistant",
-        content: "Xin chào! Bạn muốn tìm xe thuê theo tiêu chí gì? (Ví dụ: xe giá khoảng 400k/ngày, xe hãng Mercedes, xe theo danh mục hoặc khu vực...)",
-        createdAt: new Date().toISOString()
-      }
-    ]);
-  }, [activeConversationId]);
-
-  const handleSendMessage = useCallback(async (text: string) => {
-    if (!activeConversationId) return;
-
-    try {
-      setIsSending(true);
-      
-      const userMessageId = Date.now();
-      setMessages((prev) => [
-         ...prev,
-         {
-            id: userMessageId,
-            conversationId: activeConversationId,
-            senderRole: "user",
-            content: text,
-            createdAt: new Date().toISOString()
-         }
-      ]);
-
-      const requestPayload = { message: text };
-      const response = await chatService.suggestCars(requestPayload);
-      
-      const aiMessageId = Date.now() + 1;
-      setMessages((prev) => [
-         ...prev,
-         {
-            id: aiMessageId,
-            conversationId: activeConversationId,
-            senderRole: "assistant",
-            content: response.reply,
-            suggestedPosts: response.suggestedPosts,
-            createdAt: new Date().toISOString()
-         }
-      ]);
-
-    } catch (err) {
-      console.error("Failed to send message", err);
-      // Optional: Add an error message payload to chat
-      setMessages((prev) => [
-        ...prev,
-        {
-           id: Date.now(),
-           conversationId: activeConversationId,
-           senderRole: "assistant",
-           content: "Hệ thống AI đang quá tải hoặc cấu hình chưa đúng. Vui lòng thử lại sau.",
-           createdAt: new Date().toISOString()
-        }
-     ]);
-    } finally {
-      setIsSending(false);
-    }
-  }, [activeConversationId]);
-
-  const handleSuggestCars = useCallback(async () => {
-    if (!activeConversationId) return;
-    
-    // Simulate user pressing suggest cars
-    handleSendMessage("Gợi ý xe cho tôi");
-  }, [activeConversationId, handleSendMessage]);
-
-  return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-background">
-      {/* 64px offset assumes a standard top navigation bar height */}
->>>>>>> Stashed changes
       <ChatSidebar
         conversations={conversations}
         activeConversationId={activeConversationId}
@@ -357,24 +236,12 @@ export default function ChatPage() {
         isLoading={isSidebarLoading}
       />
       <div className="flex flex-col flex-1 h-full min-w-0">
-<<<<<<< Updated upstream
         <ChatMessageList messages={activeMessages} isLoading={isSending} />
         <ChatInput
           onSendMessage={handleSendMessage}
           onSuggestCars={handleSuggestCars}
           isLoading={isSending}
           disabled={false}
-=======
-        <ChatMessageList 
-           messages={messages} 
-           isLoading={isSending} 
-        />
-        <ChatInput 
-           onSendMessage={handleSendMessage}
-           onSuggestCars={handleSuggestCars}
-           isLoading={isSending}
-           disabled={false}
->>>>>>> Stashed changes
         />
       </div>
     </div>
