@@ -2,19 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Loader2, CreditCard } from "lucide-react";
-
-type OwnerSubscription = {
-  id: number;
-  ownerId: number;
-  ownerEmail?: string;
-  packageName?: string;
-  packageId?: number;
-  startDate?: string;
-  endDate?: string;
-  status: number;
-  price?: number;
-  createdAt?: string;
-};
+import {
+  getAdminOwnerSubscriptions,
+  type OwnerSubscription,
+} from "@/services/admin-owner-subscriptions";
+import { Button } from "@/components/ui/button";
 
 function formatDate(iso?: string) {
   if (!iso) return "—";
@@ -55,10 +47,8 @@ export default function AdminOwnerSubscriptionsPage() {
     setLoading(true);
     setMessage(null);
     try {
-      // TODO: Replace with actual API call when endpoint is available
-      // const data = await getAdminOwnerSubscriptions();
-      // setSubscriptions(data);
-      setSubscriptions([]);
+      const data = await getAdminOwnerSubscriptions();
+      setSubscriptions(data);
     } catch (error) {
       setMessage({
         type: "error",
@@ -100,6 +90,12 @@ export default function AdminOwnerSubscriptionsPage() {
         </div>
       )}
 
+      <div className="flex justify-end">
+        <Button onClick={fetchSubscriptions} variant="outline" size="sm">
+          Làm mới
+        </Button>
+      </div>
+
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
         {loading ? (
           <div className="flex items-center justify-center py-16">
@@ -120,9 +116,7 @@ export default function AdminOwnerSubscriptionsPage() {
             <table className="w-full min-w-[700px] text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="px-4 py-3 font-semibold text-slate-700">
-                    ID
-                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-700">ID</th>
                   <th className="px-4 py-3 font-semibold text-slate-700">
                     Chủ xe
                   </th>
