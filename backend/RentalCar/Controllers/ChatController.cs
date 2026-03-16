@@ -78,19 +78,6 @@ namespace CAR.Controllers
             return Ok(result);
         }
 
-        /// <summary>Xuất dữ liệu huấn luyện cho suggest-cars (query, positive, candidates, rationale).</summary>
-        [HttpGet("suggest-cars/training-dataset")]
-        public async Task<IActionResult> GetSuggestCarsTrainingDataset([FromQuery] int size = 120)
-        {
-            var samples = await _carSuggestionChatService.BuildTrainingDatasetAsync(size);
-            return Ok(new
-            {
-                Success = true,
-                Message = $"Generated {samples.Count} training samples",
-                Data = samples
-            });
-        }
-
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);

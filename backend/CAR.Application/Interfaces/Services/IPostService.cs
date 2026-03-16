@@ -12,7 +12,7 @@ namespace CAR.Application.Interfaces.Services
         Task UpdatePostAsync(int postId, int userId, UpdatePostRequestDto request);
         Task DeletePostAsync(int postId, int userId);
         Task<PagedResultDto<PostListItemDto>> GetPublicPostsAsync(int page, int pageSize);
-        /// <summary>Lấy danh sách bài public có filter (giá, category, location, hãng xe) để gợi ý trong chat, sort giống GetPublicPosts.</summary>
-        Task<List<PostListItemDto>> GetPublicPostsForSuggestionAsync(decimal? maxPrice, decimal? minPrice, int? categoryId, IReadOnlyList<int>? locationIds, string? brandKeyword, int limit);
+        /// <summary>Lấy danh sách bài public có filter (giá, category, location, hãng xe, từ khóa mô tả) để gợi ý trong chat. descriptionKeywords: tìm trong Title hoặc Description. orderByPriceDesc/Asc: sort theo giá (bỏ qua semantic).</summary>
+        Task<List<PostListItemDto>> GetPublicPostsForSuggestionAsync(decimal? maxPrice, decimal? minPrice, int? categoryId, IReadOnlyList<int>? locationIds, string? brandKeyword, IReadOnlyList<string>? descriptionKeywords, int limit, string? semanticQueryForRanking = null, bool orderByPriceDesc = false, bool orderByPriceAsc = false);
     }
 }

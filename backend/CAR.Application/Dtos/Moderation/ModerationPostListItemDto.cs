@@ -17,6 +17,7 @@ namespace CAR.Application.Dtos.Moderation
         public string? Description { get; set; }
         public List<string> Images { get; set; } = new();
         public List<string> Videos { get; set; } = new();
+        public List<string> LicenseImageUrls { get; set; } = new();
         /// <summary>Giấy tờ xe (đăng ký, kiểm định, bảo hiểm) để staff đối chiếu với ảnh xe khi duyệt.</summary>
         public string? RegistrationImageUrl { get; set; }
         public string? InspectionImageUrl { get; set; }

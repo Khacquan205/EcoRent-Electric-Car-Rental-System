@@ -5,7 +5,11 @@ using CAR.Application.Interfaces.Services;
 using CAR.Domain.Constants;
 using CAR.Domain.Entities;
 using CAR.Domain.Enums;
+using CAR.Infrastructure.Data;
+using CAR.Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Pgvector;
 
 namespace CAR.Infrastructure.Services
 {
@@ -18,6 +22,9 @@ namespace CAR.Infrastructure.Services
         private readonly INotificationService _notificationService;
         private readonly ISubscriptionService _subscriptionService;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IEmbeddingService _embeddingService;
+        private readonly AppDbContext _dbContext;
+        private readonly ILogger<PostModerationService> _logger;
 
         public PostModerationService(
             IPostRepository postRepository,
@@ -26,7 +33,10 @@ namespace CAR.Infrastructure.Services
             IUserRepository userRepository,
             INotificationService notificationService,
             ISubscriptionService subscriptionService,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IEmbeddingService embeddingService,
+            AppDbContext dbContext,
+            ILogger<PostModerationService> logger)
         {
             _postRepository = postRepository;
             _ownerSubscriptionRepository = ownerSubscriptionRepository;
@@ -35,12 +45,16 @@ namespace CAR.Infrastructure.Services
             _notificationService = notificationService;
             _subscriptionService = subscriptionService;
             _unitOfWork = unitOfWork;
+            _embeddingService = embeddingService;
+            _dbContext = dbContext;
+            _logger = logger;
         }
 
         public async Task<PostModerationResponseDto> ApprovePostAsync(int postId, int staffId)
         {
             var post = await _postRepository.Query()
                 .Include(p => p.OwnerProfile)
+                .Include(p => p.Category)
                 .FirstOrDefaultAsync(p => p.Id == postId);
 
             if (post == null)
@@ -88,6 +102,9 @@ namespace CAR.Infrastructure.Services
                 $"Your post \"{post.Title}\" has been approved.",
                 post.Id);
 
+            // Phase 3: tạo embedding cho semantic search
+            await CreateOrUpdateEmbeddingAsync(post).ConfigureAwait(false);
+
             return new PostModerationResponseDto
             {
                 PostId = post.Id,
@@ -100,6 +117,7 @@ namespace CAR.Infrastructure.Services
         {
             var post = await _postRepository.Query()
                 .Include(p => p.OwnerProfile)
+                .Include(p => p.Category)
                 .FirstOrDefaultAsync(p => p.Id == postId);
 
             if (post == null)
@@ -167,6 +185,8 @@ namespace CAR.Infrastructure.Services
                 .Include(p => p.Category)
                 .Include(p => p.Images)
                 .Include(p => p.Videos)
+                .Include(p => p.LicenseImages)
+                .Include(p => p.VehicleVerification)
                 .AsQueryable();
 
             if (status.HasValue)
@@ -196,9 +216,46 @@ namespace CAR.Infrastructure.Services
                     Price = p.Price,
                     Description = p.Description,
                     Images = p.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
-                    Videos = p.Videos.OrderBy(v => v.Id).Select(v => v.VideoUrl).ToList()
+                    Videos = p.Videos.OrderBy(v => v.Id).Select(v => v.VideoUrl).ToList(),
+                    LicenseImageUrls = p.LicenseImages.OrderBy(li => li.SortOrder).Select(li => li.ImageUrl).ToList(),
+                    RegistrationImageUrl = p.VehicleVerification != null ? p.VehicleVerification.RegistrationImage : null,
+                    InspectionImageUrl = p.VehicleVerification != null ? p.VehicleVerification.InspectionImage : null,
+                    InsuranceImageUrl = p.VehicleVerification != null ? p.VehicleVerification.InsuranceImage : null
                 })
                 .ToListAsync();
+        }
+
+        /// <summary>Phase 3: Tạo hoặc cập nhật embedding cho post (semantic search).</summary>
+        private async Task CreateOrUpdateEmbeddingAsync(MPost post)
+        {
+            try
+            {
+                var text = $"{post.Title} {post.Description} {post.Category?.Name}".Trim();
+                if (string.IsNullOrWhiteSpace(text)) return;
+
+                var embedding = await _embeddingService.GetEmbeddingAsync(text).ConfigureAwait(false);
+                if (embedding == null || embedding.Length == 0) return;
+
+                var existing = await _dbContext.PostEmbeddings.FirstOrDefaultAsync(e => e.PostId == post.Id).ConfigureAwait(false);
+                if (existing != null)
+                {
+                    existing.Embedding = new Vector(embedding);
+                }
+                else
+                {
+                    _dbContext.PostEmbeddings.Add(new TPostEmbedding
+                    {
+                        PostId = post.Id,
+                        Embedding = new Vector(embedding),
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+                await _dbContext.SaveChangesAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to create embedding for post {PostId}", post.Id);
+            }
         }
     }
 }
