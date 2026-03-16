@@ -1,9 +1,15 @@
 import React from "react";
 import { Conversation } from "@/types/chat";
+<<<<<<< Updated upstream
 import { PlusCircle, MessageSquare, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
+=======
+import { MessageSquare, PlusCircle } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+>>>>>>> Stashed changes
 
 interface ChatSidebarProps {
   conversations: Conversation[];
@@ -21,6 +27,7 @@ export function ChatSidebar({
   isLoading,
 }: ChatSidebarProps) {
   return (
+<<<<<<< Updated upstream
     <div className="w-80 border-r border-border bg-card flex flex-col h-full hidden md:flex">
       <div className="p-4 border-b border-border">
         <button
@@ -80,6 +87,59 @@ export function ChatSidebar({
               </button>
             ))}
           </div>
+=======
+    <div className="flex flex-col h-full w-full md:w-80 border-r border-border bg-card">
+      <div className="p-4 border-b border-border flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-foreground">Chat with AI</h2>
+        <button
+          onClick={onNewChat}
+          className="p-2 text-primary hover:bg-accent rounded-full transition-colors flex items-center justify-center cursor-pointer"
+          title="New Chat"
+        >
+          <PlusCircle className="w-6 h-6" />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        {isLoading ? (
+          <div className="space-y-3 p-2">
+             {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-14 bg-muted animate-pulse rounded-lg" />
+             ))}
+          </div>
+        ) : conversations.length === 0 ? (
+          <div className="p-4 text-center text-muted-foreground text-sm">
+            No conversations yet. Start a new chat!
+          </div>
+        ) : (
+          conversations.map((conv) => (
+            <button
+              key={conv.id}
+              onClick={() => onSelectConversation(conv.id)}
+              className={cn(
+                "w-full text-left p-3 rounded-lg flex flex-col gap-1 transition-colors cursor-pointer",
+                activeConversationId === conv.id
+                  ? "bg-accent text-accent-foreground"
+                  : "hover:bg-muted"
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-medium truncate flex-1 flex items-center gap-2 text-sm">
+                  <MessageSquare className="w-4 h-4 opacity-70" />
+                  {conv.title || "New Conversation"}
+                </span>
+                {conv.unreadCount ? (
+                  <span className="ml-2 bg-primary text-primary-foreground text-xs rounded-full px-2 py-0.5">
+                    {conv.unreadCount}
+                  </span>
+                ) : null}
+              </div>
+              <span className="text-xs opacity-70 ml-6">
+                {format(new Date(conv.createdAt), "MMM d, h:mm a")}
+              </span>
+            </button>
+          ))
+>>>>>>> Stashed changes
         )}
       </div>
     </div>

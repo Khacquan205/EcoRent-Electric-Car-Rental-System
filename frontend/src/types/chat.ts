@@ -32,3 +32,7 @@ export interface SuggestCarsResponseDto {
   reply: string;
   suggestedPosts: PostListItemDto[];
 }
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
