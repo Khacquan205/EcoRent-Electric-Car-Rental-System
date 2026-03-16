@@ -55,7 +55,7 @@ namespace CAR.Infrastructure.Services
             // Chào hỏi: trả lời dẫn dắt + gợi ý vài xe, không im re
             if (IsGreeting(userMessage))
             {
-                var topPosts = await _postService.GetPublicPostsForSuggestionAsync(null, null, null, null, null, limit: 5).ConfigureAwait(false);
+                var topPosts = await _postService.GetPublicPostsForSuggestionAsync(null, null, null, null, null, null, 5).ConfigureAwait(false);
                 var reply = "Xin chào! Bạn muốn tìm xe thuê theo tiêu chí gì? Ví dụ: xe giá dưới 500k, xe theo danh mục... ";
                 if (topPosts.Count > 0)
                     reply += "Dưới đây là một số xe đang có sẵn để bạn tham khảo.";
@@ -94,7 +94,7 @@ namespace CAR.Infrastructure.Services
             var useSemantic = !IsLikelyOffTopic(userMessage) && !intent.OrderByPriceDesc && !intent.OrderByPriceAsc;
             var posts = await _postService.GetPublicPostsForSuggestionAsync(
                 intent.MaxPrice, intent.MinPrice, intent.CategoryId, intent.LocationIds, intent.BrandKeyword,
-                limit: intent.Limit,
+                intent.DescriptionKeywords, intent.Limit,
                 semanticQueryForRanking: useSemantic ? userMessage : null,
                 orderByPriceDesc: intent.OrderByPriceDesc,
                 orderByPriceAsc: intent.OrderByPriceAsc).ConfigureAwait(false);
@@ -119,10 +119,10 @@ namespace CAR.Infrastructure.Services
                 return BuildFallbackReply(posts, userMessage, categoryNamesForNoResult);
             }
 
-            // (2) Intent rõ: dùng template (không cho AI kể giá), đảm bảo chính xác từ DB
+            // (2) Intent rõ: dùng template (không cho AI kể giá), đảm bảo chính xác từ DB, văn phong phản chiếu cách user hỏi
             if (IsIntentClear(intent))
             {
-                return BuildTemplateReply(posts, intent, categoryNamesForNoResult);
+                return BuildTemplateReply(posts, intent, categoryNamesForNoResult, userMessage);
             }
 
             // (4) Intent mơ hồ: dùng AI với structured output JSON {intro, postIds}
@@ -147,18 +147,69 @@ namespace CAR.Infrastructure.Services
             return intent.MaxPrice.HasValue || intent.MinPrice.HasValue
                 || intent.CategoryId.HasValue || (intent.LocationIds != null && intent.LocationIds.Count > 0)
                 || !string.IsNullOrWhiteSpace(intent.BrandKeyword)
+                || (intent.DescriptionKeywords != null && intent.DescriptionKeywords.Count > 0)
                 || intent.OrderByPriceDesc || intent.OrderByPriceAsc;
         }
 
-        /// <summary>(2) Template khi intent rõ: dữ liệu lấy từ DB, không cho AI kể giá.</summary>
-        private static SuggestCarsResponseDto BuildTemplateReply(List<PostListItemDto> posts, SuggestionIntent intent, IReadOnlyList<string>? categoryNamesWhenEmpty)
+        /// <summary>(2) Template khi intent rõ: dữ liệu lấy từ DB, văn phong tự nhiên phản chiếu cách người dùng hỏi.</summary>
+        private static SuggestCarsResponseDto BuildTemplateReply(List<PostListItemDto> posts, SuggestionIntent intent, IReadOnlyList<string>? categoryNamesWhenEmpty, string userMessage = "")
         {
             if (posts.Count == 0)
                 return BuildFallbackReply(posts, "", categoryNamesWhenEmpty);
-            var items = string.Join("; ", posts.Take(10).Select(p => $"{p.Title} - {p.Price:N0} đ/ngày"));
-            var reply = $"Đây là {posts.Count} xe phù hợp: {items}";
-            if (posts.Count > 10) reply += $" (... và {posts.Count - 10} xe khác)";
+            var intro = BuildConversationalIntro(userMessage, intent);
+            var lines = posts.Take(10).Select(p => $"• {p.Title} - {p.Price:N0} đ/ngày");
+            var reply = intro + "\n\n" + string.Join("\n", lines);
+            if (posts.Count > 10) reply += $"\n(... và {posts.Count - 10} xe khác)";
             return new SuggestCarsResponseDto { Reply = reply, SuggestedPosts = posts };
+        }
+
+        /// <summary>Tạo câu mở đầu tự nhiên: phản chiếu cách user hỏi (vd: "xe rộng rãi" → "Xe rộng rãi hiện EcoRent đang có các mẫu sau:")</summary>
+        private static string BuildConversationalIntro(string userMessage, SuggestionIntent intent)
+        {
+            var normalized = userMessage.Trim().ToLowerInvariant();
+            var phrase = ExtractSearchPhraseFromMessage(normalized, intent);
+
+            if (!string.IsNullOrWhiteSpace(phrase))
+            {
+                // Viết hoa chữ cái đầu
+                phrase = phrase.Trim();
+                if (phrase.Length > 0)
+                    phrase = char.ToUpperInvariant(phrase[0]) + phrase[1..];
+                return $"{phrase} hiện EcoRent đang có các mẫu sau:";
+            }
+
+            if (!string.IsNullOrWhiteSpace(intent.BrandKeyword))
+            {
+                var brand = intent.BrandKeyword.Trim();
+                brand = char.ToUpperInvariant(brand[0]) + brand[1..];
+                return $"Xe {brand} hiện đang có các lựa chọn sau:";
+            }
+            if (intent.MaxPrice.HasValue && intent.MaxPrice.Value < 1_000_000)
+                return "Xe giá phù hợp hiện đang có:";
+            if (intent.OrderByPriceAsc) return "Xe giá rẻ nhất hiện có:";
+            if (intent.OrderByPriceDesc) return "Xe cao cấp nhất hiện có:";
+
+            return "Gợi ý một số xe phù hợp:";
+        }
+
+        /// <summary>Rút gọn cụm tìm kiếm từ tin nhắn (xe rộng rãi, xe 7 chỗ, xe SUV...)</summary>
+        private static string ExtractSearchPhraseFromMessage(string normalized, SuggestionIntent intent)
+        {
+            // Bỏ các từ filler: "cho mình", "tìm", "có", "đi", "giúp", "1 con"...
+            var cleaned = Regex.Replace(normalized, @"\b(cho\s*(mình|tôi|em)|tìm|giúp|có\s+không|1\s+con|một\s+chiếc)\b", "", RegexOptions.IgnoreCase).Trim();
+            cleaned = Regex.Replace(cleaned, @"\s+(đi|nhé|ạ|ơi)\s*$", "", RegexOptions.IgnoreCase).Trim();
+            cleaned = Regex.Replace(cleaned, @"\s+", " ").Trim();
+
+            // Nếu còn "xe" + từ khóa → dùng (vd: "xe rộng rãi", "xe 7 chỗ")
+            if (cleaned.StartsWith("xe ") && cleaned.Length > 4)
+                return cleaned;
+            if (intent.DescriptionKeywords != null && intent.DescriptionKeywords.Count > 0)
+            {
+                var kw = intent.DescriptionKeywords[0];
+                if (kw.Contains("chỗ")) return "Xe " + kw;
+                if (kw.Contains("rộng") || kw.Contains("suv")) return "Xe " + kw;
+            }
+            return cleaned.Length > 2 && cleaned.Length < 50 ? cleaned : "";
         }
 
         /// <summary>(4) Structured output: AI trả JSON {intro, postIds}, ta build reply từ dữ liệu DB để đảm bảo chính xác.</summary>
@@ -178,7 +229,7 @@ namespace CAR.Infrastructure.Services
 Tin nhắn khách: {userMessage}
 
 Trả lời BẮT BUỘC bằng JSON: {{""intro"":""Câu mở đầu thân thiện"",""postIds"":[id1,id2,...]}}
-- intro: câu dẫn ngắn bằng tiếng Việt.
+- intro: câu dẫn ngắn bằng tiếng Việt, PHẢN CHIẾU LẠI cách khách nói (vd: khách nói ""xe rộng rãi"" → intro: ""Xe rộng rãi hiện EcoRent đang có các mẫu sau:"", không dùng ""Gợi ý một số xe phù hợp"").
 - postIds: mảng ID xe gợi ý (CHỈ id có trong list trên, tối đa {Math.Min(posts.Count, 5)} id).";
 
             var client = _httpClientFactory.CreateClient();
@@ -401,7 +452,10 @@ Trả lời BẮT BUỘC bằng JSON: {{""intro"":""Câu mở đầu thân thi�
             if (xeMatch.Success && int.TryParse(xeMatch.Groups[1].Value, out var n) && n >= 1 && n <= 20)
                 limit = n;
 
-            return new SuggestionIntent(maxPrice, minPrice, categoryId, locationIds, brandKeyword, orderByPriceDesc, orderByPriceAsc, limit);
+            // --- Từ khóa mô tả: xe 7 chỗ, 5 chỗ, SUV, rộng rãi... tìm trong Title hoặc Description ---
+            IReadOnlyList<string>? descriptionKeywords = ParseDescriptionKeywords(normalized);
+
+            return new SuggestionIntent(maxPrice, minPrice, categoryId, locationIds, brandKeyword, descriptionKeywords, orderByPriceDesc, orderByPriceAsc, limit);
         }
 
         /// <summary>Phase 2: AI extract intent từ tin nhắn, trả về filter để query DB. Fallback regex nếu lỗi.</summary>
@@ -514,8 +568,9 @@ Tin nhắn: ""{message.Replace("\"", "\\\"")}""";
                         x.SearchTerm.Equals(b, StringComparison.OrdinalIgnoreCase) ||
                         x.Keywords.Any(k => b.Contains(k))).SearchTerm;
             }
+            var descriptionKeywords = ParseDescriptionKeywords(message.Trim().ToLowerInvariant());
             return new SuggestionIntent(parsed.MaxPrice, parsed.MinPrice, categoryId, locationIds, brandKeyword,
-                parsed.OrderByPriceDesc == true, parsed.OrderByPriceAsc == true, parsed.Limit ?? 10);
+                descriptionKeywords, parsed.OrderByPriceDesc == true, parsed.OrderByPriceAsc == true, parsed.Limit ?? 10);
         }
 
         private class IntentExtractionDto
@@ -530,13 +585,14 @@ Tin nhắn: ""{message.Replace("\"", "\\\"")}""";
             public int? Limit { get; set; }
         }
 
-        /// <summary>Intent đã parse: filter + order + limit.</summary>
+        /// <summary>Intent đã parse: filter + order + limit. DescriptionKeywords: tìm trong Title hoặc Description (vd: "7 chỗ", "rộng rãi").</summary>
         private record SuggestionIntent(
             decimal? MaxPrice,
             decimal? MinPrice,
             int? CategoryId,
             IReadOnlyList<int>? LocationIds,
             string? BrandKeyword,
+            IReadOnlyList<string>? DescriptionKeywords,
             bool OrderByPriceDesc,
             bool OrderByPriceAsc,
             int Limit);
@@ -582,6 +638,43 @@ Tin nhắn: ""{message.Replace("\"", "\\\"")}""";
                     return searchTerm;
             }
             return null;
+        }
+
+        /// <summary>Trích từ khóa tìm trong Title/Description: xe 7 chỗ, 5 chỗ, SUV, rộng rãi... Mỗi match trả về các biến thể để tìm (7 chỗ, 7 seat, 7-seater...).</summary>
+        private static IReadOnlyList<string>? ParseDescriptionKeywords(string normalizedMessage)
+        {
+            var keywords = new List<string>();
+
+            // Xe N chỗ (7 chỗ, 5 chỗ, 4 chỗ, 7 cho...)
+            var choMatch = Regex.Match(normalizedMessage, @"(\d+)\s*ch[oôơồỗọỏ]|(\d+)\s*chỗ|(\d+)\s*cho\b", RegexOptions.IgnoreCase);
+            if (choMatch.Success)
+            {
+                var num = choMatch.Groups[1].Success ? choMatch.Groups[1].Value : choMatch.Groups[2].Value;
+                if (int.TryParse(num, out var n) && n >= 2 && n <= 9)
+                {
+                    keywords.Add($"{n} chỗ");
+                    keywords.Add($"{n} chỗ ngồi");
+                    if (n == 7) { keywords.Add("7 seat"); keywords.Add("7-seater"); }
+                    if (n == 5) { keywords.Add("5 seat"); keywords.Add("5-seater"); }
+                }
+            }
+            // "7 seats", "7-seater" (tiếng Anh)
+            var seatMatch = Regex.Match(normalizedMessage, @"(\d+)\s*[-]?\s*seat(?:s|er)?", RegexOptions.IgnoreCase);
+            if (seatMatch.Success && !keywords.Any())
+            {
+                if (int.TryParse(seatMatch.Groups[1].Value, out var n) && n >= 2 && n <= 9)
+                {
+                    keywords.Add($"{n} seat");
+                    keywords.Add($"{n}-seater");
+                    keywords.Add($"{n} chỗ");
+                }
+            }
+            // SUV, rộng rãi, không gian rộng (thường liên quan xe 7 chỗ)
+            if (normalizedMessage.Contains("suv")) keywords.Add("suv");
+            if (normalizedMessage.Contains("rộng rãi") || normalizedMessage.Contains("rong rai")) keywords.Add("rộng rãi");
+            if (normalizedMessage.Contains("không gian rộng") || normalizedMessage.Contains("khong gian rong")) keywords.Add("không gian rộng");
+
+            return keywords.Count > 0 ? keywords : null;
         }
 
         /// <summary>Bỏ dấu tiếng Việt để so khớp "ha noi" với "Hà Nội".</summary>
