@@ -16,6 +16,10 @@ export interface PostListItemDto {
   createdAt: string;
   expiredAt?: string | null;
   categoryName?: string | null;
+  /** True if post currently has an active advertisement applied (backend-sorted). */
+  isPromoted?: boolean;
+  /** 0 = not promoted, 1..3 = promoted priority level (backend-sorted). */
+  promotedPriorityLevel?: number;
   images?: string[] | null;
   videos?: string[] | null;
 }
