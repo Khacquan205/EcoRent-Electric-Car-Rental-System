@@ -477,9 +477,13 @@ namespace CAR.Infrastructure.Services
 
         public async Task<AuthResponseDto> LoginWithGoogleAsync(GoogleLoginRequestDto request)
         {
-            var userInfo = await _googleAuthProvider.ValidateIdTokenAsync(request.IdToken);
-
-            if (userInfo == null)
+            GoogleUserInfoDto? userInfo;
+            try
+            {
+                // FE dùng Firebase signInWithPopup → token là Firebase ID token, verify bằng Firebase Admin SDK
+                userInfo = await _firebaseService.VerifyGoogleIdTokenAsync(request.IdToken);
+            }
+            catch
             {
                 return new AuthResponseDto
                 {
