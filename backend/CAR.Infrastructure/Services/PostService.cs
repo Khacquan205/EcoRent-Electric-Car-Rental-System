@@ -216,6 +216,7 @@ namespace CAR.Infrastructure.Services
             var post = await _postRepository.Query()
                 .Include(p => p.Category)
                 .Include(p => p.Location)
+                .Include(p => p.OwnerProfile)
                 .Include(p => p.Images.OrderBy(i => i.SortOrder))
                 .Include(p => p.Videos)
                 .FirstOrDefaultAsync(p => p.Id == postId);
@@ -225,9 +226,22 @@ namespace CAR.Infrastructure.Services
             var vehicleVerification = await _vehicleVerificationRepository.Query()
                 .FirstOrDefaultAsync(v => v.PostId == postId);
 
+            // OwnerProfile navigation can be missing for legacy/orphaned records.
+            // Fallback to owner profile lookup by FK to keep chat owner id resolvable.
+            var ownerUserId = post.OwnerProfile?.UserId ?? 0;
+            if (ownerUserId <= 0)
+            {
+                ownerUserId = await _ownerProfileRepository.Query()
+                    .Where(op => op.Id == post.OwnerId)
+                    .Select(op => op.UserId)
+                    .FirstOrDefaultAsync();
+            }
+
             return new PostDetailDto
             {
                 Id = post.Id,
+                OwnerId = ownerUserId,
+                OwnerName = post.OwnerProfile?.Name,
                 CategoryId = post.CategoryId,
                 CategoryName = post.Category.Name,
                 LocationId = post.LocationId,

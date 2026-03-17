@@ -17,6 +17,23 @@ export function getNotificationsHubUrl(): string {
   return "http://localhost:8080/hubs/notifications";
 }
 
+export function getChatHubUrl(): string {
+  const configured =
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.NEXT_PUBLIC_API_URL;
+  if (configured && configured.trim().length > 0) {
+    return `${configured.replace(/\/$/, "")}/hubs/chat`;
+  }
+  if (typeof window !== "undefined") {
+    const host = window.location?.hostname ?? "";
+    if (host === "ecorent.site" || host === "www.ecorent.site") {
+      return "https://api.ecorent.site/hubs/chat";
+    }
+    return "/hubs/chat";
+  }
+  return "http://localhost:8080/hubs/chat";
+}
+
+
 export interface NotificationPayload {
   id: number;
   title: string;

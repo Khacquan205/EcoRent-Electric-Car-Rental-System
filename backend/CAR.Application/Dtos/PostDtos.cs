@@ -24,6 +24,9 @@ namespace CAR.Application.Dtos
     public class PostDetailDto
     {
         public int Id { get; set; }
+        /// <summary>UserId of the owner (for chat initiation).</summary>
+        public int OwnerId { get; set; }
+        public string? OwnerName { get; set; }
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = null!;
         public int? LocationId { get; set; }

@@ -1,5 +1,7 @@
 import { apiFetch } from "./client";
-import type { PagedResultDto, PostListItemDto } from "@/types/api";
+import type { PagedResultDto, PostDetailDto, PostListItemDto } from "@/types/api";
+
+export type PostDetail = PostDetailDto;
 
 export interface CreatePostRequest {
   categoryId: number;
@@ -21,45 +23,6 @@ export interface CreatePostResponse {
   status: number;
 }
 
-export interface PostDetail {
-  id: number;
-  categoryId: number;
-  categoryName: string;
-  locationId?: number | null;
-  locationName?: string | null;
-  title: string;
-  description?: string | null;
-  price: number;
-  contactPhone?: string | null;
-  status: number;
-  statusName: string;
-  rejectReason?: string | null;
-  priorityLevel: number;
-  createdAt: string;
-  updatedAt?: string | null;
-  expiredAt?: string | null;
-  /** Optional images returned by backend for the post detail. */
-  images?: string[] | null;
-  /** Optional videos returned by backend for the post detail. */
-  videos?: string[] | null;
-  /** Optional license/CCCD images */
-  licenseImages?: string[] | null;
-  /** URL ảnh giấy đăng ký xe */
-  registrationImageUrl?: string | null;
-  /** URL ảnh giấy kiểm định xe */
-  inspectionImageUrl?: string | null;
-  /** URL ảnh bảo hiểm xe */
-  insuranceImageUrl?: string | null;
-  /** Optional owner display name if backend provides it. */
-  ownerName?: string | null;
-  /** Optional vehicle verification document images. */
-  vehicleVerification?: {
-    registrationImageUrl?: string | null;
-    inspectionImageUrl?: string | null;
-    insuranceImageUrl?: string | null;
-  } | null;
-}
-
 export async function createPost(
   body: CreatePostRequest,
 ): Promise<CreatePostResponse> {
@@ -77,8 +40,8 @@ export async function getMyPosts(): Promise<PostListItemDto[]> {
   return (result as { items?: PostListItemDto[] }).items ?? [];
 }
 
-export async function getPostDetail(postId: number): Promise<PostDetail> {
-  return apiFetch<PostDetail>(`/api/Post/${postId}`, { method: "GET" });
+export async function getPostDetail(postId: number): Promise<PostDetailDto> {
+  return apiFetch<PostDetailDto>(`/api/Post/${postId}`, { method: "GET" });
 }
 
 export async function getPublicPosts(

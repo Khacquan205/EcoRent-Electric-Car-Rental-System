@@ -31,6 +31,8 @@ export interface PostListItemDto {
 /** Full post detail from GET /api/Post/:id */
 export interface PostDetailDto {
   id: number;
+  ownerId: number;
+  ownerName?: string | null;
   categoryId: number;
   categoryName: string;
   locationId?: number | null;
@@ -48,7 +50,14 @@ export interface PostDetailDto {
   expiredAt?: string | null;
   images?: string[] | null;
   videos?: string[] | null;
-  ownerName?: string | null;
+  vehicleVerification?: {
+    registrationImageUrl?: string | null;
+    inspectionImageUrl?: string | null;
+    insuranceImageUrl?: string | null;
+  } | null;
+  registrationImageUrl?: string | null;
+  inspectionImageUrl?: string | null;
+  insuranceImageUrl?: string | null;
 }
 
 /** Paginated result from GET /api/posts */

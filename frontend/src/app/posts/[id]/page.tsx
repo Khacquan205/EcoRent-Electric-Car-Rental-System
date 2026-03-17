@@ -97,8 +97,7 @@ export default function PostDetailPage() {
     }
     getPostDetail(id)
       .then((data) => {
-        // Cast from legacy PostDetail to PostDetailDto (shapes are identical)
-        setPost(data as unknown as PostDetailDto);
+        setPost(data);
       })
       .catch((e) => {
         setError(e instanceof Error ? e.message : "Không tải được bài đăng");

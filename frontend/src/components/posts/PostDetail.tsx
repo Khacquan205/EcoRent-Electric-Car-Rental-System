@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { messagingService } from "@/services/chat";
 import {
   ArrowLeft,
   MapPin,
@@ -611,6 +613,9 @@ function FeedbackSection() {
 /* ─── PostDetail ──────────────────────────────────────────────── */
 
 export default function PostDetail({ post }: PostDetailProps) {
+  const router = useRouter();
+  const [isChatLoading, setIsChatLoading] = useState(false);
+
   const images =
     post.images && post.images.length > 0 ? post.images : [PLACEHOLDER_IMAGE];
   const videos = post.videos ?? [];
@@ -767,8 +772,33 @@ export default function PostDetail({ post }: PostDetailProps) {
                   )}
                 </div>
 
-                {/* Contact */}
-                <div className="mt-5">
+                <div className="mt-5 flex items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        if (!post.ownerId) {
+                          alert("Không tìm được thông tin chủ xe. Vui lòng thử lại sau.");
+                          return;
+                        }
+                        try {
+                          setIsChatLoading(true);
+                          const conv = await messagingService.createConversation({
+                            otherUserId: post.ownerId,
+                            postId: post.id,
+                          });
+                          router.push(`/messages?conversationId=${conv.id}`);
+                        } catch (err) {
+                          console.error("[Chat] Create conversation failed:", err);
+                          alert("Bạn cần đăng nhập để chat với chủ xe.");
+                        } finally {
+                          setIsChatLoading(false);
+                        }
+                      }}
+                      disabled={isChatLoading}
+                      className="flex items-center justify-center gap-2 rounded-xl border-2 border-[#1572D3] bg-white px-4 py-2.5 text-sm font-semibold text-[#1572D3] shadow-sm transition hover:bg-[#1572D3] hover:text-white disabled:opacity-50 dark:bg-gray-900 dark:hover:bg-[#1572D3]"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      {isChatLoading ? "Đang mở..." : "Chat"}
+                    </button>
                   {post.contactPhone ? (
                     <PhoneRevealButton
                       phoneNumber={post.contactPhone}
