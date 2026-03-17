@@ -46,7 +46,6 @@ namespace CAR.Domain.Entities
         public MVehicleVerification? VehicleVerification { get; set; }
         public ICollection<TPostImage> Images { get; set; } = new List<TPostImage>();
         public ICollection<TPostVideo> Videos { get; set; } = new List<TPostVideo>();
-        public ICollection<TPostLicenseImage> LicenseImages { get; set; } = new List<TPostLicenseImage>();
         public ICollection<MReview> Reviews { get; set; } = new List<MReview>();
         public ICollection<MReport> Reports { get; set; } = new List<MReport>();
     }

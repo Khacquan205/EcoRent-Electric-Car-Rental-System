@@ -26,9 +26,6 @@ namespace CAR.Application.Dtos
         /// <summary>Optional list of video URLs for the post.</summary>
         public List<string>? VideoUrls { get; set; }
 
-        /// <summary>Optional list of driver license/CCCD image URLs.</summary>
-        public List<string>? LicenseImageUrls { get; set; }
-
         /// <summary>URL ảnh giấy đăng ký xe (để staff đối chiếu với ảnh xe khi duyệt bài).</summary>
         public string? RegistrationImageUrl { get; set; }
         /// <summary>URL ảnh giấy kiểm định xe.</summary>

@@ -79,7 +79,7 @@ namespace CAR.Infrastructure.Services
 
             var activeSubscription = await _ownerSubscriptionRepository.GetValidActiveSubscriptionAsync(post.OwnerId, DateTime.UtcNow);
 
-            if (activeSubscription != null)
+            if (activeSubscription != null && activeSubscription.Package != null)
             {
                 if (post.ExpiredAt == null)
                     post.ExpiredAt = DateTime.UtcNow.AddDays(30);
@@ -96,11 +96,21 @@ namespace CAR.Infrastructure.Services
             _postRepository.Update(post);
             await _unitOfWork.SaveChangesAsync();
 
-            await _notificationService.SendToUserAsync(
-                post.OwnerProfile.UserId,
-                "Post Approved",
-                $"Your post \"{post.Title}\" has been approved.",
-                post.Id);
+            if (post.OwnerProfile != null)
+            {
+                try
+                {
+                    await _notificationService.SendToUserAsync(
+                        post.OwnerProfile.UserId,
+                        "Post Approved",
+                        $"Your post \"{post.Title}\" has been approved.",
+                        post.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to send approval notification to owner {OwnerId}", post.OwnerProfile.UserId);
+                }
+            }
 
             // Phase 3: tạo embedding cho semantic search
             await CreateOrUpdateEmbeddingAsync(post).ConfigureAwait(false);
@@ -144,11 +154,21 @@ namespace CAR.Infrastructure.Services
             _postRepository.Update(post);
             await _unitOfWork.SaveChangesAsync();
 
-            await _notificationService.SendToUserAsync(
-                post.OwnerProfile.UserId,
-                "Post Rejected",
-                $"Your post \"{post.Title}\" has been rejected. Reason: {reason}",
-                post.Id);
+            if (post.OwnerProfile != null)
+            {
+                try
+                {
+                    await _notificationService.SendToUserAsync(
+                        post.OwnerProfile.UserId,
+                        "Post Rejected",
+                        $"Your post \"{post.Title}\" has been rejected. Reason: {reason}",
+                        post.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to send rejection notification to owner {OwnerId}", post.OwnerProfile.UserId);
+                }
+            }
 
             return new PostModerationResponseDto
             {
@@ -185,7 +205,6 @@ namespace CAR.Infrastructure.Services
                 .Include(p => p.Category)
                 .Include(p => p.Images)
                 .Include(p => p.Videos)
-                .Include(p => p.LicenseImages)
                 .Include(p => p.VehicleVerification)
                 .AsQueryable();
 
@@ -201,28 +220,28 @@ namespace CAR.Infrastructure.Services
                 query = query.Where(p => p.CreatedAt <= endOfDay);
             }
 
-            return await query
-                .OrderByDescending(p => p.CreatedAt)
-                .Select(p => new ModerationPostListItemDto
-                {
-                    Id = p.Id,
-                    Title = p.Title,
-                    CategoryName = p.Category.Name,
-                    OwnerId = p.OwnerId,
-                    OwnerName = p.OwnerProfile.Name,
-                    CreatedAt = p.CreatedAt,
-                    Status = p.Status,
-                    RejectReason = p.RejectReason,
-                    Price = p.Price,
-                    Description = p.Description,
-                    Images = p.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
-                    Videos = p.Videos.OrderBy(v => v.Id).Select(v => v.VideoUrl).ToList(),
-                    LicenseImageUrls = p.LicenseImages.OrderBy(li => li.SortOrder).Select(li => li.ImageUrl).ToList(),
-                    RegistrationImageUrl = p.VehicleVerification != null ? p.VehicleVerification.RegistrationImage : null,
-                    InspectionImageUrl = p.VehicleVerification != null ? p.VehicleVerification.InspectionImage : null,
-                    InsuranceImageUrl = p.VehicleVerification != null ? p.VehicleVerification.InsuranceImage : null
-                })
-                .ToListAsync();
+            // Materialize first - EF cannot translate OrderBy on nested collections inside Select
+            var posts = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
+
+            return posts.Select(p => new ModerationPostListItemDto
+            {
+                Id = p.Id,
+                Title = p.Title,
+                CategoryName = p.Category?.Name,
+                OwnerId = p.OwnerId,
+                OwnerName = p.OwnerProfile?.Name,
+                CreatedAt = p.CreatedAt,
+                Status = p.Status,
+                RejectReason = p.RejectReason,
+                Price = p.Price,
+                Description = p.Description,
+                Images = (p.Images ?? new List<TPostImage>()).OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
+                Videos = (p.Videos ?? new List<TPostVideo>()).OrderBy(v => v.Id).Select(v => v.VideoUrl).ToList(),
+                LicenseImageUrls = new List<string>(),
+                RegistrationImageUrl = p.VehicleVerification?.RegistrationImage,
+                InspectionImageUrl = p.VehicleVerification?.InspectionImage,
+                InsuranceImageUrl = p.VehicleVerification?.InsuranceImage
+            }).ToList();
         }
 
         /// <summary>Phase 3: Tạo hoặc cập nhật embedding cho post (semantic search).</summary>

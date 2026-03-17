@@ -40,6 +40,8 @@ namespace RentalCar.Controllers
         public async Task<IActionResult> ApprovePost(int postId)
         {
             var staffId = GetCurrentUserId();
+            if (staffId <= 0)
+                return Unauthorized(new { Success = false, Message = "Invalid or missing user session. Please log in again." });
             var result = await _moderationService.ApprovePostAsync(postId, staffId);
             return Ok(result);
         }
@@ -48,7 +50,9 @@ namespace RentalCar.Controllers
         public async Task<IActionResult> RejectPost(int postId, [FromBody] RejectPostRequestDto request)
         {
             var staffId = GetCurrentUserId();
-            var result = await _moderationService.RejectPostAsync(postId, staffId, request.Reason);
+            if (staffId <= 0)
+                return Unauthorized(new { Success = false, Message = "Invalid or missing user session. Please log in again." });
+            var result = await _moderationService.RejectPostAsync(postId, staffId, request?.Reason ?? "");
             return Ok(result);
         }
 
